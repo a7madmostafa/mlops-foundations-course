@@ -11,13 +11,40 @@ Built around **one real project** — a US Flight Delays classification model �
 that you'll grow from a fragile notebook into a production-quality ML system
 one lesson at a time.
 
----
+## Getting started
+
+**Read the course online:**
+
+> **[https://a7madmostafa.github.io/mlops-foundations-course/](https://a7madmostafa.github.io/mlops-foundations-course/)**
+
+Start at **Module 1 — Lesson 1.1** and work forward. Every lesson leaves the
+flight-delay project visibly better and still runnable.
+
+**Or clone and read locally:**
+
+```bash
+git clone https://github.com/a7madmostafa/mlops-foundations-course.git
+cd mlops-foundations-course
+```
+
+Open `index.html` in your browser — no server, no build required.
+
+### The data
+
+The course uses US flight-delay records from the **U.S. Bureau of
+Transportation Statistics (BTS)** On-Time Performance database — public,
+US-government open data.
+
+Download the 2025 corpus (12 monthly files) from
+[`us-flight-delays-2025`](https://www.kaggle.com/datasets/a7madmostafa/us-flight-delays-2025-bts-on-time-performance).
+See `data/README.md` for the exact command and for how to pull the raw data
+straight from BTS if you prefer.
 
 ## Who this is for
 
 You should already know Python, pandas, NumPy, scikit-learn, basic Streamlit,
 and basic Git, and be comfortable with exploratory analysis and supervised
-learning (you've trained a model or two).
+learning.
 
 You do **not** need to know software engineering, testing, Docker, CI/CD, or
 any MLOps tooling — every concept is taught from the ground up, always after
@@ -29,60 +56,33 @@ the problem it solves.
   operated ML system.
 - Each module has **lessons**. Every lesson is one reading page you open
   directly in your browser, followed by hands-on steps.
-- Each lesson ends with a **milestone**: the flight-delay project gets into a
+- Every lesson ends with a **milestone**: the flight-delay project gets into a
   clearly better, still-runnable state.
 - Every lesson ships the project's final `CODE/` so you can run exactly what
   the lesson produced.
 
-Start with **Module 1 — The Software Foundation**.
+**Problem** → **Concept** → **Tool** → **Apply to the Flight Delays project** → **Practice** — the rhythm of every lesson.
 
-### The roadmap
+## Modules
 
-| Module | Phase |
-|--------|-------|
-| 1 | The software foundation — from fragile notebook to real ML project |
-| 2 | ML lifecycle & reproducibility |
-| 3 | Orchestration — pipelines & workflows |
-| 4 | APIs & serving |
-| 5 | Containers & security |
-| 6 | Model monitoring |
-| 7 | Automation & CI/CD |
-| 8 | Capstone & working on an ML team |
+| Module | Title | Lessons | What you'll learn |
+|--------|-------|---------|-------------------|
+| 1 | The Software Foundation | 5 | From fragile notebook to real project: structure, dependencies, configuration, robustness, tests |
+| 2 | ML Lifecycle & Reproducibility | 6 | Experiment tracking, model registry, data versioning, DVC |
+| 3 | Orchestration | 3 | DAGs, retries, failure handling, Airflow |
+| 4 | APIs & Serving | 6 | REST, FastAPI, testing the API, performance |
+| 5 | Containers & Security | 4 | Docker, compose, security basics for ML |
+| 6 | Model Monitoring | 3 | Drift detection, data quality, Evidently |
+| 7 | Automation & CI/CD | 4 | Pre-commit, CI, GitHub Actions, ML CD |
+| 8 | Capstone & the ML Team | 2 | End-to-end operation, code review, on-call |
 
-## Getting started
+## The project
 
-Clone the repository:
+One binary-classification project — *will this flight arrive 15+ minutes late?* — is taken through the whole engineering journey. Real BTS on-time-performance data ships with every lesson, so you can reproduce every step from a clean clone.
 
-```bash
-git clone https://github.com/a7madmostafa/mlops-foundations-course.git
-cd mlops-foundations-course
-```
-
-then open **`index.html`** in your browser (double-click it). No server, no
-build — the whole course is static HTML. GitHub Pages hosts the same site
-for online reading.
-
-### The data
-
-The course uses US flight-delay records from the **U.S. Bureau of
-Transportation Statistics (BTS)** On-Time Performance database — public,
-US-government open data.
-
-- The CSV files are intentionally not stored in Git because the full corpus
-  is large.
-- Download the 2025 corpus (12 monthly files) from
-  [`us-flight-delays-2025`](https://www.kaggle.com/datasets/a7madmostafa/us-flight-delays-2025-bts-on-time-performance).
-  See `data/README.md` for the exact command and for how to pull the raw data
-  straight from BTS if you prefer.
-
-## Repository layout
-
-| Path | What it is |
-|---|---|
-| `index.html` | The course home (open this) |
-| `assets/style.css` | The shared design system |
-| `modules/module-01/` … `module-08/` | The modules, each with lessons and their runnable `CODE/` |
-| `data/` | The course dataset (download from Kaggle, see `data/README.md`) |
+- **Lesson 1.1** starts you in a deliberately fragile notebook and lets you name its problems.
+- **Every later milestone** refactors, packages, tests, serves, containerizes, monitors, or automates the same project.
+- **Verify every step** by diffing one lesson's `CODE/` with the previous one.
 
 ## License
 
