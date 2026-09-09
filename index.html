@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From ML to MLOps — Self-Paced Course</title>
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('theme');
+    if(saved === 'dark' || saved === 'light'){
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  }catch(e){}
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+<button class="theme-toggle" aria-label="Toggle dark mode">
+  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
+</button>
+<div class="sidebar-backdrop"></div>
+<nav class="site-sidebar">
+<div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
+<a href="index.html" class="home-entry active">Home</a>
+<details class="side-module">
+  <summary><span class="daynum">Module 01</span><span class="mod-title">The Software Foundation</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-01/lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
+    <a href="modules/module-01/lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook → Project</a>
+    <a href="modules/module-01/lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
+    <a href="modules/module-01/lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
+    <a href="modules/module-01/lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 02</span><span class="mod-title">ML Lifecycle &amp; Reproducibility</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-02/lesson-01/01_reading.html"><span class="daynum">L2.1</span>Tracking Fundamentals</a>
+    <a href="modules/module-02/lesson-02/02_reading.html"><span class="daynum">L2.2</span>MLflow Tracking</a>
+    <a href="modules/module-02/lesson-03/03_reading.html"><span class="daynum">L2.3</span>MLflow Registry</a>
+    <a href="modules/module-02/lesson-04/04_reading.html"><span class="daynum">L2.4</span>Data Versioning</a>
+    <a href="modules/module-02/lesson-05/05_reading.html"><span class="daynum">L2.5</span>DVC</a>
+    <a href="modules/module-02/lesson-06/06_reading.html"><span class="daynum">L2.6</span>DVC Pipelines</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 03</span><span class="mod-title">Orchestration</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-03/lesson-01/01_reading.html"><span class="daynum">L3.1</span>Fundamentals</a>
+    <a href="modules/module-03/lesson-02/02_reading.html"><span class="daynum">L3.2</span>Airflow</a>
+    <a href="modules/module-03/lesson-03/03_reading.html"><span class="daynum">L3.3</span>Training DAG</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 04</span><span class="mod-title">APIs &amp; Serving</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-04/lesson-01/01_reading.html"><span class="daynum">L4.1</span>REST/HTTP</a>
+    <a href="modules/module-04/lesson-02/02_reading.html"><span class="daynum">L4.2</span>API Clients</a>
+    <a href="modules/module-04/lesson-03/03_reading.html"><span class="daynum">L4.3</span>FastAPI</a>
+    <a href="modules/module-04/lesson-04/04_reading.html"><span class="daynum">L4.4</span>Flight Delay API</a>
+    <a href="modules/module-04/lesson-05/05_reading.html"><span class="daynum">L4.5</span>API Testing</a>
+    <a href="modules/module-04/lesson-06/06_reading.html"><span class="daynum">L4.6</span>Performance</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 05</span><span class="mod-title">Containers &amp; Security</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-05/lesson-01/01_reading.html"><span class="daynum">L5.1</span>Docker</a>
+    <a href="modules/module-05/lesson-02/02_reading.html"><span class="daynum">L5.2</span>Dockerize API</a>
+    <a href="modules/module-05/lesson-03/03_reading.html"><span class="daynum">L5.3</span>Compose</a>
+    <a href="modules/module-05/lesson-04/04_reading.html"><span class="daynum">L5.4</span>Security</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 06</span><span class="mod-title">Model Monitoring</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-06/lesson-01/01_reading.html"><span class="daynum">L6.1</span>Fundamentals</a>
+    <a href="modules/module-06/lesson-02/02_reading.html"><span class="daynum">L6.2</span>Drift</a>
+    <a href="modules/module-06/lesson-03/03_reading.html"><span class="daynum">L6.3</span>Evidently</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 07</span><span class="mod-title">Automation &amp; CI/CD</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-07/lesson-01/01_reading.html"><span class="daynum">L7.1</span>Pre-commit</a>
+    <a href="modules/module-07/lesson-02/02_reading.html"><span class="daynum">L7.2</span>CI</a>
+    <a href="modules/module-07/lesson-03/03_reading.html"><span class="daynum">L7.3</span>GH Actions</a>
+    <a href="modules/module-07/lesson-04/04_reading.html"><span class="daynum">L7.4</span>CD for ML</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 08</span><span class="mod-title">Capstone &amp; the ML Team</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="modules/module-08/lesson-01/01_reading.html"><span class="daynum">L8.1</span>Capstone</a>
+    <a href="modules/module-08/lesson-02/02_reading.html"><span class="daynum">L8.2</span>ML Team</a>
+  </div>
+</details>
+</nav>
+<div class="page">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="icon-download" viewBox="0 0 16 16">
+      <path d="M8 2v7M4.5 6.5L8 10l3.5-3.5M2.5 12.5h11"/>
+    </symbol>
+    <symbol id="icon-external" viewBox="0 0 16 16">
+      <path d="M6.5 2.5h7v7M13.5 2.5L6 10M4 4H2.5v9.5H12V12"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="crumb">Self-paced course</div>
+<h1 class="title">From ML to MLOps</h1>
+<p class="subtitle">A hands-on course that takes a single US Flight Delays project from a fragile notebook to an engineered, tested, packaged, served, monitored, and automated ML system. You already know how to train a model — this course teaches what it takes to <em>operate</em> one.</p>
+<p class="author-line">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></p>
+
+<div class="pitch-grid">
+  <div class="pitch-card">
+    <h4>Who this is for</h4>
+    <ul>
+      <li>ML practitioners who train models in notebooks</li>
+      <li>Data scientists going from experiments to production</li>
+      <li>Python-savvy people new to software engineering</li>
+      <li>Learners who want the "engineering" half of MLOps</li>
+    </ul>
+    <p class="note">Assume ML + pandas + scikit-learn. No DevOps, testing, or web experience required.</p>
+  </div>
+  <div class="pitch-card">
+    <h4>What you'll be able to do</h4>
+    <ul>
+      <li>Turn a notebook into an installable, maintainable project</li>
+      <li>Structure code, manage dependencies, and configure per machine</li>
+      <li>Test, log, and debug ML pipelines with confidence</li>
+      <li>Track experiments, version data, and orchestrate training</li>
+      <li>Serve the model behind an API, then containerize it</li>
+      <li>Monitor drift, automate CI/CD, and ship like a team</li>
+    </ul>
+  </div>
+</div>
+
+<p class="rhythm"><b>Problem</b> → <b>Concept</b> → <b>Tool</b> → <b>Apply to the Flight Delays project</b> → <b>Practice</b> — the rhythm of every lesson.</p>
+
+<div class="skills-row">
+  <span>Python</span><span>Project Structure</span><span>uv</span><span>pytest</span><span>Logging</span><span>MLflow</span><span>DVC</span><span>Airflow</span><span>FastAPI</span><span>Docker</span><span>Monitoring</span><span>CI/CD</span>
+</div>
+
+<div class="intro-box">
+  <h3>Before you start</h3>
+  <p>Start at Module 01 and work forward — every lesson leaves the flight-delay project visibly better and still runnable. Each lesson ships a reading page, the project's <code class="inline">CODE/</code> after the change, and notebook exports you can read in any browser.</p>
+  <ul>
+    <li><strong>One project, eight modules.</strong> You predict US Flight Delays (arrival <code class="inline">≥ 15</code> min late) from real BTS on-time-performance data.</li>
+    <li><strong>Each lesson has a verifiable milestone.</strong> "What changed?" is answered with a diff against the previous lesson's <code class="inline">CODE/</code> and a command that proves it.</li>
+    <li><strong>No build tooling needed.</strong> Open any reading page directly in a browser. The repo clones-and-runs: data and example config are shipped.</li>
+    <li><strong>Documentation and tools are taught as they're needed</strong> — nothing appears before the problem it solves.</li>
+  </ul>
+</div>
+
+<h2 class="section">Modules</h2>
+<div class="day-grid">
+
+  <div class="day-card" id="mod-1">
+    <div class="day-num">M01</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">The Software Foundation</span></div>
+      <p class="day-topics">From fragile notebook to real project: structure, dependencies, configuration, robustness, tests. 5 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Name every problem in a notebook before fixing any of them.</li>
+            <li>Turn the notebook into an installable project with <code class="inline">uv</code>.</li>
+            <li>Refactor toward clean, typed, DRY code.</li>
+            <li>Replace prints with real logging and fail loudly on errors.</li>
+            <li>Cover the pipeline with automated tests.</li>
+          </ul>
+          <p class="before-start"><strong>Before you start:</strong> start here — everything else builds on this module.</p>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-01/lesson-01/01_reading.html">Start with L1.1</a>
+        <a href="modules/module-01/index.html">Module 1 overview</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-2">
+    <div class="day-num">M02</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">ML Lifecycle &amp; Reproducibility</span></div>
+      <p class="day-topics">Never lose a run again: experiment tracking, model registry, data versioning, DVC. 6 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Record every run's metrics, params, and artifacts.</li>
+            <li>Log, compare, and pick runs with MLflow.</li>
+            <li>Version models and promote them through stages.</li>
+            <li>Version data so training is fully reproducible.</li>
+            <li>Define the pipeline as cached DVC stages.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-02/lesson-01/01_reading.html">L2.1 · Tracking Fundamentals</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-3">
+    <div class="day-num">M03</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">Orchestration</span></div>
+      <p class="day-topics">Reliable, scheduled pipelines: DAGs, retries, failure handling, Airflow. 3 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>See why manual pipeline running breaks down.</li>
+            <li>Understand DAGs, retries, logs, and failure handling.</li>
+            <li>Run the flight-delay training pipeline on a schedule with Airflow.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-03/lesson-01/01_reading.html">L3.1 · Fundamentals</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-4">
+    <div class="day-num">M04</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">APIs &amp; Serving</span></div>
+      <p class="day-topics">HTTP, REST, FastAPI, testing the API, performance. 6 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Design a REST contract and call real APIs from Python.</li>
+            <li>Serve the trained model behind <code class="inline">POST /predict</code>.</li>
+            <li>Reuse the exact training preprocessing at serving time.</li>
+            <li>Test the API contract and measure real latency.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-04/lesson-01/01_reading.html">L4.1 · REST/HTTP</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-5">
+    <div class="day-num">M05</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">Containers &amp; Security</span></div>
+      <p class="day-topics">Docker, compose, and security basics for ML systems. 4 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Containerize a reproducible runtime with Docker.</li>
+            <li>Run the flight-delay service with one <code class="inline">docker run</code>.</li>
+            <li>Spin up multi-service development with compose.</li>
+            <li>Apply a security checklist: secrets, auth, scanning, least privilege.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-05/lesson-01/01_reading.html">L5.1 · Docker</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-6">
+    <div class="day-num">M06</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">Model Monitoring</span></div>
+      <p class="day-topics">Silent prediction decay is the real threat: monitoring fundamentals, drift, Evidently. 3 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Decide what to watch and what to ignore.</li>
+            <li>Detect training/serving skew, data drift, and concept drift.</li>
+            <li>Produce drift and data-quality reports with Evidently.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-06/lesson-01/01_reading.html">L6.1 · Fundamentals</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-7">
+    <div class="day-num">M07</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">Automation &amp; CI/CD</span></div>
+      <p class="day-topics">Stop "works on my machine": pre-commit, CI, GitHub Actions, ML CD. 4 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Gate commits with one local command.</li>
+            <li>Understand continuous integration and its stages.</li>
+            <li>Run format/lint/type/test on every push with GitHub Actions.</li>
+            <li>Build a CD workflow that validates and ships the model.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-07/lesson-01/01_reading.html">L7.1 · Pre-commit</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card" id="mod-8">
+    <div class="day-num">M08</div>
+    <div class="day-body">
+      <div class="day-head"><span class="day-title">Capstone &amp; the ML Team</span></div>
+      <p class="day-topics">Bring it all together, then make it human: review, pairing, on-call. 2 lessons.</p>
+      <details class="day-details">
+        <summary><span class="caret">&#9656;</span>What you'll learn</summary>
+        <div class="day-details-body">
+          <ul>
+            <li>Operate the flight-delay system end to end.</li>
+            <li>Work like an ML team: code review, issues, delivery slices, on-call.</li>
+          </ul>
+        </div>
+      </details>
+      <div class="day-links">
+        <a class="primary" href="modules/module-08/lesson-01/01_reading.html">L8.1 · Capstone</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2 class="section">The project</h2>
+<div class="intro-box">
+  <h3>US Flight Delays, all the way through</h3>
+  <p>One binary-classification project — <em>will this flight arrive 15+ minutes late?</em> — is taken through the whole engineering journey. Real BTS on-time-performance data for January 2024 ships with every lesson, so you can reproduce every step from a clean clone.</p>
+  <ul>
+    <li><strong>Lesson 1.1</strong> starts you in a deliberately fragile notebook and lets you name its problems.</li>
+    <li><strong>Every later milestone</strong> refactors, packages, tests, serves, containerizes, monitors, or automates the same project.</li>
+    <li><strong>Verify every step</strong> by diffing one lesson's <code class="inline">CODE/</code> with the previous one and running the lesson's verify command.</li>
+  </ul>
+</div>
+
+</div>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">From ML to MLOps</div>
+    <p class="footer-tagline">Software engineering &amp; MLOps foundations for ML practitioners — one US flight-delay project, engineered end to end.</p>
+    <p class="footer-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></p>
+    <div class="footer-bottom">
+      <span>&#169; 2026 Ahmad Mostafa</span><span>&#183;</span><span>From ML to MLOps &#183; self-paced</span>
+    </div>
+  </div>
+</footer>
+<script>
+(function(){
+  var sidebar = document.querySelector('.site-sidebar');
+  var toggle = document.querySelector('.sidebar-toggle');
+  var backdrop = document.querySelector('.sidebar-backdrop');
+  if(!sidebar || !toggle || !backdrop) return;
+  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+  toggle.addEventListener('click', function(){
+    if (sidebar.classList.contains('open')) close(); else openMenu();
+  });
+  backdrop.addEventListener('click', close);
+})();
+</script>
+<script>
+(function(){
+  var btn = document.querySelector('.theme-toggle');
+  if(!btn) return;
+  function currentTheme(){
+    var attr = document.documentElement.getAttribute('data-theme');
+    if(attr === 'dark' || attr === 'light') return attr;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  btn.addEventListener('click', function(){
+    var next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('theme', next); }catch(e){}
+  });
+})();
+</script>
+</body></html>

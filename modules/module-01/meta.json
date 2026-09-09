@@ -1,0 +1,14 @@
+{
+  "module": 1,
+  "id": "MML01",
+  "title": "The Software Foundation",
+  "phase": "Phase 1 of 8",
+  "description": "From a fragile notebook to a real ML project: structure, dependencies, configuration, robustness, and tests.",
+  "lessons": [
+    { "id": "L1.1", "title": "Your Starting Point: The Flight Delay Notebook", "slug": "lesson-01" },
+    { "id": "L1.2", "title": "From Notebook to Structured ML Project", "slug": "lesson-02" },
+    { "id": "L1.3", "title": "Clean, Typed, Consistent Code", "slug": "lesson-03" },
+    { "id": "L1.4", "title": "Robustness & Logging", "slug": "lesson-04" },
+    { "id": "L1.5", "title": "Automated Testing", "slug": "lesson-05" }
+  ]
+}

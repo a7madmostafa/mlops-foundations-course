@@ -1,0 +1,29 @@
+# Prep / build files — never part of the published site
+AGENTS.md
+AGREED.md
+course-map.md
+.opencode/
+.stage/
+_stage/
+memory.md
+
+# Local OS noise
+Thumbs.db
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# References
+references/
+# NOTE: course data ships in the repo (clone-and-run). The lesson-level
+# CODE/.gitignore files demonstrate real-repo behavior (ignoring data/.env)
+# and are taught inside the lessons.
+
+# Bulk course data is hosted on Kaggle (see data/README.md); keep the repo
+# lean by NOT committing the large per-month CSV files or the upload zip.
+data/*.csv
+data/kaggle_upload/*.zip
+data/kaggle_upload/*.ipynb

@@ -1,0 +1,9 @@
+# Generated artifacts this lesson produces when you run the notebook
+models/
+
+# Real-repo behavior: data/ lives in the course data pool, not in CODE
+data/
+
+# Python + Jupyter noise
+__pycache__/
+.ipynb_checkpoints/

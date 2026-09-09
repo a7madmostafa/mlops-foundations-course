@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 1 — The Software Foundation</title>
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('theme');
+    if(saved === 'dark' || saved === 'light'){
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  }catch(e){}
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
+<button class="theme-toggle" aria-label="Toggle dark mode">
+  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
+</button>
+<div class="sidebar-backdrop"></div>
+<nav class="site-sidebar">
+<div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
+<a href="../../index.html" class="home-entry">Home</a>
+<details class="side-module" open="">
+  <summary><span class="daynum">Module 01</span><span class="mod-title">The Software Foundation</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
+    <a href="lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
+    <a href="lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
+    <a href="lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
+    <a href="lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 02</span><span class="mod-title">ML Lifecycle &amp; Reproducibility</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-02/lesson-01/01_reading.html"><span class="daynum">L2.1</span>Tracking Fundamentals</a>
+    <a href="../../modules/module-02/lesson-02/02_reading.html"><span class="daynum">L2.2</span>MLflow Tracking</a>
+    <a href="../../modules/module-02/lesson-03/03_reading.html"><span class="daynum">L2.3</span>MLflow Registry</a>
+    <a href="../../modules/module-02/lesson-04/04_reading.html"><span class="daynum">L2.4</span>Data Versioning</a>
+    <a href="../../modules/module-02/lesson-05/05_reading.html"><span class="daynum">L2.5</span>DVC</a>
+    <a href="../../modules/module-02/lesson-06/06_reading.html"><span class="daynum">L2.6</span>DVC Pipelines</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 03</span><span class="mod-title">Orchestration</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-03/lesson-01/01_reading.html"><span class="daynum">L3.1</span>Fundamentals</a>
+    <a href="../../modules/module-03/lesson-02/02_reading.html"><span class="daynum">L3.2</span>Airflow</a>
+    <a href="../../modules/module-03/lesson-03/03_reading.html"><span class="daynum">L3.3</span>Training DAG</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 04</span><span class="mod-title">APIs &amp; Serving</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-04/lesson-01/01_reading.html"><span class="daynum">L4.1</span>REST/HTTP</a>
+    <a href="../../modules/module-04/lesson-02/02_reading.html"><span class="daynum">L4.2</span>API Clients</a>
+    <a href="../../modules/module-04/lesson-03/03_reading.html"><span class="daynum">L4.3</span>FastAPI</a>
+    <a href="../../modules/module-04/lesson-04/04_reading.html"><span class="daynum">L4.4</span>Flight Delay API</a>
+    <a href="../../modules/module-04/lesson-05/05_reading.html"><span class="daynum">L4.5</span>API Testing</a>
+    <a href="../../modules/module-04/lesson-06/06_reading.html"><span class="daynum">L4.6</span>Performance</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 05</span><span class="mod-title">Containers &amp; Security</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-05/lesson-01/01_reading.html"><span class="daynum">L5.1</span>Docker</a>
+    <a href="../../modules/module-05/lesson-02/02_reading.html"><span class="daynum">L5.2</span>Dockerize API</a>
+    <a href="../../modules/module-05/lesson-03/03_reading.html"><span class="daynum">L5.3</span>Compose</a>
+    <a href="../../modules/module-05/lesson-04/04_reading.html"><span class="daynum">L5.4</span>Security</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 06</span><span class="mod-title">Model Monitoring</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-06/lesson-01/01_reading.html"><span class="daynum">L6.1</span>Fundamentals</a>
+    <a href="../../modules/module-06/lesson-02/02_reading.html"><span class="daynum">L6.2</span>Drift</a>
+    <a href="../../modules/module-06/lesson-03/03_reading.html"><span class="daynum">L6.3</span>Evidently</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 07</span><span class="mod-title">Automation &amp; CI/CD</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-07/lesson-01/01_reading.html"><span class="daynum">L7.1</span>Pre-commit</a>
+    <a href="../../modules/module-07/lesson-02/02_reading.html"><span class="daynum">L7.2</span>CI</a>
+    <a href="../../modules/module-07/lesson-03/03_reading.html"><span class="daynum">L7.3</span>GH Actions</a>
+    <a href="../../modules/module-07/lesson-04/04_reading.html"><span class="daynum">L7.4</span>CD for ML</a>
+  </div>
+</details>
+<details class="side-module">
+  <summary><span class="daynum">Module 08</span><span class="mod-title">Capstone &amp; the ML Team</span><span class="caret">&#9656;</span></summary>
+  <div class="side-lessons">
+    <a href="../../modules/module-08/lesson-01/01_reading.html"><span class="daynum">L8.1</span>Capstone</a>
+    <a href="../../modules/module-08/lesson-02/02_reading.html"><span class="daynum">L8.2</span>ML Team</a>
+  </div>
+</details>
+</nav>
+<div class="page">
+
+<div class="crumb-row">
+  <span class="lesson-pill">Module 1 of 8</span>
+  <nav class="breadcrumb"><a href="../../index.html">Course Home</a><span class="crumb-sep">/</span><span>Module 1 &#183; The Software Foundation</span></nav>
+</div>
+<h1 class="title">Module 1 &#183; The Software Foundation</h1>
+<p class="subtitle">From a fragile notebook to a real ML project &#8212; structure, dependencies, configuration, robustness, tests. Five lessons, each ending with the flight-delay project visibly better and still runnable.</p>
+
+<div class="callout insight">
+  <div class="ti">Start here</div>
+  <p>This is the foundation of the whole course &#8212; every later module assumes the project you build in these five lessons. Begin with L1.1, where you build your own baseline notebook and name the problems the rest of the course fixes.</p>
+</div>
+
+<div class="lesson-list">
+  <a class="lesson-row" href="lesson-01/01_reading.html">
+    <span class="lesson-num">L1.1</span>
+    <span class="lesson-body">
+      <span class="lesson-title">Your Starting Point: The Flight Delay Notebook</span>
+      <span class="lesson-desc">Get to know the flight-delay data, build your own baseline notebook, then read it like an engineer and name the problems that make it dangerous in production.</span>
+    </span>
+    <span class="lesson-go">&#8594;</span>
+  </a>
+  <a class="lesson-row" href="lesson-02/02_reading.html">
+    <span class="lesson-num">L1.2</span>
+    <span class="lesson-body">
+      <span class="lesson-title">From Notebook to Structured ML Project</span>
+      <span class="lesson-desc">Turn the notebook into an installable src/ project &#8212; importable pipeline modules, uv + lockfile, paths and secrets as configuration.</span>
+    </span>
+    <span class="lesson-go">&#8594;</span>
+  </a>
+  <a class="lesson-row" href="lesson-03/03_reading.html">
+    <span class="lesson-num">L1.3</span>
+    <span class="lesson-body">
+      <span class="lesson-title">Clean, Typed, Consistent Code</span>
+      <span class="lesson-desc">Refactor toward single-responsibility functions and DRY preprocessing, then enforce a consistent style with formatting, linting, and type checks.</span>
+    </span>
+    <span class="lesson-go">&#8594;</span>
+  </a>
+  <a class="lesson-row" href="lesson-04/04_reading.html">
+    <span class="lesson-num">L1.4</span>
+    <span class="lesson-body">
+      <span class="lesson-title">Robustness &amp; Logging</span>
+      <span class="lesson-desc">Make the pipeline fail loudly with clear errors, and log every run so any execution is diagnosable &#8212; prints are gone.</span>
+    </span>
+    <span class="lesson-go">&#8594;</span>
+  </a>
+  <a class="lesson-row" href="lesson-05/05_reading.html">
+    <span class="lesson-num">L1.5</span>
+    <span class="lesson-body">
+      <span class="lesson-title">Automated Testing</span>
+      <span class="lesson-desc">Cover preprocessing, schema, and the prediction contract with a pytest suite &#8212; now you can change code with confidence.</span>
+    </span>
+    <span class="lesson-go">&#8594;</span>
+  </a>
+</div>
+
+<div class="day-nav">
+  <a class="day-nav-link prev" href="../../index.html">
+    <span class="dn-label">&larr; Back to</span>
+    <span class="dn-title">Course Home</span>
+  </a>
+  <a class="day-nav-link next" href="lesson-01/01_reading.html">
+    <span class="dn-label">Start &rarr;</span>
+    <span class="dn-title">L1.1 &#183; Your Starting Point</span>
+  </a>
+</div>
+
+</div>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">From ML to MLOps</div>
+    <p class="footer-tagline">Software engineering &amp; MLOps foundations for ML practitioners &#8212; one US flight-delay project, engineered end to end.</p>
+    <p class="footer-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></p>
+    <div class="footer-bottom">
+      <span>&#169; 2026 Ahmad Mostafa</span><span>&#183;</span><span>From ML to MLOps &#183; self-paced</span>
+    </div>
+  </div>
+</footer>
+<script>
+(function(){
+  var sidebar = document.querySelector('.site-sidebar');
+  var toggle = document.querySelector('.sidebar-toggle');
+  var backdrop = document.querySelector('.sidebar-backdrop');
+  if(!sidebar || !toggle || !backdrop) return;
+  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+  toggle.addEventListener('click', function(){
+    if (sidebar.classList.contains('open')) close(); else openMenu();
+  });
+  backdrop.addEventListener('click', close);
+})();
+</script>
+<script>
+(function(){
+  var btn = document.querySelector('.theme-toggle');
+  if(!btn) return;
+  function currentTheme(){
+    var attr = document.documentElement.getAttribute('data-theme');
+    if(attr === 'dark' || attr === 'light') return attr;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  btn.addEventListener('click', function(){
+    var next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('theme', next); }catch(e){}
+  });
+})();
+</script>
+</body></html>
