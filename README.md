@@ -42,13 +42,30 @@ straight from BTS if you prefer.
 
 ## Who this is for
 
-You should already know Python, pandas, NumPy, scikit-learn, basic Streamlit,
-and basic Git, and be comfortable with exploratory analysis and supervised
-learning.
+This course is for:
+
+- ML practitioners who train models in notebooks and want to learn production engineering
+- Data scientists going from experiments to production
+- Python-savvy people new to software engineering
+- Learners who want the "engineering" half of MLOps
+
+## Prerequisites
+
+You should be comfortable with:
+
+- Python fundamentals
+- NumPy and pandas
+- Exploratory data analysis
+- Supervised ML (classification and regression)
+- scikit-learn
+- Basic Streamlit
+- Basic Git
 
 You do **not** need to know software engineering, testing, Docker, CI/CD, or
 any MLOps tooling — every concept is taught from the ground up, always after
 the problem it solves.
+
+New to machine learning? Start with the **[Arabic ML Bootcamp](https://github.com/a7madmostafa/Arabic_ML_Bootcamp)** — it covers the ML foundations this course builds on.
 
 ## How the course works
 
