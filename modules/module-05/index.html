@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Module 1 — The Software Foundation</title>
+<title>Module 5 — Containers &amp; Security</title>
 <script>
 (function(){
   try{
@@ -30,14 +30,14 @@
 <nav class="site-sidebar">
 <div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
 <a href="../../index.html" class="home-entry">Home</a>
-<details class="side-module" open="">
+<details class="side-module">
   <summary><span class="daynum">Module 01</span><span class="mod-title">The Software Foundation</span><span class="caret">&#9656;</span></summary>
   <div class="side-lessons">
-    <a href="lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
-    <a href="lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
-    <a href="lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
-    <a href="lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
-    <a href="lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
+    <a href="../../modules/module-01/lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
+    <a href="../../modules/module-01/lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
+    <a href="../../modules/module-01/lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
+    <a href="../../modules/module-01/lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
+    <a href="../../modules/module-01/lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
   </div>
 </details>
 <details class="side-module">
@@ -70,13 +70,13 @@
     <a href="../../modules/module-04/lesson-06/06_reading.html"><span class="daynum">L4.6</span>Performance</a>
   </div>
 </details>
-<details class="side-module">
+<details class="side-module" open="">
   <summary><span class="daynum">Module 05</span><span class="mod-title">Containers &amp; Security</span><span class="caret">&#9656;</span></summary>
   <div class="side-lessons">
-    <a href="../../modules/module-05/lesson-01/01_reading.html"><span class="daynum">L5.1</span>Docker</a>
-    <a href="../../modules/module-05/lesson-02/02_reading.html"><span class="daynum">L5.2</span>Dockerize API</a>
-    <a href="../../modules/module-05/lesson-03/03_reading.html"><span class="daynum">L5.3</span>Compose</a>
-    <a href="../../modules/module-05/lesson-04/04_reading.html"><span class="daynum">L5.4</span>Security</a>
+    <a href="lesson-01/01_reading.html"><span class="daynum">L5.1</span>Docker</a>
+    <a href="lesson-02/02_reading.html"><span class="daynum">L5.2</span>Dockerize API</a>
+    <a href="lesson-03/03_reading.html"><span class="daynum">L5.3</span>Compose</a>
+    <a href="lesson-04/04_reading.html"><span class="daynum">L5.4</span>Security</a>
   </div>
 </details>
 <details class="side-module">
@@ -107,68 +107,60 @@
 <main id="main-content" class="page">
 
 <div class="crumb-row">
-  <span class="lesson-pill">Module 1 of 8</span>
-  <nav class="breadcrumb"><a href="../../index.html">Course Home</a><span class="crumb-sep">/</span><span>Module 1 &#183; The Software Foundation</span></nav>
+  <span class="lesson-pill">Module 5 of 8</span>
+  <nav class="breadcrumb"><a href="../../index.html">Course Home</a><span class="crumb-sep">/</span><span>Module 5 &#183; Containers &amp; Security</span></nav>
 </div>
-<h1 class="title">Module 1 &#183; The Software Foundation</h1>
-<p class="subtitle">From a fragile notebook to a real ML project &#8212; structure, dependencies, configuration, robustness, tests. Five lessons, each ending with the flight-delay project visibly better and still runnable.</p>
+<h1 class="title">Module 5 &#183; Containers &amp; Security</h1>
+<p class="subtitle">Docker, compose, and security basics for ML systems. Four lessons.</p>
 
 <div class="callout insight">
   <div class="ti">Start here</div>
-  <p>This is the foundation of the whole course &#8212; every later module assumes the project you build in these five lessons. Begin with L1.1, where you build your own baseline notebook and name the problems the rest of the course fixes.</p>
+  <p>Start with L5.1 &#8212; you will containerize a small app before touching the ML service.</p>
 </div>
 
 <div class="lesson-list">
   <a class="lesson-row" href="lesson-01/01_reading.html">
-    <span class="lesson-num">L1.1</span>
+    <span class="lesson-num">L5.1</span>
     <span class="lesson-body">
-      <span class="lesson-title">Your Starting Point: The Flight Delay Notebook</span>
-      <span class="lesson-desc">Get to know the flight-delay data, build your own baseline notebook, then read it like an engineer and name the problems that make it dangerous in production.</span>
+      <span class="lesson-title">Docker</span>
+      <span class="lesson-desc">Learn what containers are, why they matter for ML, and how to build your first Docker image.</span>
     </span>
     <span class="lesson-go">&#8594;</span>
   </a>
   <a class="lesson-row" href="lesson-02/02_reading.html">
-    <span class="lesson-num">L1.2</span>
+    <span class="lesson-num">L5.2</span>
     <span class="lesson-body">
-      <span class="lesson-title">From Notebook to Structured ML Project</span>
-      <span class="lesson-desc">Turn the notebook into an installable src/ project &#8212; importable pipeline modules, uv + lockfile, paths and secrets as configuration.</span>
+      <span class="lesson-title">Dockerize API</span>
+      <span class="lesson-desc">Containerize the flight-delay FastAPI service so it runs identically on any machine.</span>
     </span>
     <span class="lesson-go">&#8594;</span>
   </a>
   <a class="lesson-row" href="lesson-03/03_reading.html">
-    <span class="lesson-num">L1.3</span>
+    <span class="lesson-num">L5.3</span>
     <span class="lesson-body">
-      <span class="lesson-title">Clean, Typed, Consistent Code</span>
-      <span class="lesson-desc">Refactor toward single-responsibility functions and DRY preprocessing, then enforce a consistent style with formatting, linting, and type checks.</span>
+      <span class="lesson-title">Compose</span>
+      <span class="lesson-desc">Use Docker Compose to orchestrate multi-container setups for development and testing.</span>
     </span>
     <span class="lesson-go">&#8594;</span>
   </a>
   <a class="lesson-row" href="lesson-04/04_reading.html">
-    <span class="lesson-num">L1.4</span>
+    <span class="lesson-num">L5.4</span>
     <span class="lesson-body">
-      <span class="lesson-title">Robustness &amp; Logging</span>
-      <span class="lesson-desc">Make the pipeline fail loudly with clear errors, and log every run so any execution is diagnosable &#8212; prints are gone.</span>
-    </span>
-    <span class="lesson-go">&#8594;</span>
-  </a>
-  <a class="lesson-row" href="lesson-05/05_reading.html">
-    <span class="lesson-num">L1.5</span>
-    <span class="lesson-body">
-      <span class="lesson-title">Automated Testing</span>
-      <span class="lesson-desc">Cover preprocessing, schema, and the prediction contract with a pytest suite &#8212; now you can change code with confidence.</span>
+      <span class="lesson-title">Security</span>
+      <span class="lesson-desc">Apply security basics for ML systems &#8212; secrets, images, and runtime hygiene.</span>
     </span>
     <span class="lesson-go">&#8594;</span>
   </a>
 </div>
 
 <div class="day-nav">
-  <a class="day-nav-link prev" href="../../index.html">
+  <a class="day-nav-link prev" href="../module-04/index.html">
     <span class="dn-label">&larr; Back to</span>
-    <span class="dn-title">Course Home</span>
+    <span class="dn-title">Module 4 &#183; APIs &amp; Serving</span>
   </a>
   <a class="day-nav-link next" href="lesson-01/01_reading.html">
     <span class="dn-label">Start &rarr;</span>
-    <span class="dn-title">L1.1 &#183; Your Starting Point</span>
+    <span class="dn-title">L5.1 &#183; Docker</span>
   </a>
 </div>
 </div>
