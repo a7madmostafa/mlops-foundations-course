@@ -134,23 +134,23 @@
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>You need Jupyter, pandas, scikit-learn, matplotlib, and joblib &#8212; nothing else. No new tools, no tests, no packaging.</p>
+  <p>You need Jupyter, pandas, scikit-learn, matplotlib, and joblib &#8212; nothing else. No new tools, modules, tests, logging, packaging, or refactoring.</p>
   <p>First get the data. The course uses the US Flight Delays January 2025 file, one of 12 monthly files in the shared pool at the repo root in <code class="inline">data/</code>:</p>
   <div class="day-links">
     <a class="primary" href="https://www.kaggle.com/datasets/a7madmostafa/us-flight-delays-2025-bts-on-time-performance"><svg class="dl-icon"><use href="#icon-download"/></svg>Download the dataset from Kaggle</a>
     <a href="../../../data/README.md">data/README.md &#8212; instructions</a>
   </div>
-  <p>Or from the command line: <code class="inline">kaggle datasets download -d a7madmostafa/us-flight-delays-2025-bts-on-time-performance</code> then unzip into <code class="inline">data/</code>.</p>
+  <p>Or, from the repository root, run <code class="inline">kaggle datasets download a7madmostafa/us-flight-delays-2025-bts-on-time-performance -p data --unzip</code>.</p>
 </div>
 
 <div class="objectives">
   <h2>What you'll do in this lesson</h2>
   <ul>
-    <li>Read about the project &#8212; what we are predicting, what the data looks like, what the target is.</li>
+    <li>Understand the project &#8212; what you predict, when you predict it, and what the target means.</li>
     <li>Build your own notebook: explore the data, clean it, engineer features, train a baseline model.</li>
-    <li>Compare your approach against our reference notebook in <code class="inline">CODE/</code>.</li>
-    <li>See the six problems we labeled in our notebook, each with a code snapshot from the actual cell.</li>
-    <li>Understand why these problems matter and which lesson fixes each one.</li>
+    <li>Run our reference notebook from a fresh kernel and record its baseline metrics.</li>
+    <li>Write a six-row <strong>Fragility Audit</strong> &#8212; a table of risks supported by evidence from the notebook.</li>
+    <li>Map each problem to the later lesson that will fix it.</li>
   </ul>
 </div>
 
@@ -159,9 +159,9 @@
 
 <p>The US Department of Transportation's Bureau of Transportation Statistics (BTS) publishes on-time performance for every domestic flight &#8212; carrier, origin, destination, scheduled and actual times, and delay breakdowns. The data is public, US-government open data.</p>
 
-<p>The course data pool at the repo root (<code class="inline">data/</code>, see <code class="inline">data/README.md</code>) holds the full 2025 corpus. This lesson uses <code class="inline">flight_delays_2025_01.csv</code> &#8212; January 2025, 539,747 flights, 40 columns.</p>
+<p>After you download it, the course data pool at the repo root (<code class="inline">data/</code>, see <code class="inline">data/README.md</code>) holds the full 2025 corpus. This lesson uses <code class="inline">flight_delays_2025_01.csv</code> &#8212; January 2025, 539,747 flights, 40 columns.</p>
 
-<p>The task is simple: <strong>predict, before departure, whether a flight will arrive 15 or more minutes late</strong> (the BTS definition of "delayed"). It is a binary classification problem. The target column is <code class="inline">ArrDel15</code> &#8212; 1.0 means delayed, 0.0 means on time.</p>
+<p>The task is simple: <strong>shortly after departure, predict whether a flight will arrive 15 or more minutes late</strong> (the BTS definition of "delayed"). At that point the actual departure delay is known, while the arrival outcome is not. It is a binary classification problem. The target column is <code class="inline">ArrDel15</code> &#8212; 1.0 means delayed, 0.0 means on time.</p>
 
 <p>Here is what a few rows look like:</p>
 
@@ -173,7 +173,7 @@
 11        AA       JFK   LAX        700      2475       1.0</div>
 </div>
 
-<p>Features you can use: carrier, origin/destination airports, scheduled departure time, day of week, distance, departure delay, elapsed time, and more. The dataset is rich enough for real feature engineering &#8212; and small enough that a baseline model fits comfortably on a laptop (a random forest over half a million rows takes a few minutes at most).</p>
+<p>Features you can use at that prediction point include carrier, origin/destination airports, scheduled departure time, day of week, distance, actual departure delay, and scheduled elapsed time. The dataset is rich enough for real feature engineering &#8212; and small enough that a baseline model fits comfortably on a laptop (a random forest over half a million rows takes a few minutes at most).</p>
 
 <h2 class="section"><span class="num">2</span>Build your own notebook</h2>
 <p class="section-intro">This is your hands-on work for this lesson.</p>
@@ -395,8 +395,10 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
   <p>Jupyter is the right tool for exploration &#8212; this disease hunt lives in one, after all. The problem is using it (only) as the vehicle for code that must run reliably later. Every line above is about the <em>use</em>, not the tool.</p>
 </div>
 
-<h2 class="section"><span class="num">7</span>What you now know</h2>
-<p class="section-intro">The data, the task, the baseline, and the roadmap.</p>
+<h2 class="section"><span class="num">7</span>What changed in our project?</h2>
+<p class="section-intro">You now have a recorded baseline and a named audit of what must change next.</p>
+
+<p><strong>Before:</strong> you had a notebook that produced a model, but no explicit record of what made the workflow fragile. <strong>After:</strong> you have cold-run baseline metrics and a six-row Fragility Audit that points to the lessons where each risk will be removed.</p>
 
 <div class="table-scroll">
 <table class="api">
@@ -416,6 +418,11 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
 
 <p>Every row in that table is a lesson. The course is the process of clearing them one by one.</p>
 
+<div class="callout tip">
+  <div class="ti">Verify the milestone</div>
+  <p>Restart the notebook kernel, choose <strong>Run All</strong>, and confirm accuracy is approximately <code class="inline">0.9184</code> and F1 is approximately <code class="inline">0.7587</code>. Your Fragility Audit is complete when it contains the six rows above, with notebook evidence and the lesson that will fix each problem.</p>
+</div>
+
 <div class="callout recap">
   <div class="ti">Takeaways</div>
   <p>You know the data: 539,747 US flights from January 2025, 40 columns, binary target <code class="inline">ArrDel15</code>.<br>
@@ -434,8 +441,6 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
     <span class="dn-title">L1.2 &#183; Notebook &#8594; Structured ML Project</span>
   </a>
 </div>
-</div>
-
 </main>
 <footer class="site-footer">
   <div class="footer-inner">

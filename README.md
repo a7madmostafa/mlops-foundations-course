@@ -54,7 +54,8 @@ Start with **Module 1 — The Software Foundation**.
 Clone the repository:
 
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/a7madmostafa/mlops-foundations-course.git
+cd mlops-foundations-course
 ```
 
 then open **`index.html`** in your browser (double-click it). No server, no
@@ -67,11 +68,12 @@ The course uses US flight-delay records from the **U.S. Bureau of
 Transportation Statistics (BTS)** On-Time Performance database — public,
 US-government open data.
 
-- A small baseline month ships inside the first lesson's `CODE/data/`.
-- The full 2025 corpus (12 monthly files) is on Kaggle:
-  [`us-flight-delays-2025`](https://www.kaggle.com) — see `data/README.md`
-  for the exact download command and for how to pull the raw data straight
-  from BTS if you prefer.
+- The CSV files are intentionally not stored in Git because the full corpus
+  is large.
+- Download the 2025 corpus (12 monthly files) from
+  [`us-flight-delays-2025`](https://www.kaggle.com/datasets/a7madmostafa/us-flight-delays-2025-bts-on-time-performance).
+  See `data/README.md` for the exact command and for how to pull the raw data
+  straight from BTS if you prefer.
 
 ## Repository layout
 

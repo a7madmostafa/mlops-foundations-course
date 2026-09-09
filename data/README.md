@@ -15,10 +15,13 @@ root; data is never copied into lesson folders.
 ### Option A — Kaggle CLI (recommended)
 
 ```bash
-pip install kaggle         # one-time
-kaggle datasets download -d a7madmostafa/us-flight-delays-2025-bts-on-time-performance
-unzip us-flight-delays-2025-bts-on-time-performance.zip -d data
+python -m pip install kaggle   # one-time
+kaggle auth login             # one-time; follow the browser prompt
+kaggle datasets download a7madmostafa/us-flight-delays-2025-bts-on-time-performance -p data --unzip
 ```
+
+Run those commands from the repository root. When the download finishes,
+confirm that `data/flight_delays_2025_01.csv` exists before opening Lesson 1.1.
 
 ### Option B — Kaggle website
 
