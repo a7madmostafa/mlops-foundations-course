@@ -132,12 +132,14 @@ table.api tbody tr:last-child td{border-bottom:none}
 .annotation p{margin:3px 0 0;font-size:14.5px;color:var(--ink)}
 
 .compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
-.compare .col{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px var(--shadow)}
+.compare .col{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px var(--shadow);min-width:0}
 .compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
 .compare .col p,.compare .col li{font-size:14.5px}
 .compare .col ul{margin:6px 0 0;padding-left:18px}
 .compare .col.good{background:var(--good-bg);border-color:var(--good-border)}
 .compare .col.bad{background:var(--bad-bg);border-color:var(--bad-border)}
+.compare .col pre{margin:0;font-family:'IBM Plex Mono',monospace;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:6px}
+.compare .col code.code-body{display:block;padding:12px 14px;font-size:12.5px;line-height:1.6;white-space:pre}
 
 .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
 .card-grid.three{grid-template-columns:repeat(3,1fr)}
