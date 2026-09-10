@@ -127,31 +127,32 @@
 <h1 class="title">Clean, Typed, Consistent</h1>
 <p class="subtitle">Your pipeline runs, but the code has no style enforcement, no type declarations, and magic strings scattered across files. This lesson fixes all three &#8212; same pipeline, same numbers.</p>
 
+<div class="day-links">
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-03/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+</div>
+
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>You need Lesson 1.2 complete with the data pool at the repo root. If you have a <code>src/</code> folder and <code>uv run python main.py</code> prints <code>accuracy: 0.8952</code>, you are ready.</p>
+  <p>You need Lesson 1.2 complete with the data pool at the repo root. If you have a <code class="inline">src/</code> folder and <code class="inline">uv run python main.py</code> prints <code class="inline">accuracy: 0.8952</code>, you are ready.</p>
 </div>
 
-<div class="callout insight">
-  <div class="ti">Goal</div>
-  <p>Install Ruff and mypy, add type annotations to every function, consolidate duplicate pipeline logic, centralise config, and introduce a <code>FlightDelayModel</code> class &#8212; then prove the pipeline still produces the same metrics.</p>
-  <p><strong>Time:</strong> ~45&#8211;60 minutes</p>
+<div class="objectives">
+  <h2>What you'll do in this lesson</h2>
+  <ul>
+    <li>Install and run the Ruff formatter and linter on every <code class="inline">.py</code> file.</li>
+    <li>Add type annotations to every function and verify them with mypy.</li>
+    <li>Consolidate two pipeline-building functions into one DRY function.</li>
+    <li>Centralise all magic strings and defaults into a typed <code>config.py</code>.</li>
+    <li>Introduce a <code>FlightDelayModel</code> class that owns the prediction contract.</li>
+    <li>Confirm the pipeline still produces <code class="inline">accuracy: 0.8952</code> and <code class="inline">f1: 0.7415</code>.</li>
+  </ul>
 </div>
-
-<h2 id="objectives">What you will do</h2>
-<ul class="objectives">
-  <li><span class="obj-check">&#9744;</span> Install and run the Ruff formatter and linter on every <code>.py</code> file.</li>
-  <li><span class="obj-check">&#9744;</span> Add type annotations to every function and verify them with mypy.</li>
-  <li><span class="obj-check">&#9744;</span> Consolidate two pipeline-building functions into one DRY function.</li>
-  <li><span class="obj-check">&#9744;</span> Centralise all magic strings and defaults into a typed <code>config.py</code>.</li>
-  <li><span class="obj-check">&#9744;</span> Introduce a <code>FlightDelayModel</code> class that owns the prediction contract.</li>
-  <li><span class="obj-check">&#9744;</span> Confirm the pipeline still produces <code>accuracy: 0.8952</code> and <code>f1: 0.7415</code>.</li>
-</ul>
 
 <!-- ================================================================
      SECTION 1 — Why clean code matters
      ================================================================ -->
-<h2 id="why">1. Why clean code matters</h2>
+<h2 class="section"><span class="num">1</span>Why clean code matters</h2>
+<p class="section-intro">Three cracks that grow worse as the project grows.</p>
 
 <p>You have a working pipeline from Lesson 1.2. Run it, get the numbers, done. But open the code and you will notice three cracks that will only get worse as the project grows:</p>
 
@@ -159,14 +160,15 @@
 
 <p><strong>Crack 2: invisible contracts.</strong> Look at <code class="inline">train_model(model, X_train, y_train)</code>. What is <code class="inline">model</code>? What does the function return? You have to open the file and read the body to find out. Multiply that by every function, and nobody can reason about the code without reading everything.</p>
 
-<p><strong>Crack 3: magic strings.</strong> <code class="inline">"ArrDel15"</code>, <code class="inline">"model_2025_01.joblib"</code>, <code class="inline">"flight_delays_2025_01.csv"</code> appear directly in <code>main.py</code>. Rename the target and you must find and replace every occurrence. Forget one and you get a silent bug.</p>
+<p><strong>Crack 3: magic strings.</strong> <code class="inline">"ArrDel15"</code>, <code class="inline">"model_2025_01.joblib"</code>, <code class="inline">"flight_delays_2025_01.csv"</code> appear directly in <code class="inline">main.py</code>. Rename the target and you must find and replace every occurrence. Forget one and you get a silent bug.</p>
 
 <p>Each crack has a fix. The pattern is the same one you have seen before: <strong>problem &#8594; practice &#8594; tool &#8594; apply</strong>. Start with the easiest win: consistent formatting.</p>
 
 <!-- ================================================================
      SECTION 2 — Ruff: formatting and linting
      ================================================================ -->
-<h2 id="ruff">2. Ruff: formatting and linting</h2>
+<h2 class="section"><span class="num">2</span>Ruff: formatting and linting</h2>
+<p class="section-intro">Automate style so it is never a human decision.</p>
 
 <h3>The problem</h3>
 <p>Your code runs, but it looks nothing like your teammate's code &#8212; or even your own code from last week. Indentation, spacing, line length, import order all differ. Every pull request mixes formatting noise with real changes.</p>
@@ -188,7 +190,7 @@
 
 <h3>The formatter</h3>
 
-<p>Run the formatter on every <code>.py</code> file:</p>
+<p>Run the formatter on every <code class="inline">.py</code> file:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
@@ -221,7 +223,7 @@
 
 <p>Same logic. Consistent style. No human debate needed.</p>
 
-<p>The formatter config lives in <code>pyproject.toml</code>. The default 88-character line length is the PEP 8 community convention &#8212; just leave it:</p>
+<p>The formatter config lives in <code class="inline">pyproject.toml</code>. The default 88-character line length is the PEP 8 community convention &#8212; just leave it:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml</span></div>
@@ -232,7 +234,7 @@ target-version = <span class="str">"py311"</span>
 select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span class="str">"I"</span>]</div>
 </div>
 
-<p><code class="inline">["E", "F", "I"]</code> enables pycodestyle errors (<code>E</code>), pyflakes (<code>F</code>), and isort import ordering (<code>I</code>) &#8212; the three rule sets that catch real bugs and noise without overwhelming you.</p>
+<p><code class="inline">["E", "F", "I"]</code> enables pycodestyle errors (<code class="inline">E</code>), pyflakes (<code class="inline">F</code>), and isort import ordering (<code class="inline">I</code>) &#8212; the three rule sets that catch real bugs and noise without overwhelming you.</p>
 
 <h3>The linter</h3>
 
@@ -243,11 +245,11 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
   <div class="code-body"><span class="fn">uv</span> run ruff check src main.py</div>
 </div>
 
-<p>Common linter catches: <code>F841</code> (variable assigned but never used), <code>E402</code> (import at the top, not buried in code), <code>F821</code> (undefined name). Fix what it reports. If a rule does not apply to your case, add a <code># noqa</code> comment on that line with a short reason.</p>
+<p>Common linter catches: <code class="inline">F841</code> (variable assigned but never used), <code class="inline">E402</code> (import at the top, not buried in code), <code class="inline">F821</code> (undefined name). Fix what it reports. If a rule does not apply to your case, add a <code class="inline"># noqa</code> comment on that line with a short reason.</p>
 
 <div class="callout tip">
   <div class="ti">Check both</div>
-  <p><code>ruff format</code> and <code>ruff check</code> are independent. You need both. Format first (so linter does not flag formatting), then lint.</p>
+  <p><code class="inline">ruff format</code> and <code class="inline">ruff check</code> are independent. You need both. Format first (so linter does not flag formatting), then lint.</p>
 </div>
 
 <p>Formatting is fixed. But open any function and you still have to read the body to know what it takes and returns. That is the next crack.</p>
@@ -255,10 +257,11 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 <!-- ================================================================
      SECTION 3 — Type hints and mypy
      ================================================================ -->
-<h2 id="types">3. Type hints and mypy</h2>
+<h2 class="section"><span class="num">3</span>Type hints and mypy</h2>
+<p class="section-intro">Declare contracts so you never reverse-engineer a function.</p>
 
 <h3>The problem</h3>
-<p>Open <code>train.py</code> from Lesson 1.2:</p>
+<p>Open <code class="inline">train.py</code> from Lesson 1.2:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py (L1.2)</span></div>
@@ -267,7 +270,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
     <span class="kw">return</span> model</div>
 </div>
 
-<p>What is <code class="inline">model</code>? A list? A <code>Pipeline</code>? A custom object? What does the function return? You cannot tell from the signature. You have to open the file and read the body. Every caller must reverse-engineer the contract.</p>
+<p>What is <code class="inline">model</code>? A list? A <code class="inline">Pipeline</code>? A custom object? What does the function return? You cannot tell from the signature. You have to open the file and read the body. Every caller must reverse-engineer the contract.</p>
 
 <h3>The practice</h3>
 <p><strong>Type hints</strong> are annotations that declare the expected type of every argument and return value. They do not change runtime behaviour &#8212; Python ignores them. But they let two tools help you:</p>
@@ -284,11 +287,11 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
   <div class="code-body"><span class="fn">uv</span> add --dev mypy pandas-stubs</div>
 </div>
 
-<p><code class="inline">pandas-stubs</code> provides type information for pandas &#8212; without it, mypy treats every DataFrame column as <code>Any</code> and misses real errors.</p>
+<p><code class="inline">pandas-stubs</code> provides type information for pandas &#8212; without it, mypy treats every DataFrame column as <code class="inline">Any</code> and misses real errors.</p>
 
 <h3>Annotating the functions</h3>
 
-<p>Open every <code>.py</code> file in <code>src/</code> and add the annotation for every argument and return value. Here are the patterns you apply:</p>
+<p>Open every <code class="inline">.py</code> file in <code class="inline">src/</code> and add the annotation for every argument and return value. Here are the patterns you apply:</p>
 
 <div class="compare">
   <div class="col">
@@ -310,7 +313,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
   </div>
 </div>
 
-<p>Do the same for every function in <code>load.py</code>, <code>clean.py</code>, <code>features.py</code>, <code>evaluate.py</code>, and <code>predict.py</code>. The pattern is always:</p>
+<p>Do the same for every function in <code class="inline">load.py</code>, <code class="inline">clean.py</code>, <code class="inline">features.py</code>, <code class="inline">evaluate.py</code>, and <code class="inline">predict.py</code>. The pattern is always:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">annotation pattern</span></div>
@@ -354,8 +357,8 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 <p>Common fixes when mypy complains:</p>
 
 <ul class="callout-body">
-  <li><strong>Missing stubs</strong> &#8212; install <code>uv add --dev pandas-stubs</code> for pandas; add a <code>[[tool.mypy.overrides]]</code> block for sklearn (no official stubs).</li>
-  <li><strong>Missing return type</strong> &#8212; every function needs <code>-&gt; ReturnType</code>; <code>None</code> for functions that do not return.</li>
+  <li><strong>Missing stubs</strong> &#8212; install <code class="inline">uv add --dev pandas-stubs</code> for pandas; add a <code class="inline">[[tool.mypy.overrides]]</code> block for sklearn (no official stubs).</li>
+  <li><strong>Missing return type</strong> &#8212; every function needs <code class="inline">-&gt; ReturnType</code>; <code class="inline">None</code> for functions that do not return.</li>
   <li><strong>Incompatible types</strong> &#8212; usually a real bug or a missing cast. Read the line number; mypy tells you what it found vs what it expected.</li>
 </ul>
 
@@ -374,7 +377,7 @@ ignore_missing_imports = <span class="kw">true</span></div>
 
 <div class="callout tip">
   <div class="ti">mypy does not run your code</div>
-  <p>mypy is a static checker: it reads your <code>.py</code> files and your hints. It never imports or executes anything. That is why it is fast and safe &#8212; it cannot break your pipeline.</p>
+  <p>mypy is a static checker: it reads your <code class="inline">.py</code> files and your hints. It never imports or executes anything. That is why it is fast and safe &#8212; it cannot break your pipeline.</p>
 </div>
 
 <p>Formatting is consistent. Types are declared. Now look at structure: two functions that do one job, and magic strings in the orchestrator.</p>
@@ -382,15 +385,16 @@ ignore_missing_imports = <span class="kw">true</span></div>
 <!-- ================================================================
      SECTION 4 — Refactor: single responsibility + DRY
      ================================================================ -->
-<h2 id="refactor">4. Single responsibility and DRY</h2>
+<h2 class="section"><span class="num">4</span>Single responsibility and DRY</h2>
+<p class="section-intro">Two functions that build one thing, and magic strings in the orchestrator.</p>
 
 <p>With formatting and types in place, turn to structure. The Lesson 1.2 code has two structural problems: two functions that build one thing, and magic strings in the orchestrator.</p>
 
 <h3>DRY: two functions &#8594; one</h3>
 
-<p>In Lesson 1.2, <code>build_preprocessor()</code> and <code>build_model()</code> are separate functions. But the preprocessor is never used alone &#8212; every call to <code>build_model()</code> immediately wraps it in a <code>Pipeline</code> with the classifier. Two functions for one thing means two places to maintain when the preprocessing changes. This is a textbook violation of <strong>DRY</strong> &#8212; Don't Repeat Yourself.</p>
+<p>In Lesson 1.2, <code class="inline">build_preprocessor()</code> and <code class="inline">build_model()</code> are separate functions. But the preprocessor is never used alone &#8212; every call to <code class="inline">build_model()</code> immediately wraps it in a <code class="inline">Pipeline</code> with the classifier. Two functions for one thing means two places to maintain when the preprocessing changes. This is a textbook violation of <strong>DRY</strong> &#8212; Don't Repeat Yourself.</p>
 
-<p>Consolidate into a single <code>build_model()</code> that constructs the complete pipeline:</p>
+<p>Consolidate into a single <code class="inline">build_model()</code> that constructs the complete pipeline:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/features.py</span></div>
@@ -441,7 +445,7 @@ ignore_missing_imports = <span class="kw">true</span></div>
     )</div>
 </div>
 
-<p>The caller in <code>main.py</code> shrinks from two calls to one:</p>
+<p>The caller in <code class="inline">main.py</code> shrinks from two calls to one:</p>
 
 <div class="compare">
   <div class="col">
@@ -460,13 +464,13 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
   </div>
 </div>
 
-<p><code class="inline">build_preprocessor()</code> is deleted from <code>features.py</code> and its import removed from <code>main.py</code>. One function, one place, one responsibility.</p>
+<p><code class="inline">build_preprocessor()</code> is deleted from <code class="inline">features.py</code> and its import removed from <code class="inline">main.py</code>. One function, one place, one responsibility.</p>
 
 <h3>Magic strings &#8594; typed config</h3>
 
 <p>Lesson 1.2's <code>main.py</code> contains strings like <code class="inline">"ArrDel15"</code>, <code class="inline">"flight_delays_2025_01.csv"</code>, <code class="inline">"model_2025_01.joblib"</code>, and the full feature list. These are decision-level choices embedded in the orchestrator. Change the target or the data file, and you must find and replace every occurrence.</p>
 
-<p>Move every choice into <code>src/config.py</code> as a named, typed constant:</p>
+<p>Move every choice into <code class="inline">src/config.py</code> as a named, typed constant:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py</span></div>
@@ -505,13 +509,13 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 <span class="def">MAX_ITER</span>: int = 500</div>
 </div>
 
-<p><code>main.py</code> imports the constants it needs. One place to change the target &#8594; every file sees the new value. And because every constant has a type, mypy catches mistakes like assigning a string to a <code>Path</code> variable.</p>
+<p><code class="inline">main.py</code> imports the constants it needs. One place to change the target &#8594; every file sees the new value. And because every constant has a type, mypy catches mistakes like assigning a string to a <code class="inline">Path</code> variable.</p>
 
 <h3>Splitting train and save</h3>
 
-<p>In Lesson 1.2, <code>train.py</code> only contained <code>train_model()</code> and saving was done with an inline <code>joblib.dump()</code> call in <code>main.py</code>. This violates single responsibility: <code>main.py</code> should know <em>what</em> to save, not <em>how</em>.</p>
+<p>In Lesson 1.2, <code class="inline">train.py</code> only contained <code class="inline">train_model()</code> and saving was done with an inline <code class="inline">joblib.dump()</code> call in <code class="inline">main.py</code>. This violates single responsibility: <code class="inline">main.py</code> should know <em>what</em> to save, not <em>how</em>.</p>
 
-<p>Add a <code>save_model()</code> function to <code>train.py</code> and call it from <code>main.py</code>. The pattern applies in reverse for loading: a <code>load()</code> class method on the model object knows how to deserialize.</p>
+<p>Add a <code class="inline">save_model()</code> function to <code class="inline">train.py</code> and call it from <code class="inline">main.py</code>. The pattern applies in reverse for loading: a <code>load()</code> class method on the model object knows how to deserialize.</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py</span></div>
@@ -531,24 +535,25 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
     <span class="kw">return</span> model_path</div>
 </div>
 
-<p>The project now has clean formatting, typed contracts, a DRY pipeline builder, a centralised config, and separate train/save responsibilities. One thing remains: the prediction path in <code>predict.py</code> still exposes two loose functions. When a fitted pipeline must be loaded once and reused for every prediction, that is state &#8212; and state earns a class.</p>
+<p>The project now has clean formatting, typed contracts, a DRY pipeline builder, a centralised config, and separate train/save responsibilities. One thing remains: the prediction path in <code class="inline">predict.py</code> still exposes two loose functions. When a fitted pipeline must be loaded once and reused for every prediction, that is state &#8212; and state earns a class.</p>
 
 <!-- ================================================================
      SECTION 5 — OOP awareness: FlightDelayModel
      ================================================================ -->
-<h2 id="oop">5. OOP awareness: when state earns a class</h2>
+<h2 class="section"><span class="num">5</span>OOP awareness: when state earns a class</h2>
+<p class="section-intro">A class earns its keep when state must survive between calls.</p>
 
-<p>You have been using objects all along &#8212; a pandas <code>DataFrame</code> is an object (it bundles rows with <code>.head()</code>, <code>.groupby()</code>), and a scikit-learn <code>Pipeline</code> is an object (it bundles steps with <code>.fit()</code>, <code>.predict()</code>). A class is just a way to bundle state with the functions that operate on it. This is not new vocabulary for something you already do.</p>
+<p>You have been using objects all along &#8212; a pandas <code class="inline">DataFrame</code> is an object (it bundles rows with <code class="inline">.head()</code>, <code class="inline">.groupby()</code>), and a scikit-learn <code class="inline">Pipeline</code> is an object (it bundles steps with <code class="inline">.fit()</code>, <code class="inline">.predict()</code>). A class is just a way to bundle state with the functions that operate on it. This is not new vocabulary for something you already do.</p>
 
 <h3>When does a function need a class?</h3>
 
 <p>A class earns its keep when the thing you are modelling <em>has state that must survive between calls</em>. A function is enough when each call is independent.</p>
 
-<p>The flight-delay prediction path has genuine state: a fitted <code>Pipeline</code>. Once trained, that artifact must be loaded once, held in memory, and reused for every incoming prediction. Two separate functions &#8212; <code>load_model()</code> and <code>predict_delay()</code> &#8212; work, but the caller must remember to load first and pass the artifact around. A class bundles the two and makes the state explicit.</p>
+<p>The flight-delay prediction path has genuine state: a fitted <code class="inline">Pipeline</code>. Once trained, that artifact must be loaded once, held in memory, and reused for every incoming prediction. Two separate functions &#8212; <code class="inline">load_model()</code> and <code class="inline">predict_delay()</code> &#8212; work, but the caller must remember to load first and pass the artifact around. A class bundles the two and makes the state explicit.</p>
 
 <h3>The FlightDelayModel class</h3>
 
-<p>Open <code>src/predict.py</code>. The class has three parts:</p>
+<p>Open <code class="inline">src/predict.py</code>. The class has three parts:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/predict.py</span></div>
@@ -571,12 +576,12 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 <p>Walk through each part:</p>
 
 <ul class="callout-body">
-  <li><code class="inline">__init__(self, pipeline)</code> &#8212; the constructor. Takes a fitted <code>Pipeline</code> and stores it. The underscore prefix on <code class="inline">self._pipeline</code> signals: this is internal state; callers should not touch it directly.</li>
-  <li><code class="inline">load(cls, model_path)</code> &#8212; a <code>@classmethod</code>: it belongs to the class, not to a particular instance. It deserializes the pipeline and returns a new <code>FlightDelayModel</code> wrapping it.</li>
+  <li><code class="inline">__init__(self, pipeline)</code> &#8212; the constructor. Takes a fitted <code class="inline">Pipeline</code> and stores it. The underscore prefix on <code class="inline">self._pipeline</code> signals: this is internal state; callers should not touch it directly.</li>
+  <li><code class="inline">load(cls, model_path)</code> &#8212; a <code>@classmethod</code>: it belongs to the class, not to a particular instance. It deserializes the pipeline and returns a new <code class="inline">FlightDelayModel</code> wrapping it.</li>
   <li><code class="inline">predict_delay(self, features_df)</code> &#8212; the single public method. Takes a DataFrame of features, returns an array of delay probabilities. This is the contract: one input, one output, no side effects.</li>
 </ul>
 
-<p>The caller in <code>main.py</code> is now two lines:</p>
+<p>The caller in <code class="inline">main.py</code> is now two lines:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (excerpt)</span></div>
@@ -584,24 +589,25 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 delay_probability = model.predict_delay(X_test.iloc[:1])</div>
 </div>
 
-<p>No <code>import joblib</code> in <code>main.py</code>. No knowledge of how the pipeline was serialized. The class hides the mechanism; the caller works with the contract.</p>
+<p>No <code class="inline">import joblib</code> in <code class="inline">main.py</code>. No knowledge of how the pipeline was serialized. The class hides the mechanism; the caller works with the contract.</p>
 
 <h3>Why not just two functions?</h3>
 
-<p>Two functions work at this project size. But the class gives you one place to add input validation, logging, or a model registry later &#8212; not every call site. And when Module 4 builds an API endpoint, the endpoint receives a <code>FlightDelayModel</code>, not a loose function. That is why production MLOps code wraps models behind an object.</p>
+<p>Two functions work at this project size. But the class gives you one place to add input validation, logging, or a model registry later &#8212; not every call site. And when Module 4 builds an API endpoint, the endpoint receives a <code class="inline">FlightDelayModel</code>, not a loose function. That is why production MLOps code wraps models behind an object.</p>
 
 <h3>The over-OO anti-pattern</h3>
 
-<p>The opposite mistake is wrapping everything in classes for the sake of "object-oriented design": a <code>CsvLoader</code> class with a <code>load()</code> method that returns a <code>DataFrame</code>. A plain function <code>load_csv(path) -&gt; DataFrame</code> is simpler and does the same job. Not every tool needs a class. Apply the rule: <strong>state earns a class; stateless behaviour stays a function</strong>.</p>
+<p>The opposite mistake is wrapping everything in classes for the sake of "object-oriented design": a <code class="inline">CsvLoader</code> class with a <code class="inline">load()</code> method that returns a <code class="inline">DataFrame</code>. A plain function <code class="inline">load_csv(path) -&gt; DataFrame</code> is simpler and does the same job. Not every tool needs a class. Apply the rule: <strong>state earns a class; stateless behaviour stays a function</strong>.</p>
 
 <p>Five changes. One lesson. Now prove nothing broke.</p>
 
 <!-- ================================================================
      SECTION 6 — Run it
      ================================================================ -->
-<h2 id="verify">6. Run it &#8212; the milestone</h2>
+<h2 class="section"><span class="num">6</span>Run it &#8212; the milestone</h2>
+<p class="section-intro">Same pipeline, same numbers, plus two new quality checks.</p>
 
-<p>Open the lesson's <code>CODE/</code> folder. Run the pipeline and both quality checks:</p>
+<p>Open the lesson's <code class="inline">CODE/</code> folder. Run the pipeline and both quality checks:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
@@ -647,65 +653,48 @@ Done.</div>
 <!-- ================================================================
      SECTION 7 — What changed?
      ================================================================ -->
-<h2 id="changed">7. What changed?</h2>
+<h2 class="section"><span class="num">7</span>What changed in our project?</h2>
+<p class="section-intro">Before vs after &#8212; the milestone is verifiable.</p>
 
-<div class="compare">
-  <div class="col">
-    <h4>Lesson 1.2 (before)</h4>
-    <table class="compare-table">
-      <tr><td><strong>Formatting</strong></td><td>Manual; no style check</td></tr>
-      <tr><td><strong>Types</strong></td><td>No annotations; no static check</td></tr>
-      <tr><td><strong>Pipeline</strong></td><td><code>build_preprocessor()</code> + <code>build_model()</code> (two calls)</td></tr>
-      <tr><td><strong>Prediction</strong></td><td>Two loose functions in <code>predict.py</code></td></tr>
-      <tr><td><strong>Config</strong></td><td>Strings and numbers inline in <code>main.py</code></td></tr>
-      <tr><td><strong>Save/load</strong></td><td>Inline <code>joblib.dump</code> in <code>main.py</code></td></tr>
-      <tr><td><strong>Dev tools</strong></td><td>None installed</td></tr>
-    </table>
-  </div>
-  <div class="col">
-    <h4>Lesson 1.3 (after)</h4>
-    <table class="compare-table">
-      <tr><td><strong>Formatting</strong></td><td><code>ruff format</code> + <code>ruff check</code> enforce style</td></tr>
-      <tr><td><strong>Types</strong></td><td>Every function annotated; <code>mypy</code> passes</td></tr>
-      <tr><td><strong>Pipeline</strong></td><td><code>build_model()</code> &#8212; one function owns all preprocessing</td></tr>
-      <tr><td><strong>Prediction</strong></td><td><code>FlightDelayModel</code> class wraps the fitted pipeline</td></tr>
-      <tr><td><strong>Config</strong></td><td>Typed constants in <code>config.py</code></td></tr>
-      <tr><td><strong>Save/load</strong></td><td><code>save_model()</code> + <code>FlightDelayModel.load()</code></td></tr>
-      <tr><td><strong>Dev tools</strong></td><td>Ruff, mypy, pandas-stubs in <code>[dependency-groups] dev</code></td></tr>
-    </table>
-  </div>
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>Aspect</th><th>Before (Lesson 1.2)</th><th>After (Lesson 1.3)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Formatting</td><td>Manual; no style check</td><td><code class="inline">ruff format</code> + <code class="inline">ruff check</code> enforce style</td></tr>
+    <tr><td>Types</td><td>No annotations; no static check</td><td>Every function annotated; <code class="inline">mypy</code> passes</td></tr>
+    <tr><td>Pipeline</td><td><code class="inline">build_preprocessor()</code> + <code class="inline">build_model()</code> (two calls)</td><td><code class="inline">build_model()</code> &#8212; one function owns all preprocessing</td></tr>
+    <tr><td>Prediction</td><td>Two loose functions in <code class="inline">predict.py</code></td><td><code class="inline">FlightDelayModel</code> class wraps the fitted pipeline</td></tr>
+    <tr><td>Config</td><td>Strings and numbers inline in <code class="inline">main.py</code></td><td>Typed constants in <code class="inline">config.py</code></td></tr>
+    <tr><td>Save/load</td><td>Inline <code class="inline">joblib.dump</code> in <code class="inline">main.py</code></td><td><code class="inline">save_model()</code> + <code class="inline">FlightDelayModel.load()</code></td></tr>
+    <tr><td>Dev tools</td><td>None installed</td><td>Ruff, mypy, pandas-stubs in <code class="inline">[dependency-groups] dev</code></td></tr>
+  </tbody>
+</table>
 </div>
+
+<p>Verify the milestone: run <code class="inline">uv run python main.py</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src main.py</code>, <code class="inline">uv run ruff check src main.py</code>, and <code class="inline">uv run mypy src main.py</code> &#8212; all three must be green.</p>
 
 <!-- ================================================================
      TRY IT
      ================================================================ -->
 <div class="callout try">
   <div class="ti">Try it</div>
-  <p>Open <code>src/config.py</code> and change <code class="inline">TARGET: str = "ArrDel15"</code> to <code class="inline">TARGET: str = "DepDel15"</code> (a column that does exist in the raw data, so it will not crash, but will produce different metrics). Run <code>uv run python main.py</code> and observe that the accuracy changes &#8212; the entire pipeline adapted to the new target by changing one constant. Now change it back.</p>
+  <p>Open <code class="inline">src/config.py</code> and change <code class="inline">TARGET: str = "ArrDel15"</code> to <code class="inline">TARGET: str = "DepDel15"</code> (a column that does exist in the raw data, so it will not crash, but will produce different metrics). Run <code class="inline">uv run python main.py</code> and observe that the accuracy changes &#8212; the entire pipeline adapted to the new target by changing one constant. Now change it back.</p>
 </div>
 
 <!-- ================================================================
      TAKEAWAYS
      ================================================================ -->
-<h2 id="takeaways">Takeaways</h2>
-<ul class="takeaways">
-  <li>A <strong>formatter</strong> (Ruff) makes style a tool decision, not a human decision. Run <code>ruff format</code> then <code>ruff check</code>; fix what it reports.</li>
-  <li><strong>Type hints</strong> are documentation that mypy can verify. Every function gets an annotation; <code>mypy</code> catches mismatches before runtime.</li>
-  <li><strong>DRY</strong> means one function owns one responsibility. If two functions always appear together, merge them.</li>
-  <li><strong>Typed config</strong> replaces magic strings. One place to change the target, the data file, or the model path.</li>
-  <li>A <strong>class earns its keep</strong> when it bundles state that must survive between calls. Stateless behaviour stays a function.</li>
-</ul>
-
-<h2 id="reflect">Reflect</h2>
-<p>Before you move on, think about this: if you added a new feature &#8212; say, a weather column &#8212; how many files would you need to touch? With the typed config, the answer is one: <code>config.py</code>. Without it, you would hunt through <code>main.py</code>, <code>features.py</code>, and anywhere else the feature list was hardcoded. That is the payoff of centralised config.</p>
-
-<div class="callout try">
-  <div class="ti">Before you move on</div>
-  <p>&#9744; <code>uv run ruff format --check src main.py</code> exits with no changes<br>
-  &#9744; <code>uv run ruff check src main.py</code> reports all checks passed<br>
-  &#9744; <code>uv run mypy src main.py</code> reports success with no issues<br>
-  &#9744; <code>uv run python main.py</code> prints <code>accuracy: 0.8952</code> and <code>f1: 0.7415</code><br>
-  &#9744; You can explain why <code>FlightDelayModel</code> is a class and <code>load_csv</code> is a function</p>
+<div class="callout recap">
+  <div class="ti">Takeaways</div>
+  <ul>
+    <li>A <strong>formatter</strong> (Ruff) makes style a tool decision, not a human decision. Run <code class="inline">ruff format</code> then <code class="inline">ruff check</code>; fix what it reports.</li>
+    <li><strong>Type hints</strong> are documentation that mypy can verify. Every function gets an annotation; <code class="inline">mypy</code> catches mismatches before runtime.</li>
+    <li><strong>DRY</strong> means one function owns one responsibility. If two functions always appear together, merge them.</li>
+    <li><strong>Typed config</strong> replaces magic strings. One place to change the target, the data file, or the model path.</li>
+    <li>A <strong>class earns its keep</strong> when it bundles state that must survive between calls. Stateless behaviour stays a function.</li>
+  </ul>
 </div>
 
 <!-- ================================================================
@@ -713,11 +702,11 @@ Done.</div>
      ================================================================ -->
 <div class="callout warn">
   <div class="ti">Before the next lesson &#8212; what still hurts?</div>
-  <p>Open <code>main.py</code> and delete the CSV file path, or rename it to a file that does not exist. Run <code>uv run python main.py</code>. You get a raw Python traceback with no context about what went wrong. The pipeline prints <code class="inline">accuracy: 0.8952</code> on success but gives you nothing except a crash on failure.</p>
+  <p>Open <code class="inline">main.py</code> and delete the CSV file path, or rename it to a file that does not exist. Run <code class="inline">uv run python main.py</code>. You get a raw Python traceback with no context about what went wrong. The pipeline prints <code class="inline">accuracy: 0.8952</code> on success but gives you nothing except a crash on failure.</p>
   <p>That is the symptom Lesson 1.4 fixes. It adds <strong>error handling</strong> (the pipeline catches bad inputs and reports them clearly) and <strong>logging</strong> (prints become structured log messages that tell you <em>when</em>, <em>where</em>, and <em>why</em>).</p>
   <ul>
     <li>The CSV path is wrong &#8594; L1.4 adds a clean error message instead of a traceback.</li>
-    <li><code>print()</code> is the only output mechanism &#8594; L1.4 introduces <code>logging</code> with severity levels.</li>
+    <li><code class="inline">print()</code> is the only output mechanism &#8594; L1.4 introduces <code class="inline">logging</code> with severity levels.</li>
     <li>There is no way to tell when the pipeline last ran successfully &#8594; L1.4 adds a timestamped log entry at each stage.</li>
   </ul>
 </div>
