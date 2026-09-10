@@ -15,6 +15,7 @@ src/
   features.py      — build_preprocessor(), build_model()
   train.py         — train_model()
   evaluate.py      — evaluate_model()
+  predict.py       — load_model(), predict_delay()
 ```
 
 ## Install & run
@@ -32,10 +33,13 @@ You should see:
 ```
 accuracy: 0.8952
 f1:       0.7415
+
+Predicted delay probability for the first test flight: 0.0550
 ```
 
 These match the notebook baseline from Lesson 1.1 — same data, same
-pipeline, same random seed.
+pipeline, same random seed. The last line proves the saved artifact loads
+back and predicts.
 
 ## Customise the data path
 
@@ -49,7 +53,7 @@ FLIGHT_DATA_DIR=/path/to/data uv run python main.py
 
 | Before (notebook) | After (project) |
 |---|---|
-| One `.ipynb` file | 7 `.py` modules |
+| One `.ipynb` file | 8 `.py` files (7 modules + entry point) |
 | Hardcoded path `../../../../data/...` | Configurable via `config.py` or env var |
 | No dependency record | `pyproject.toml` + `uv.lock` |
 | Cannot run without Jupyter | `uv run python main.py` |

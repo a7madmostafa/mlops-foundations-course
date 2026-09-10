@@ -23,6 +23,7 @@ from src.config import (
 from src.evaluate import evaluate_model
 from src.features import build_model, build_preprocessor
 from src.load import load_csv
+from src.predict import load_model, predict_delay
 from src.train import train_model
 
 
@@ -63,6 +64,13 @@ def main():
     model_path = MODEL_DIR / "model_2025_01.joblib"
     joblib.dump(model, model_path)
     print(f"\nSaved pipeline to {model_path}")
+
+    # --- Predict -------------------------------------------------------------
+    loaded_model = load_model(model_path)
+    delay_probability = predict_delay(loaded_model, X_test.iloc[:1])
+    print(f"\nPredicted delay probability for the first test flight: {delay_probability[0]:.4f}")
+
+    print("\nDone.")
 
 
 if __name__ == "__main__":

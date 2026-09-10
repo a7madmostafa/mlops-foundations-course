@@ -140,7 +140,7 @@
   <h2>What you'll do in this lesson</h2>
   <ul>
     <li>Install <code class="inline">uv</code> and use it to create a virtual environment with recorded dependencies.</li>
-    <li>Split the notebook into six importable Python modules under <code class="inline">src/</code>.</li>
+    <li>Split the notebook into seven importable Python modules under <code class="inline">src/</code>.</li>
     <li>Move hardcoded paths into a central <code class="inline">config.py</code> with sensible defaults.</li>
     <li>Create a <code class="inline">main.py</code> entry point that reproduces the baseline with one command.</li>
   </ul>
@@ -166,7 +166,7 @@
   <div class="col">
     <h4>After</h4>
     <ul>
-      <li>Six importable <code class="inline">.py</code> modules</li>
+      <li>Seven importable <code class="inline">.py</code> modules</li>
       <li>Paths live in <code class="inline">config.py</code></li>
       <li><code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code></li>
       <li><code class="inline">uv run python main.py</code></li>
@@ -394,6 +394,7 @@ dependencies = [
     features.py
     train.py
     evaluate.py
+    predict.py
   <span class="def">.venv/</span>             <span class="com"># virtual environment (gitignored)</span></div>
 </div>
 
@@ -577,10 +578,32 @@ dependencies = [
     }</div>
 </div>
 
+<h3>5.5 Predict</h3>
+<p>The pipeline saves the fitted model at the end. <code class="inline">predict.py</code> is the other half of that deal &#8212; it loads the artifact back and turns flight rows into delay probabilities. This mirrors what a serving system will do after training, on data the pipeline has never seen:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/predict.py</span></div>
+  <div class="code-body"><span class="str">"""Load a saved model and predict delay probabilities."""</span>
+
+<span class="def">import</span> joblib
+
+
+<span class="def">def</span> <span class="fn">load_model</span>(model_path):
+    <span class="str">"""Load a saved fitted pipeline from disk and return it."""</span>
+    <span class="def">return</span> joblib.<span class="fn">load</span>(model_path)
+
+
+<span class="def">def</span> <span class="fn">predict_delay</span>(model, features_df):
+    <span class="str">"""Return the estimated delay probability (ArrDel15) for each row."""</span>
+    <span class="def">return</span> model.<span class="fn">predict_proba</span>(features_df)[:, <span class="fn">1</span>]</div>
+</div>
+
+<p><code class="inline">predict_proba(...)[:, 1]</code> reads the column of a binary classifier's two probability columns that belongs to class 1 &#8212; our <em>delayed</em> class. The function returns one probability per row.</p>
+
 <h2 class="section"><span class="num">6</span>The entry point</h2>
 <p class="section-intro">One script that wires everything together.</p>
 
-<p><code class="inline">main.py</code> sits at the project root (not inside <code class="inline">src/</code>) and imports from the package. It runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save. This is what a teammate (or a future CI job) runs:</p>
+<p><code class="inline">main.py</code> sits at the project root (not inside <code class="inline">src/</code>) and imports from the package. It runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save &#8594; predict. This is what a teammate (or a future CI job) runs:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py</span></div>
@@ -600,6 +623,7 @@ dependencies = [
 <span class="def">from</span> src.evaluate <span class="def">import</span> evaluate_model
 <span class="def">from</span> src.features <span class="def">import</span> build_model, build_preprocessor
 <span class="def">from</span> src.load <span class="def">import</span> load_csv
+<span class="def">from</span> src.predict <span class="def">import</span> load_model, predict_delay
 <span class="def">from</span> src.train <span class="def">import</span> train_model
 
 
@@ -631,16 +655,24 @@ dependencies = [
     joblib.<span class="fn">dump</span>(model, model_path)
     <span class="fn">print</span>(<span class="str">f"\nSaved pipeline to {model_path}"</span>)
 
+    loaded_model = <span class="fn">load_model</span>(model_path)
+    delay_probability = <span class="fn">predict_delay</span>(loaded_model, X_test.<span class="fn">iloc</span>[:<span class="fn">1</span>])
+    <span class="fn">print</span>(<span class="str">f"\nPredicted delay probability for the first test flight: {delay_probability[0]:.4f}"</span>)
+
+    <span class="fn">print</span>(<span class="str">"\nDone."</span>)
+
 
 <span class="def">if</span> __name__ == <span class="str">"__main__"</span>:
     <span class="fn">main</span>()</div>
 </div>
 
-<p>Three things in this file are worth stopping on.</p>
+<p>Four things in this file are worth stopping on.</p>
 
 <p><strong>Environment variables.</strong> An <strong>environment variable</strong> is a named value stored outside your code, usually in your terminal session or operating system. The line <code class="inline">os.environ.get("FLIGHT_DATA_DIR", DATA_DIR)</code> says: "look for a variable named <code class="inline">FLIGHT_DATA_DIR</code>; if it does not exist, use the default from <code class="inline">config.py</code>." This lets you override the data path per machine <em>without changing code</em>. This is the "code vs configuration" pattern &#8212; the code is fixed, the configuration changes per machine.</p>
 
-<p><strong>Saving the model.</strong> <code class="inline">joblib</code> is a library that serializes Python objects &#8212; it writes a fitted scikit-learn pipeline to a file so you can load it later without retraining. It is the last step of this lesson's pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; <em>save</em>. The saved <code class="inline">models/model_2025_01.joblib</code> file is what a later lesson will load to make predictions.</p>
+<p><strong>Saving the model.</strong> <code class="inline">joblib</code> is a library that serializes Python objects &#8212; it writes a fitted scikit-learn pipeline to a file so you can load it later without retraining. The pipeline now runs: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save &#8594; predict. The saved <code class="inline">models/model_2025_01.joblib</code> file is loaded back in the very next step.</p>
+
+<p><strong>Predicting right after training.</strong> The script does not stop after saving. It loads the artifact back with <code class="inline">load_model</code> and predicts a delay probability for the first test flight. This round-trip proves the file you keep is the model you will actually serve later. The preprocessing never re-runs here &#8212; the fitted pipeline already contains it, so one feature row (<code class="inline">X_test.iloc[:1]</code>) goes straight to <code class="inline">predict_proba</code>. This is the shape of serving we will build in Module 4.</p>
 
 <p><strong>The <code class="inline">if __name__ == "__main__"</code> guard.</strong> This means <code class="inline">main.py</code> only runs when you execute it directly with <code class="inline">python main.py</code>. If another file does <code class="inline">import main</code>, the function does not fire. This is a Python convention that prevents side effects on import.</p>
 
@@ -661,7 +693,11 @@ Modeling rows: 522,269
 accuracy: <span class="fn">0.8952</span>
 f1:       <span class="fn">0.7415</span>
 
-Saved pipeline to models/model_2025_01.joblib</div>
+Saved pipeline to models/model_2025_01.joblib
+
+Predicted delay probability for the first test flight: <span class="fn">0.0550</span>
+
+Done.</div>
 </div>
 
 <p>The same accuracy and F1 as the notebook &#8212; same data, same pipeline, same random seed. But now the result is produced by a program, not a session transcript.</p>
@@ -699,7 +735,7 @@ Saved pipeline to models/model_2025_01.joblib</div>
     <tr><th>Aspect</th><th>Before (Lesson 1.1)</th><th>After (Lesson 1.2)</th></tr>
   </thead>
   <tbody>
-    <tr><td>File structure</td><td>1 notebook</td><td>6 modules + entry point</td></tr>
+    <tr><td>File structure</td><td>1 notebook</td><td>7 modules + entry point</td></tr>
     <tr><td>Data path</td><td>Hardcoded <code class="inline">../../../../data/...</code></td><td><code class="inline">config.py</code> + env var override</td></tr>
     <tr><td>Dependencies</td><td>Not recorded</td><td><code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code></td></tr>
     <tr><td>Run command</td><td><code class="inline">jupyter notebook</code></td><td><code class="inline">uv run python main.py</code></td></tr>
@@ -724,6 +760,17 @@ Saved pipeline to models/model_2025_01.joblib</div>
     <li><strong><code class="inline">config.py</code></strong> centralises paths and constants so the rest of the code never hardcodes them.</li>
     <li>One entry point (<code class="inline">main.py</code>) replaces the notebook-as-program: same numbers, importable code, configurable paths.</li>
   </ul>
+</div>
+
+<div class="callout warn">
+  <div class="ti">Before the next lesson &#8212; what still hurts?</div>
+  <p>Your project runs, but a teammate handed it to you, you would notice three cracks:</p>
+  <ul>
+    <li><code class="inline">main()</code> still does everything &#8212; it loads, cleans, splits, trains, evaluates, and saves. Any change means reading the whole function.</li>
+    <li>Nothing checks the code's style or catches simple mistakes before run time &#8212; two people will hand back two differently formatted <code class="inline">src/</code> folders, and a typo in a column name only explodes when a cell calls it.</li>
+    <li>Nothing guarantees <code class="inline">predict.py</code> stays in sync with <code class="inline">features.py</code> &#8212; one drift and the saved model quietly uses the wrong preprocessing.</li>
+  </ul>
+  <p>L1.3 fixes all three: the modules get refactored into single-purpose functions, automated checks keep the code clean and consistent, and you will be able to prove the prediction path never drifts from training.</p>
 </div>
 
 <div class="day-nav">
