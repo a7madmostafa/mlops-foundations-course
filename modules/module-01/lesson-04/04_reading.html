@@ -21,13 +21,13 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
-<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
-<button class="theme-toggle" aria-label="Toggle dark mode">
+<button class="sidebar-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="site-sidebar">&#9776;</button>
+<button class="theme-toggle" aria-label="Use dark theme" aria-pressed="false">
   <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
   <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
 </button>
 <div class="sidebar-backdrop"></div>
-<nav class="site-sidebar">
+<nav id="site-sidebar" class="site-sidebar" aria-label="Course navigation">
 <div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
 <a href="../../../index.html" class="home-entry">Home</a>
 <details class="side-module" open="">
@@ -36,7 +36,7 @@
     <a href="../../../modules/module-01/lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
     <a href="../../../modules/module-01/lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
     <a href="../../../modules/module-01/lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
-    <a href="../../../modules/module-01/lesson-04/04_reading.html" class="active"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
+    <a href="../../../modules/module-01/lesson-04/04_reading.html" class="active" aria-current="page"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
     <a href="../../../modules/module-01/lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
   </div>
 </details>
@@ -106,7 +106,7 @@
 </nav>
 <main id="main-content" class="page">
 
-<svg width="0" height="0" style="position:absolute">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
       <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
@@ -122,18 +122,18 @@
 
 <div class="crumb-row">
   <span class="lesson-pill">L1.4 &#183; Lesson 4 of 5</span>
-  <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.4</span></nav>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.4</span></nav>
 </div>
 <h1 class="title">Robustness &amp; Logging</h1>
 <p class="subtitle">Your pipeline crashes with a wall of traceback text and prints its results to nowhere. This lesson makes it fail loudly with a clear error on expected breakage and talk with timestamped logs.</p>
 
 <div class="day-links">
-  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-04/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-04/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
 </div>
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>You need Lesson 1.3 complete: <code class="inline">uv run python main.py</code> prints <code class="inline">accuracy: 0.8952</code> and <code class="inline">f1: 0.7415</code>, and Ruff + mypy are installed and green in the lesson's <code class="inline">CODE/</code> folder.</p>
+  <p>You need Lesson 1.3 complete: <code class="inline">uv run flight-delays</code> prints <code class="inline">accuracy: 0.8952</code> and <code class="inline">f1: 0.7415</code>, and Ruff + mypy are installed and green in the lesson's <code class="inline">CODE/</code> folder.</p>
 </div>
 
 <div class="objectives">
@@ -154,15 +154,15 @@
 <h2 class="section"><span class="num">1</span>A crash that tells you nothing</h2>
 <p class="section-intro">The symptom this lesson fixes, and what a traceback is for.</p>
 
-<p>Open the Lesson 1.3 <code class="inline">CODE/</code>, run <code class="inline">uv run python main.py</code>, and it works &#8212; numbers on screen. Now point the pipeline at a folder that has no CSV:</p>
+<p>Open the Lesson 1.3 <code class="inline">CODE/</code>, run <code class="inline">uv run flight-delays</code>, and it works &#8212; numbers on screen. Now point the pipeline at a folder that has no CSV:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
   <div class="code-body"><span class="com"># macOS / Linux</span>
-FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
+FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run flight-delays
 
 <span class="com"># Windows PowerShell</span>
-<span class="fn">$env</span>:FLIGHT_DATA_DIR=<span class="str">"C:\no\such\dir"</span>; <span class="fn">uv</span> run python main.py</div>
+<span class="fn">$env</span>:FLIGHT_DATA_DIR=<span class="str">"C:\no\such\dir"</span>; <span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <p>The tail of what Python prints looks like this:</p>
@@ -204,10 +204,10 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 
 <p>Checks belong at the edge of the pipeline, right where the raw input arrives &#8212; not deep inside a training function where the original source of the problem is far away. That is the <strong>fail fast</strong> principle: stop the moment you know the input is wrong, with a message that says so.</p>
 
-<p>The new <code class="inline">src/validate.py</code> adds three such checks. Each one <code class="inline">raise</code>s a specific exception type with a message that says <em>what is wrong</em> and <em>what to do about it</em>:</p>
+<p>The new <code class="inline">src/flight_delays/validate.py</code> adds three such checks. Each one <code class="inline">raise</code>s a specific exception type with a message that says <em>what is wrong</em> and <em>what to do about it</em>:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/validate.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/validate.py</span></div>
   <div class="code-body"><span class="str">"""Clear, loud checks for the data the pipeline depends on."""</span>
 
 <span class="kw">from</span> pathlib <span class="kw">import</span> Path
@@ -235,14 +235,16 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
         )
 
 
-<span class="kw">def</span> <span class="fn">ensure_nonempty</span>(df: pd.DataFrame) -&gt; None:
+<span class="kw">def</span> <span class="fn">ensure_nonempty</span>(df: pd.DataFrame, target: str) -&gt; None:
     <span class="str">"""Raise ValueError if there are no rows left to model on."""</span>
     <span class="kw">if</span> len(df) == 0:
         <span class="kw">raise</span> ValueError(
             <span class="str">"No modeling rows after cleaning. Check that the CSV contains "</span>
-            <span class="str">"completed flights with a known ArrDel15 value."</span>
+            <span class="str">f"completed flights with a known {target} value."</span>
         )</div>
 </div>
+
+<p><code class="inline">REQUIRED_RAW_COLUMNS</code> lives in <code class="inline">config.py</code>. It lists only columns that must already exist in the downloaded CSV; it does not include <code class="inline">scheduled_departure_hour</code>, because cleaning derives that column. Checking this list before <code class="inline">clean_flights()</code> prevents an unexplained pandas <code class="inline">KeyError</code>.</p>
 
 <p><code class="inline">raise FileNotFoundError("...")</code> creates an exception object and throws it. That is a statement of intent: <em>this is not a normal path through the program</em>. Notice the messages name the expected failure mode, not the raw OS error. The type matters too: a missing file is <code class="inline">FileNotFoundError</code>, a schema problem is <code class="inline">ValueError</code> &#8212; the two families the pipeline will actually handle.</p>
 
@@ -278,7 +280,7 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 <h2 class="section"><span class="num">3</span>Prints are a dead end</h2>
 <p class="section-intro">Why print() cannot be the project's voice as it grows.</p>
 
-<p>Lesson 1.3's <code class="inline">main.py</code> reports success with <code class="inline">print(f"accuracy: {metrics['accuracy']:.4f}")</code> and failure with an unhandled traceback. That was fine at two files. Now ask what you need from a pipeline that will be re-run on new data, by schedulers, from CI, on servers:</p>
+<p>Lesson 1.3's <code class="inline">cli.py</code> reports success with <code class="inline">print(f"accuracy: {metrics['accuracy']:.4f}")</code> and failure with an unhandled traceback. That was fine for a first package. Now ask what you need from a pipeline that will be re-run on new data, by schedulers, from CI, or on servers:</p>
 
 <ul class="callout-body">
   <li><strong>Severity.</strong> A warning and an error are not equal. You want to filter them, and to silence the noise when good is good enough.</li>
@@ -290,11 +292,11 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 
 <div class="compare">
   <div class="col">
-    <h4>Before (L1.3 print)</h4>
+    <h3>Before (L1.3 print)</h3>
 <pre><code class="code-body">print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)</code></pre>
   </div>
   <div class="col">
-    <h4>After (L1.4 logging)</h4>
+    <h3>After (L1.4 logging)</h3>
 <pre><code class="code-body">logger.info(<span class="str">"accuracy: %.4f"</span>, metrics[<span class="str">"accuracy"</span>])</code></pre>
   </div>
 </div>
@@ -321,11 +323,11 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 <p>At the top of a file that will log, add one line:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (top)</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (top)</span></div>
   <div class="code-body">logger = <span class="fn">logging.getLogger</span>(__name__)</div>
 </div>
 
-<p><code class="inline">__name__</code> is the module's name (here <code class="inline">__main__</code>). The logger name does two jobs: it appears in the output (so "who said that" is free), and it is the key you reuse if you ever want to tune one module only. This is why production code rarely logs on a single global logger &#8212; a global logger loses the "which module" answer.</p>
+<p><code class="inline">__name__</code> is the module's import name (here <code class="inline">flight_delays.cli</code>). The logger name does two jobs: it appears in the output, and it is the key you reuse if you ever want to tune one module only. This is why production code creates a logger per module &#8212; one unnamed global logger loses the "which module" answer.</p>
 
 <h3>printf-style formatting</h3>
 
@@ -341,10 +343,10 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
 
 <h3>The shared setup</h3>
 
-<p>Every module logger feeds a shared root logger, so the whole project needs exactly <em>one</em> configuration place. The new <code class="inline">src/log_setup.py</code> is that place:</p>
+<p>Any module logger feeds a shared root logger, so the whole project needs exactly <em>one</em> configuration place. The new <code class="inline">src/flight_delays/log_setup.py</code> is that place:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/log_setup.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/log_setup.py</span></div>
   <div class="code-body"><span class="str">"""Shared logging configuration for the flight-delay pipeline."""</span>
 
 <span class="kw">import</span> logging
@@ -374,7 +376,7 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
 <ul class="callout-body">
   <li><code class="inline">%(asctime)s</code> &#8212; the timestamp, in the shape given by <code class="inline">datefmt</code>.</li>
   <li><code class="inline">%(levelname)-8s</code> &#8212; the level, left-justified in 8 characters, so <code class="inline">INFO</code> and <code class="inline">ERROR</code> align in a column.</li>
-  <li><code class="inline">%(name)s</code> &#8212; the logger name (<code class="inline">__main__</code>, <code class="inline">src.load</code>, &#8230;).</li>
+  <li><code class="inline">%(name)s</code> &#8212; the logger name (<code class="inline">flight_delays.cli</code>, <code class="inline">flight_delays.load</code>, &#8230;).</li>
   <li><code class="inline">%(message)s</code> &#8212; the formatted message you passed.</li>
 </ul>
 
@@ -383,10 +385,10 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">real output</span></div>
   <div class="code-body"><span class="com">%(asctime)s      %(levelname)-8s  %(name)s      %(message)s</span>
-2026-09-10 16:17:23  <span class="fn">INFO</span>     <span class="fn">__main__</span>  accuracy: 0.8952</div>
+2026-09-10 16:17:23  <span class="fn">INFO</span>     <span class="fn">flight_delays.cli</span>  accuracy: 0.8952</div>
 </div>
 
-<p><code class="inline">setup_logging()</code> must run <em>before</em> anything logs, so it belongs at the program's entry point &#8212; the one block at the bottom of <code class="inline">main.py</code>. <code class="inline">force=True</code> makes the call safe to repeat (e.g. when a notebook re-imports the module) instead of silently ignoring the second call.</p>
+<p><code class="inline">setup_logging()</code> must run <em>before</em> anything logs, so the installed command calls a small <code class="inline">run()</code> wrapper in <code class="inline">cli.py</code>. <code class="inline">force=True</code> replaces any existing root handlers, which is useful when an interactive environment has already configured logging.</p>
 
 <p>One detail that surprises everyone: until <code class="inline">logging.basicConfig</code> runs, the root logger's default threshold is <code class="inline">WARNING</code>. Drop <code class="inline">setup_logging()</code> and your <code class="inline">INFO</code> lines vanish, not because they fail &#8212; because no handler and no permissive threshold exist yet. That is the severity gate working as designed: silence below the threshold is a feature.</p>
 
@@ -394,12 +396,12 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
      SECTION 5 — Wiring logging into the pipeline
      ================================================================ -->
 <h2 class="section"><span class="num">5</span>Wire logging into the pipeline</h2>
-<p class="section-intro">main.py grows a logger, per-stage messages, and a guarded entry point.</p>
+<p class="section-intro">The command gains a logger, per-stage messages, and a guarded entry point.</p>
 
-<p>Open this lesson's <code class="inline">main.py</code>. It now imports <code class="inline">logging</code> and the two new modules, defines a module logger, logs one <code class="inline">INFO</code> line per stage, and guards the entry point:</p>
+<p>Open this lesson's <code class="inline">src/flight_delays/cli.py</code>. It defines a module logger, validates raw input before cleaning, logs one <code class="inline">INFO</code> line per stage, and keeps command-line error handling in <code class="inline">run()</code>:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (excerpt)</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
   <div class="code-body">logger = <span class="fn">logging.getLogger</span>(__name__)
 
 <span class="kw">def</span> <span class="fn">main</span>() -&gt; None:
@@ -409,10 +411,11 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
     csv_path = <span class="fn">Path</span>(os.environ.get(<span class="str">"FLIGHT_DATA_DIR"</span>, DATA_DIR)) / DATA_FILE
     <span class="fn">ensure_file_exists</span>(csv_path)
     logger.info(<span class="str">"Loading data from %s"</span>, csv_path)
-    flights = <span class="fn">clean_flights</span>(<span class="fn">load_csv</span>(csv_path))
-
+    raw_flights = <span class="fn">load_csv</span>(csv_path)
+    <span class="fn">ensure_columns</span>(raw_flights, REQUIRED_RAW_COLUMNS)
+    flights = <span class="fn">clean_flights</span>(raw_flights, target=TARGET)
     <span class="fn">ensure_columns</span>(flights, FEATURES + [TARGET])
-    <span class="fn">ensure_nonempty</span>(flights)
+    <span class="fn">ensure_nonempty</span>(flights, target=TARGET)
     logger.info(<span class="str">"Modeling rows: %s"</span>, <span class="str">f"{len(flights):,}"</span>)
 
     <span class="com"># ... train + evaluate ...</span>
@@ -425,7 +428,7 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
     logger.info(<span class="str">"Pipeline finished"</span>)
 
 
-<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+<span class="kw">def</span> <span class="fn">run</span>() -&gt; None:
     <span class="fn">setup_logging</span>()
     <span class="kw">try</span>:
         <span class="fn">main</span>()
@@ -437,12 +440,12 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
 <p>Walk the pieces:</p>
 
 <ul class="callout-body">
-  <li><strong>The validation chain.</strong> The CSV path is decided first &#8212; <code class="inline">FLIGHT_DATA_DIR</code> if set, else the configured <code class="inline">DATA_DIR</code> (an environment variable is a name&#8594;value pair handed to the process at launch, so you can switch data folders without editing code) &#8212; then <code class="inline">ensure_file_exists</code> checks it before pandas ever touches a missing file. Columns and row count are checked right after cleaning, close to the source, with messages that name the exact missing column.</li>
+  <li><strong>The validation chain.</strong> The CSV path is decided first &#8212; <code class="inline">FLIGHT_DATA_DIR</code> if set, else the configured <code class="inline">DATA_DIR</code> &#8212; then <code class="inline">ensure_file_exists</code> checks it before pandas opens the path. Required raw columns are checked <em>before</em> cleaning can index them; the derived model schema and row count are checked immediately after cleaning.</li>
   <li><strong>One message per stage.</strong> Loaded, trained, saved, done &#8212; each phase announces itself. Anyone skimming logs can now answer "where did it get to?" without reading code.</li>
-  <li><strong>The guard.</strong> The only two exceptions the pipeline deliberately handles are the two the validation can raise. On either, it logs one <code class="inline">ERROR</code> line and <em>exits with code 1</em>.</li>
+  <li><strong>The command boundary.</strong> The only two exception families the pipeline deliberately handles are the expected input failures. On either, <code class="inline">run()</code> logs one <code class="inline">ERROR</code> line and <em>exits with code 1</em>.</li>
 </ul>
 
-<p><strong>Exit codes</strong> are how one program reports to another: <code class="inline">0</code> means success, anything else means failure. <code class="inline">raise SystemExit(1)</code> does two things: it stops the process with code <code class="inline">1</code>, and <code class="inline">from error</code> keeps the original exception attached to the exit so a debugger still finds the true cause. A scheduler or a CI job checks that code &#8212; a human reading one clean <code class="inline">ERROR</code> line is just a bonus. Because only expected families are caught, an unexpected bug still crashes with the full traceback: that is the microscope, kept on purpose.</p>
+<p><strong>Exit codes</strong> are how one program reports to another: <code class="inline">0</code> means success, anything else means failure. <code class="inline">raise SystemExit(1)</code> stops the process with code <code class="inline">1</code>; <code class="inline">from error</code> preserves the causal link for debugging. A scheduler or a CI job checks that code. Because only expected input failures are caught, an unexpected bug still crashes with its full traceback.</p>
 
 <!-- ================================================================
      SECTION 6 — Run it
@@ -456,40 +459,40 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
   <div class="code-body"><span class="fn">cd</span> modules/module-01/lesson-04/CODE
 <span class="fn">uv</span> sync
-<span class="fn">uv</span> run python main.py</div>
+<span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <p>Expected output (timestamps and absolute paths differ):</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
-  <div class="code-body">2026-09-10 16:17:16 | <span class="fn">INFO</span>     | __main__ | Pipeline started
-2026-09-10 16:17:16 | <span class="fn">INFO</span>     | __main__ | Loading data from .../data/flight_delays_2025_01.csv
-2026-09-10 16:17:19 | <span class="fn">INFO</span>     | __main__ | Modeling rows: 522,269
-2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | accuracy: 0.8952
-2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | f1:       0.7415
-2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | Saved pipeline to .../models/model_2025_01.joblib
-2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | Probability of delay for first test flight: 0.0550
-2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | Pipeline finished</div>
+  <div class="code-body">2026-09-10 16:17:16 | <span class="fn">INFO</span>     | flight_delays.cli | Pipeline started
+2026-09-10 16:17:16 | <span class="fn">INFO</span>     | flight_delays.cli | Loading data from .../data/flight_delays_2025_01.csv
+2026-09-10 16:17:19 | <span class="fn">INFO</span>     | flight_delays.cli | Modeling rows: 522,269
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | flight_delays.cli | accuracy: 0.8952
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | flight_delays.cli | f1:       0.7415
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | flight_delays.cli | Saved pipeline to .../models/model_2025_01.joblib
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | flight_delays.cli | Probability of delay for first test flight: 0.0550
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | flight_delays.cli | Pipeline finished</div>
 </div>
 
-<p>Same numbers as Lesson 1.3 &#8212; the model and the data did not change, only the project's voice. Every line now tells you <em>when</em> (<code class="inline">%(asctime)s</code>), <em>who</em> (<code class="inline">__main__</code>), and <em>how important</em> (<code class="inline">INFO</code>).</p>
+<p>Same numbers as Lesson 1.3 &#8212; the model and the data did not change, only the project's voice. Every line now tells you <em>when</em> (<code class="inline">%(asctime)s</code>), <em>who</em> (<code class="inline">flight_delays.cli</code>), and <em>how important</em> (<code class="inline">INFO</code>).</p>
 
 <p>Now break it. Point the pipeline at a folder with no CSV, using the same <code class="inline">FLIGHT_DATA_DIR</code> mechanism from earlier:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
   <div class="code-body"><span class="com"># macOS / Linux</span>
-FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
+FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run flight-delays
 
 <span class="com"># Windows PowerShell</span>
-<span class="fn">$env</span>:FLIGHT_DATA_DIR=<span class="str">"C:\no\such\dir"</span>; <span class="fn">uv</span> run python main.py</div>
+<span class="fn">$env</span>:FLIGHT_DATA_DIR=<span class="str">"C:\no\such\dir"</span>; <span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
-  <div class="code-body">2026-09-10 16:18:01 | <span class="fn">INFO</span>  | __main__ | Pipeline started
-2026-09-10 16:18:01 | <span class="fn">ERROR</span> | __main__ | Pipeline failed: Data file not found: C:\no\such\dir\flight_delays_2025_01.csv. Download the flight-delays CSV first, then run again. See the download command in data/README.md.</div>
+  <div class="code-body">2026-09-10 16:18:01 | <span class="fn">INFO</span>  | flight_delays.cli | Pipeline started
+2026-09-10 16:18:01 | <span class="fn">ERROR</span> | flight_delays.cli | Pipeline failed: Data file not found: C:\no\such\dir\flight_delays_2025_01.csv. Download the flight-delays CSV first, then run again. See the download command in data/README.md.</div>
 </div>
 
 <p>One <code class="inline">ERROR</code> line, no traceback wall, and the process stops. Confirm the failure is visible to other programs: run <code class="inline">$LASTEXITCODE</code> (PowerShell) or <code class="inline">echo $?</code> (macOS/Linux) and read <code class="inline">1</code>. Unset the variable before continuing:</p>
@@ -503,12 +506,12 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run ruff format --check src main.py
-<span class="fn">uv</span> run ruff check src main.py
-<span class="fn">uv</span> run mypy src main.py</div>
+  <div class="code-body"><span class="fn">uv</span> run ruff format --check src
+<span class="fn">uv</span> run ruff check src
+<span class="fn">uv</span> run mypy src</div>
 </div>
 
-<p>All three green &#8212; mypy now reports <code class="inline">Success: no issues found in 11 source files</code>. That is the milestone: <strong>expected breakage becomes one clear error and exit code 1, every run leaves a timestamped, leveled log trail, and the numbers did not move.</strong></p>
+<p>All three green &#8212; mypy now reports <code class="inline">Success: no issues found in 12 source files</code>. That is the milestone: <strong>expected breakage becomes one clear error and exit code 1, every run leaves a timestamped, leveled log trail, and the numbers did not move.</strong></p>
 
 <!-- ================================================================
      SECTION 7 — What changed?
@@ -525,23 +528,22 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
     <tr><td>Missing CSV</td><td>Raw <code class="inline">FileNotFoundError</code> traceback</td><td>One <code class="inline">ERROR</code> line with a fix hint; exit code 1</td></tr>
     <tr><td>Schema / data checks</td><td>None &#8212; silent failure or crash deep in training</td><td><code class="inline">ensure_columns</code> + <code class="inline">ensure_nonempty</code> fail fast with the missing names</td></tr>
     <tr><td>Output</td><td><code class="inline">print()</code> on success, nothing else</td><td><code class="inline">logging</code>: levels, timestamps, module names</td></tr>
-    <tr><td>Logging config</td><td>None</td><td><code class="inline">src/log_setup.py</code> &#8212; one <code class="inline">setup_logging()</code> for every module</td></tr>
+    <tr><td>Logging config</td><td>None</td><td><code class="inline">src/flight_delays/log_setup.py</code> &#8212; one <code class="inline">setup_logging()</code> for every module</td></tr>
     <tr><td>Failure handling</td><td>Unhandled exception to the top</td><td><code class="inline">try</code>/<code class="inline">except</code> catches expected families; traceback kept for bugs</td></tr>
-    <tr><td>Data location</td><td>Constant <code class="inline">DATA_DIR</code> only</td><td>Overridable per-run via <code class="inline">FLIGHT_DATA_DIR</code></td></tr>
-    <tr><td>Quality checks</td><td>ruff + mypy green over 9 files</td><td>ruff + mypy green over 11 files; metrics unchanged</td></tr>
+    <tr><td>Quality checks</td><td>Ruff + mypy green over 10 files</td><td>Ruff + mypy green over 12 files; metrics unchanged</td></tr>
   </tbody>
 </table>
 </div>
 
-<p>Verify the milestone: run <code class="inline">uv run python main.py</code> from the <code class="inline">CODE/</code> folder and confirm the log shows accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src main.py</code>, <code class="inline">uv run ruff check src main.py</code>, and <code class="inline">uv run mypy src main.py</code> &#8212; all three green. Finally, re-run the <code class="inline">FLIGHT_DATA_DIR</code> failure demo above and confirm one <code class="inline">ERROR</code> line and exit code <code class="inline">1</code>.</p>
+<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm the log shows accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src</code>, <code class="inline">uv run ruff check src</code>, and <code class="inline">uv run mypy src</code> &#8212; all three green. Finally, re-run the <code class="inline">FLIGHT_DATA_DIR</code> failure demo above and confirm one <code class="inline">ERROR</code> line and exit code <code class="inline">1</code>.</p>
 
 <!-- ================================================================
      TRY IT
      ================================================================ -->
 <div class="callout try">
   <div class="ti">Try it</div>
-  <p>Open <code class="inline">CODE/src/config.py</code> and change <code class="inline">DATA_FILE: str = "flight_delays_2025_01.csv"</code> to <code class="inline">"flight_delays_9999_01.csv"</code>. Run <code class="inline">uv run python main.py</code> and read the error message &#8212; it should name a file and a remedy, not just an OS path. Revert and re-run.</p>
-  <p>Now provoke the schema check: in <code class="inline">CODE/main.py</code>, add a fake column to the validation call (<code class="inline">ensure_columns(flights, FEATURES + [TARGET] + ["Not_A_Real_Column"])</code>). Run again &#8212; the <code class="inline">ERROR</code> line should name the exact missing column. Revert, re-run, and see the timestamped <code class="inline">INFO</code> trail return.</p>
+  <p>Open <code class="inline">CODE/src/flight_delays/config.py</code> and change <code class="inline">DATA_FILE: str = "flight_delays_2025_01.csv"</code> to <code class="inline">"flight_delays_9999_01.csv"</code>. Run <code class="inline">uv run flight-delays</code> and read the error message &#8212; it should name a file and a remedy, not just an OS path. Revert and re-run.</p>
+  <p>Now provoke the raw-schema check: in <code class="inline">CODE/src/flight_delays/config.py</code>, add <code class="inline">"Not_A_Real_Column"</code> to <code class="inline">REQUIRED_RAW_COLUMNS</code>. Run again &#8212; the <code class="inline">ERROR</code> line should name the exact missing column before cleaning begins. Revert, re-run, and see the timestamped <code class="inline">INFO</code> trail return.</p>
 </div>
 
 <!-- ================================================================
@@ -563,10 +565,9 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
      ================================================================ -->
 <div class="callout warn">
   <div class="ti">Before the next lesson &#8212; what still hurts?</div>
-  <p>The pipeline now tells you when it fails. But look at what it cannot tell you: after the happy path runs, nothing checked that the metrics are actually still <em>right</em> &#8212; change one preprocessing line and the accuracy could silently drift and nobody would know. And the log lines themselves are plain text for a human: a scheduler or dashboard cannot count <code class="inline">ERROR</code> lines or chart accuracy over time. Finally, <code class="inline">data/</code> and <code class="inline">models/</code> are still just files &#8212; there is no record of which data and code produced the model sitting on disk.</p>
+  <p>The pipeline now tells you when an expected input fails. But after the happy path runs, nothing checks that the metrics are still <em>right</em> &#8212; change one preprocessing line and the accuracy could silently drift. The generated model is also just a file: there is no recorded run connecting its data, code, parameters, and metrics.</p>
   <ul>
     <li>Nothing proves the pipeline still works after you touch it &#8594; L1.5 checks the pipeline's behaviour automatically and repeatedly.</li>
-    <li>Logs are human-readable text that no tool can parse into metrics &#8594; L4.4 makes machine-parseable, structured logs.</li>
     <li>No record of which data + code version produced which model &#8594; L2.1 starts recording experiments and their inputs.</li>
   </ul>
 </div>
@@ -590,13 +591,68 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
   var sidebar = document.querySelector('.site-sidebar');
   var toggle = document.querySelector('.sidebar-toggle');
   var backdrop = document.querySelector('.sidebar-backdrop');
+  var mobile = window.matchMedia('(max-width: 900px)');
   if(!sidebar || !toggle || !backdrop) return;
-  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
-  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+
+  function isOpen(){ return sidebar.classList.contains('open'); }
+  function focusableItems(){
+    return Array.prototype.filter.call(
+      sidebar.querySelectorAll('a[href], summary'),
+      function(item){ return item.offsetParent !== null; }
+    );
+  }
+  function syncInert(){
+    if(mobile.matches && !isOpen()) sidebar.setAttribute('inert', '');
+    else sidebar.removeAttribute('inert');
+  }
+  function closeMenu(restoreFocus){
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+    syncInert();
+    if(restoreFocus) toggle.focus();
+  }
+  function openMenu(){
+    sidebar.removeAttribute('inert');
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close navigation');
+    var items = focusableItems();
+    if(items.length) items[0].focus();
+  }
+
   toggle.addEventListener('click', function(){
-    if (sidebar.classList.contains('open')) close(); else openMenu();
+    if(isOpen()) closeMenu(true); else openMenu();
   });
-  backdrop.addEventListener('click', close);
+  backdrop.addEventListener('click', function(){ closeMenu(false); });
+  document.addEventListener('keydown', function(event){
+    if(!isOpen()) return;
+    if(event.key === 'Escape'){
+      event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+    if(event.key !== 'Tab') return;
+    var items = focusableItems();
+    if(!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();
+      last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  function handleViewportChange(){ closeMenu(false); syncInert(); }
+  if(mobile.addEventListener) mobile.addEventListener('change', handleViewportChange);
+  else if(mobile.addListener) mobile.addListener(handleViewportChange);
+  syncInert();
 })();
 </script>
 <script>
@@ -608,10 +664,17 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
     if(attr === 'dark' || attr === 'light') return attr;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
+  function syncButton(){
+    var dark = currentTheme() === 'dark';
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  }
+  syncButton();
   btn.addEventListener('click', function(){
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('theme', next); }catch(e){}
+    syncButton();
   });
 })();
 </script>

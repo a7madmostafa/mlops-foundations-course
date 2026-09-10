@@ -3,7 +3,7 @@
 import pandas as pd
 
 
-def clean_flights(df):
+def clean_flights(df, target):
     """Drop cancelled/diverted flights, duplicates, and add features.
 
     Steps applied:
@@ -17,7 +17,7 @@ def clean_flights(df):
         df.loc[
             df["Cancelled"].eq(0)
             & df["Diverted"].eq(0)
-            & df["ArrDel15"].notna()
+            & df[target].notna()
         ]
         .drop_duplicates()
         .copy()

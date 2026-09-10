@@ -10,8 +10,8 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 def setup_logging(level: int = logging.INFO) -> None:
     """Configure the root logger once, at process start.
 
-    Every module builds its own logger with ``logging.getLogger(__name__)``;
-    this one call sets the format, level, and destination for all of them.
+    Any module can build its own logger with ``logging.getLogger(__name__)``;
+    this call sets the format, level, and destination for all of them.
     """
     logging.basicConfig(
         level=level,

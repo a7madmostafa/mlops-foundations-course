@@ -1,59 +1,74 @@
-# Lesson 1.2 CODE — Notebook to Project
+# Lesson 1.2 CODE — Notebook to Installed Package
 
-The flight-delay notebook has been split into importable modules. One
-command reproduces the baseline metrics on any machine with Python and
-`uv` installed.
+The flight-delay notebook is now an installable Python package. Its modules
+can be imported without depending on the current working directory, and one
+installed command reproduces the baseline.
 
 ## What's here
 
-```
-main.py            — entry point: orchestrates the full pipeline
+```text
+pyproject.toml
 src/
-  config.py        — paths, feature lists, training defaults
-  load.py          — load_csv()
-  clean.py         — clean_flights()
-  features.py      — build_preprocessor(), build_model()
-  train.py         — train_model()
-  evaluate.py      — evaluate_model()
-  predict.py       — load_model(), predict_delay()
+  flight_delays/       — the import package
+    __init__.py
+    __main__.py        — supports `python -m flight_delays`
+    cli.py             — orchestrates the full pipeline
+    config.py          — paths, feature lists, training defaults
+    load.py            — load_csv()
+    clean.py           — clean_flights()
+    features.py        — build_preprocessor(), build_model()
+    train.py           — train_model()
+    evaluate.py        — evaluate_model()
+    predict.py         — load_model(), predict_delay()
 ```
 
-## Install & run
+`src/` is the source-layout boundary; `flight_delays/` is the package you
+import. Installing the project makes imports predictable, gives learners a
+stable command, and prepares the same code for later tests and services.
 
-Make sure the data pool is present (see `data/README.md` at the repo
-root). Then, from this folder:
+## Install and run
+
+Make sure the shared data is present (see `data/README.md` at the repository
+root). Then run these commands from this folder:
 
 ```bash
-uv sync           # create venv + install dependencies
-uv run python main.py
+uv sync
+uv run flight-delays
+```
+
+`uv sync` installs the project itself as well as its dependencies. The
+`flight-delays` command is declared in `pyproject.toml`. This equivalent form
+also works:
+
+```bash
+uv run python -m flight_delays
 ```
 
 You should see:
 
-```
+```text
 accuracy: 0.8952
 f1:       0.7415
 
 Predicted delay probability for the first test flight: 0.0550
 ```
 
-These match the notebook baseline from Lesson 1.1 — same data, same
-pipeline, same random seed. The last line proves the saved artifact loads
-back and predicts.
+These match the notebook baseline from Lesson 1.1. The last line proves the
+saved artifact loads back and predicts.
 
-## Customise the data path
+## Customize the data path
 
-If your data lives somewhere else, set the environment variable:
+If your data lives elsewhere, set the environment variable for this command:
 
 ```bash
-FLIGHT_DATA_DIR=/path/to/data uv run python main.py
+FLIGHT_DATA_DIR=/path/to/data uv run flight-delays
 ```
 
 ## What changed from Lesson 1.1
 
-| Before (notebook) | After (project) |
+| Before (notebook) | After (package) |
 |---|---|
-| One `.ipynb` file | 8 `.py` files (7 modules + entry point) |
-| Hardcoded path `../../../../data/...` | Configurable via `config.py` or env var |
+| One `.ipynb` file | Importable modules under `src/flight_delays/` |
+| Hardcoded path `../../../../data/...` | Configurable through `config.py` or an environment variable |
 | No dependency record | `pyproject.toml` + `uv.lock` |
-| Cannot run without Jupyter | `uv run python main.py` |
+| Cannot run without Jupyter | `uv run flight-delays` |

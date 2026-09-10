@@ -21,13 +21,13 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
-<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
-<button class="theme-toggle" aria-label="Toggle dark mode">
+<button class="sidebar-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="site-sidebar">&#9776;</button>
+<button class="theme-toggle" aria-label="Use dark theme" aria-pressed="false">
   <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
   <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
 </button>
 <div class="sidebar-backdrop"></div>
-<nav class="site-sidebar">
+<nav id="site-sidebar" class="site-sidebar" aria-label="Course navigation">
 <div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
 <a href="../../../index.html" class="home-entry">Home</a>
 <details class="side-module" open="">
@@ -35,7 +35,7 @@
   <div class="side-lessons">
     <a href="../../../modules/module-01/lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
     <a href="../../../modules/module-01/lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
-    <a href="../../../modules/module-01/lesson-03/03_reading.html" class="active"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
+    <a href="../../../modules/module-01/lesson-03/03_reading.html" class="active" aria-current="page"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
     <a href="../../../modules/module-01/lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
     <a href="../../../modules/module-01/lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
   </div>
@@ -106,7 +106,7 @@
 </nav>
 <main id="main-content" class="page">
 
-<svg width="0" height="0" style="position:absolute">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
       <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
@@ -122,18 +122,18 @@
 
 <div class="crumb-row">
   <span class="lesson-pill">L1.3 &#183; Lesson 3 of 5</span>
-  <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.3</span></nav>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.3</span></nav>
 </div>
 <h1 class="title">Clean, Typed, Consistent</h1>
 <p class="subtitle">Your pipeline runs, but the code has no style enforcement, no type declarations, and magic strings scattered across files. This lesson fixes all three &#8212; same pipeline, same numbers.</p>
 
 <div class="day-links">
-  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-03/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-03/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
 </div>
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
-  <p>You need Lesson 1.2 complete with the data pool at the repo root. If you have a <code class="inline">src/</code> folder and <code class="inline">uv run python main.py</code> prints <code class="inline">accuracy: 0.8952</code>, you are ready.</p>
+  <p>You need Lesson 1.2 complete with the data pool at the repo root. If <code class="inline">src/flight_delays/</code> exists and <code class="inline">uv run flight-delays</code> prints <code class="inline">accuracy: 0.8952</code>, you are ready.</p>
 </div>
 
 <div class="objectives">
@@ -160,7 +160,7 @@
 
 <p><strong>Crack 2: invisible contracts.</strong> Look at <code class="inline">train_model(model, X_train, y_train)</code>. What is <code class="inline">model</code>? What does the function return? You have to open the file and read the body to find out. Multiply that by every function, and nobody can reason about the code without reading everything.</p>
 
-<p><strong>Crack 3: magic strings.</strong> <code class="inline">"ArrDel15"</code>, <code class="inline">"model_2025_01.joblib"</code>, <code class="inline">"flight_delays_2025_01.csv"</code> appear directly in <code class="inline">main.py</code>. Rename the target and you must find and replace every occurrence. Forget one and you get a silent bug.</p>
+<p><strong>Crack 3: magic strings.</strong> <code class="inline">"ArrDel15"</code>, <code class="inline">"model_2025_01.joblib"</code>, and <code class="inline">"flight_delays_2025_01.csv"</code> appear directly in <code class="inline">cli.py</code>. Rename the target and you must find and replace every occurrence. Forget one and you get a silent bug.</p>
 
 <p>Each crack has a fix. The pattern is the same one you have seen before: <strong>problem &#8594; practice &#8594; tool &#8594; apply</strong>. Start with the easiest win: consistent formatting.</p>
 
@@ -194,20 +194,20 @@
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run ruff format src main.py</div>
+  <div class="code-body"><span class="fn">uv</span> run ruff format src</div>
 </div>
 
 <p>Ruff rewrites files in place. Here is what it does to a poorly formatted function:</p>
 
 <div class="compare">
   <div class="col">
-    <h4>Before ruff format</h4>
+    <h3>Before ruff format</h3>
 <pre><code class="code-body"><span class="kw">def</span> <span class="fn">evaluate_model</span>(model,X_test,y_test):
   y_pred=model.predict(X_test)
   <span class="kw">return</span> {<span class="str">"accuracy"</span>:accuracy_score(y_test,y_pred),<span class="str">"f1"</span>:f1_score(y_test,y_pred)}</code></pre>
   </div>
   <div class="col">
-    <h4>After ruff format</h4>
+    <h3>After ruff format</h3>
 <pre><code class="code-body"><span class="kw">def</span> <span class="fn">evaluate_model</span>(
     model,
     X_test,
@@ -228,7 +228,7 @@
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml</span></div>
   <div class="code-body"><span class="com">[tool.ruff]</span>
-target-version = <span class="str">"py311"</span>
+target-version = <span class="str">"py312"</span>
 
 <span class="com">[tool.ruff.lint]</span>
 select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span class="str">"I"</span>]</div>
@@ -242,7 +242,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run ruff check src main.py</div>
+  <div class="code-body"><span class="fn">uv</span> run ruff check src</div>
 </div>
 
 <p>Common linter catches: <code class="inline">F841</code> (variable assigned but never used), <code class="inline">E402</code> (import at the top, not buried in code), <code class="inline">F821</code> (undefined name). Fix what it reports. If a rule does not apply to your case, add a <code class="inline"># noqa</code> comment on that line with a short reason.</p>
@@ -264,7 +264,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 <p>Open <code class="inline">train.py</code> from Lesson 1.2:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py (L1.2)</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/train.py (L1.2)</span></div>
   <div class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(model, X_train, y_train):
     model.fit(X_train, y_train)
     <span class="kw">return</span> model</div>
@@ -295,13 +295,13 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 
 <div class="compare">
   <div class="col">
-    <h4>Before (untyped)</h4>
+    <h3>Before (untyped)</h3>
 <pre><code class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(model, X_train, y_train):
     model.fit(X_train, y_train)
     <span class="kw">return</span> model</code></pre>
   </div>
   <div class="col">
-    <h4>After (typed)</h4>
+    <h3>After (typed)</h3>
 <pre><code class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(
     model: Pipeline,
     X_train: pd.DataFrame,
@@ -324,7 +324,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 
 <ul class="callout-body">
   <li><code class="inline">load_csv(path: Path | str) -&gt; pd.DataFrame</code></li>
-  <li><code class="inline">clean_flights(df: pd.DataFrame) -&gt; pd.DataFrame</code></li>
+  <li><code class="inline">clean_flights(df: pd.DataFrame, target: str) -&gt; pd.DataFrame</code></li>
   <li><code class="inline">build_model(...) -&gt; Pipeline</code></li>
   <li><code class="inline">train_model(...) -&gt; Pipeline</code></li>
   <li><code class="inline">save_model(model: Pipeline, model_path: Path) -&gt; Path</code></li>
@@ -335,8 +335,8 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 <p><code class="inline">config.py</code> is all module-level constants &#8212; annotate them too:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py (excerpt)</span></div>
-  <div class="code-body"><span class="def">REPO_ROOT</span>: Path = Path(__file__).resolve().parents[5]
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/config.py (excerpt)</span></div>
+  <div class="code-body"><span class="def">REPO_ROOT</span>: Path = Path(__file__).resolve().parents[6]
 <span class="def">DATA_DIR</span>: Path = REPO_ROOT / <span class="str">"data"</span>
 <span class="def">DATA_FILE</span>: str = <span class="str">"flight_delays_2025_01.csv"</span>
 <span class="def">FEATURES</span>: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
@@ -349,10 +349,10 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run mypy src main.py</div>
+  <div class="code-body"><span class="fn">uv</span> run mypy src</div>
 </div>
 
-<p>mypy reads all files, follows imports, and checks every annotation against every call. A clean run prints <code class="inline">Success: no issues found in 9 source files</code>.</p>
+<p>mypy reads all package files, follows imports, and checks every annotation against every call. A clean run prints <code class="inline">Success: no issues found in 10 source files</code>.</p>
 
 <p>Common fixes when mypy complains:</p>
 
@@ -397,7 +397,7 @@ ignore_missing_imports = <span class="kw">true</span></div>
 <p>Consolidate into a single <code class="inline">build_model()</code> that constructs the complete pipeline:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/features.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/features.py</span></div>
   <div class="code-body"><span class="kw">def</span> <span class="fn">build_model</span>(
     numeric_features: list[str],
     categorical_features: list[str],
@@ -445,16 +445,16 @@ ignore_missing_imports = <span class="kw">true</span></div>
     )</div>
 </div>
 
-<p>The caller in <code class="inline">main.py</code> shrinks from two calls to one:</p>
+<p>The caller in <code class="inline">cli.py</code> shrinks from two calls to one:</p>
 
 <div class="compare">
   <div class="col">
-    <h4>Before (two calls)</h4>
+    <h3>Before (two calls)</h3>
 <pre><code class="code-body">preprocessor = <span class="fn">build_preprocessor</span>(...)
 model = <span class="fn">build_model</span>(preprocessor)</code></pre>
   </div>
   <div class="col">
-    <h4>After (one call)</h4>
+    <h3>After (one call)</h3>
 <pre><code class="code-body">model = <span class="fn">build_model</span>(
     NUMERIC_FEATURES,
     CATEGORICAL_FEATURES,
@@ -464,26 +464,26 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
   </div>
 </div>
 
-<p><code class="inline">build_preprocessor()</code> is deleted from <code class="inline">features.py</code> and its import removed from <code class="inline">main.py</code>. One function, one place, one responsibility.</p>
+<p><code class="inline">build_preprocessor()</code> is deleted from <code class="inline">features.py</code> and its import removed from <code class="inline">cli.py</code>. One function, one place, one responsibility.</p>
 
 <h3>Magic strings &#8594; typed config</h3>
 
-<p>Lesson 1.2's <code>main.py</code> contains strings like <code class="inline">"ArrDel15"</code>, <code class="inline">"flight_delays_2025_01.csv"</code>, <code class="inline">"model_2025_01.joblib"</code>, and the full feature list. These are decision-level choices embedded in the orchestrator. Change the target or the data file, and you must find and replace every occurrence.</p>
+<p>Lesson 1.2's <code>cli.py</code> contains strings like <code class="inline">"ArrDel15"</code>, <code class="inline">"flight_delays_2025_01.csv"</code>, and <code class="inline">"model_2025_01.joblib"</code>. These are decision-level choices embedded in the orchestrator. Change the target or the data file, and you must find and replace every occurrence.</p>
 
-<p>Move every choice into <code class="inline">src/config.py</code> as a named, typed constant:</p>
+<p>Move every choice into <code class="inline">src/flight_delays/config.py</code> as a named, typed constant:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/config.py</span></div>
   <div class="code-body"><span class="str">"""Project configuration &#8212; paths, features, and training defaults."""</span>
 
 <span class="kw">from</span> pathlib <span class="kw">import</span> Path
 
 <span class="com"># --- Paths -----------------------------------------------------------</span>
 
-<span class="def">REPO_ROOT</span>: Path = Path(__file__).resolve().parents[5]
+<span class="def">REPO_ROOT</span>: Path = Path(__file__).resolve().parents[6]
 <span class="def">DATA_DIR</span>: Path = REPO_ROOT / <span class="str">"data"</span>
 <span class="def">DATA_FILE</span>: str = <span class="str">"flight_delays_2025_01.csv"</span>
-<span class="def">MODEL_DIR</span>: Path = Path(__file__).resolve().parent.parent / <span class="str">"models"</span>
+<span class="def">MODEL_DIR</span>: Path = Path(__file__).resolve().parents[2] / <span class="str">"models"</span>
 <span class="def">MODEL_FILE</span>: str = <span class="str">"model_2025_01.joblib"</span>
 
 <span class="com"># --- Feature lists -----------------------------------------------------------</span>
@@ -509,16 +509,16 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 <span class="def">MAX_ITER</span>: int = 500</div>
 </div>
 
-<p><code class="inline">main.py</code> imports the constants it needs. One place to change the target &#8594; every file sees the new value. And because every constant has a type, mypy catches mistakes like assigning a string to a <code class="inline">Path</code> variable.</p>
+<p><code class="inline">cli.py</code> imports the constants it needs and passes <code class="inline">TARGET</code> into <code class="inline">clean_flights()</code> as well as the training split. One place to change the target &#8594; every stage sees the new value. Because every constant has a type, mypy also catches mistakes like assigning a string to a <code class="inline">Path</code> variable.</p>
 
 <h3>Splitting train and save</h3>
 
-<p>In Lesson 1.2, <code class="inline">train.py</code> only contained <code class="inline">train_model()</code> and saving was done with an inline <code class="inline">joblib.dump()</code> call in <code class="inline">main.py</code>. This violates single responsibility: <code class="inline">main.py</code> should know <em>what</em> to save, not <em>how</em>.</p>
+<p>In Lesson 1.2, <code class="inline">train.py</code> only contained <code class="inline">train_model()</code> and saving was done with an inline <code class="inline">joblib.dump()</code> call in <code class="inline">cli.py</code>. This violates single responsibility: the orchestrator should know <em>what</em> to save, not <em>how</em>.</p>
 
-<p>Add a <code class="inline">save_model()</code> function to <code class="inline">train.py</code> and call it from <code class="inline">main.py</code>. The pattern applies in reverse for loading: a <code>load()</code> class method on the model object knows how to deserialize.</p>
+<p>Add a <code class="inline">save_model()</code> function to <code class="inline">train.py</code> and call it from <code class="inline">cli.py</code>. The pattern applies in reverse for loading: a <code>load()</code> class method on the model object knows how to deserialize.</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/train.py</span></div>
   <div class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(
     model: Pipeline,
     X_train: pd.DataFrame,
@@ -553,10 +553,10 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 
 <h3>The FlightDelayModel class</h3>
 
-<p>Open <code class="inline">src/predict.py</code>. The class has three parts:</p>
+<p>Open <code class="inline">src/flight_delays/predict.py</code>. The class has three parts:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/predict.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/predict.py</span></div>
   <div class="code-body"><span class="kw">class</span> <span class="fn">FlightDelayModel</span>:
     <span class="str">"""A fitted flight-delay model with one job: predict delay probability."""</span>
 
@@ -581,15 +581,15 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
   <li><code class="inline">predict_delay(self, features_df)</code> &#8212; the single public method. Takes a DataFrame of features, returns an array of delay probabilities. This is the contract: one input, one output, no side effects.</li>
 </ul>
 
-<p>The caller in <code class="inline">main.py</code> is now two lines:</p>
+<p>The caller in <code class="inline">cli.py</code> is now two lines:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (excerpt)</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
   <div class="code-body">model = FlightDelayModel.load(model_path)
 delay_probability = model.predict_delay(X_test.iloc[:1])</div>
 </div>
 
-<p>No <code class="inline">import joblib</code> in <code class="inline">main.py</code>. No knowledge of how the pipeline was serialized. The class hides the mechanism; the caller works with the contract.</p>
+<p>No <code class="inline">import joblib</code> in <code class="inline">cli.py</code>. No knowledge of how the pipeline was serialized. The class hides the mechanism; the caller works with the contract.</p>
 
 <h3>Why not just two functions?</h3>
 
@@ -613,7 +613,7 @@ delay_probability = model.predict_delay(X_test.iloc[:1])</div>
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
   <div class="code-body"><span class="fn">cd</span> modules/module-01/lesson-03/CODE
 <span class="fn">uv</span> sync
-<span class="fn">uv</span> run python main.py</div>
+<span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <p>Expected output:</p>
@@ -635,9 +635,9 @@ Done.</div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run ruff format --check src main.py
-<span class="fn">uv</span> run ruff check src main.py
-<span class="fn">uv</span> run mypy src main.py</div>
+  <div class="code-body"><span class="fn">uv</span> run ruff format --check src
+<span class="fn">uv</span> run ruff check src
+<span class="fn">uv</span> run mypy src</div>
 </div>
 
 <p>All three must be green:</p>
@@ -645,7 +645,7 @@ Done.</div>
 <ul class="callout-body">
   <li><code class="inline">ruff format --check</code> exits 0 (no formatting changes needed).</li>
   <li><code class="inline">ruff check</code> reports <code class="inline">All checks passed!</code>.</li>
-  <li><code class="inline">mypy</code> reports <code class="inline">Success: no issues found in 9 source files</code>.</li>
+  <li><code class="inline">mypy</code> reports <code class="inline">Success: no issues found in 10 source files</code>.</li>
 </ul>
 
 <p>That is the milestone: <strong>same pipeline, same metrics, ruff green, mypy green, and a model object that owns the prediction contract.</strong></p>
@@ -666,21 +666,21 @@ Done.</div>
     <tr><td>Types</td><td>No annotations; no static check</td><td>Every function annotated; <code class="inline">mypy</code> passes</td></tr>
     <tr><td>Pipeline</td><td><code class="inline">build_preprocessor()</code> + <code class="inline">build_model()</code> (two calls)</td><td><code class="inline">build_model()</code> &#8212; one function owns all preprocessing</td></tr>
     <tr><td>Prediction</td><td>Two loose functions in <code class="inline">predict.py</code></td><td><code class="inline">FlightDelayModel</code> class wraps the fitted pipeline</td></tr>
-    <tr><td>Config</td><td>Strings and numbers inline in <code class="inline">main.py</code></td><td>Typed constants in <code class="inline">config.py</code></td></tr>
-    <tr><td>Save/load</td><td>Inline <code class="inline">joblib.dump</code> in <code class="inline">main.py</code></td><td><code class="inline">save_model()</code> + <code class="inline">FlightDelayModel.load()</code></td></tr>
+    <tr><td>Config</td><td>Strings and numbers inline in <code class="inline">cli.py</code></td><td>Typed constants in <code class="inline">config.py</code></td></tr>
+    <tr><td>Save/load</td><td>Inline <code class="inline">joblib.dump</code> in <code class="inline">cli.py</code></td><td><code class="inline">save_model()</code> + <code class="inline">FlightDelayModel.load()</code></td></tr>
     <tr><td>Dev tools</td><td>None installed</td><td>Ruff, mypy, pandas-stubs in <code class="inline">[dependency-groups] dev</code></td></tr>
   </tbody>
 </table>
 </div>
 
-<p>Verify the milestone: run <code class="inline">uv run python main.py</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src main.py</code>, <code class="inline">uv run ruff check src main.py</code>, and <code class="inline">uv run mypy src main.py</code> &#8212; all three must be green.</p>
+<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src</code>, <code class="inline">uv run ruff check src</code>, and <code class="inline">uv run mypy src</code> &#8212; all three must be green.</p>
 
 <!-- ================================================================
      TRY IT
      ================================================================ -->
 <div class="callout try">
   <div class="ti">Try it</div>
-  <p>Open <code class="inline">src/config.py</code> and change <code class="inline">TARGET: str = "ArrDel15"</code> to <code class="inline">TARGET: str = "DepDel15"</code> (a column that does exist in the raw data, so it will not crash, but will produce different metrics). Run <code class="inline">uv run python main.py</code> and observe that the accuracy changes &#8212; the entire pipeline adapted to the new target by changing one constant. Now change it back.</p>
+  <p>Open <code class="inline">src/flight_delays/config.py</code> and change <code class="inline">TARGET: str = "ArrDel15"</code> to <code class="inline">TARGET: str = "DepDel15"</code> (a column that does exist in the raw data, so it will not crash, but will produce different metrics). Run <code class="inline">uv run flight-delays</code> and observe that the accuracy changes &#8212; the entire pipeline adapted to the new target by changing one constant. Now change it back.</p>
 </div>
 
 <!-- ================================================================
@@ -702,7 +702,7 @@ Done.</div>
      ================================================================ -->
 <div class="callout warn">
   <div class="ti">Before the next lesson &#8212; what still hurts?</div>
-  <p>Open <code class="inline">main.py</code> and delete the CSV file path, or rename it to a file that does not exist. Run <code class="inline">uv run python main.py</code>. You get a raw Python traceback with no context about what went wrong. The pipeline prints <code class="inline">accuracy: 0.8952</code> on success but gives you nothing except a crash on failure.</p>
+  <p>Open <code class="inline">src/flight_delays/config.py</code> and rename <code class="inline">DATA_FILE</code> to a file that does not exist. Run <code class="inline">uv run flight-delays</code>. You get a raw Python traceback with no explanation of how to recover. The command prints <code class="inline">accuracy: 0.8952</code> on success but gives you nothing except a crash on failure.</p>
   <p>That is the symptom Lesson 1.4 fixes. It adds <strong>error handling</strong> (the pipeline catches bad inputs and reports them clearly) and <strong>logging</strong> (prints become structured log messages that tell you <em>when</em>, <em>where</em>, and <em>why</em>).</p>
   <ul>
     <li>The CSV path is wrong &#8594; L1.4 adds a clean error message instead of a traceback.</li>
@@ -730,13 +730,68 @@ Done.</div>
   var sidebar = document.querySelector('.site-sidebar');
   var toggle = document.querySelector('.sidebar-toggle');
   var backdrop = document.querySelector('.sidebar-backdrop');
+  var mobile = window.matchMedia('(max-width: 900px)');
   if(!sidebar || !toggle || !backdrop) return;
-  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
-  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+
+  function isOpen(){ return sidebar.classList.contains('open'); }
+  function focusableItems(){
+    return Array.prototype.filter.call(
+      sidebar.querySelectorAll('a[href], summary'),
+      function(item){ return item.offsetParent !== null; }
+    );
+  }
+  function syncInert(){
+    if(mobile.matches && !isOpen()) sidebar.setAttribute('inert', '');
+    else sidebar.removeAttribute('inert');
+  }
+  function closeMenu(restoreFocus){
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+    syncInert();
+    if(restoreFocus) toggle.focus();
+  }
+  function openMenu(){
+    sidebar.removeAttribute('inert');
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close navigation');
+    var items = focusableItems();
+    if(items.length) items[0].focus();
+  }
+
   toggle.addEventListener('click', function(){
-    if (sidebar.classList.contains('open')) close(); else openMenu();
+    if(isOpen()) closeMenu(true); else openMenu();
   });
-  backdrop.addEventListener('click', close);
+  backdrop.addEventListener('click', function(){ closeMenu(false); });
+  document.addEventListener('keydown', function(event){
+    if(!isOpen()) return;
+    if(event.key === 'Escape'){
+      event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+    if(event.key !== 'Tab') return;
+    var items = focusableItems();
+    if(!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();
+      last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  function handleViewportChange(){ closeMenu(false); syncInert(); }
+  if(mobile.addEventListener) mobile.addEventListener('change', handleViewportChange);
+  else if(mobile.addListener) mobile.addListener(handleViewportChange);
+  syncInert();
 })();
 </script>
 <script>
@@ -748,10 +803,17 @@ Done.</div>
     if(attr === 'dark' || attr === 'light') return attr;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
+  function syncButton(){
+    var dark = currentTheme() === 'dark';
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  }
+  syncButton();
   btn.addEventListener('click', function(){
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('theme', next); }catch(e){}
+    syncButton();
   });
 })();
 </script>

@@ -1,34 +1,39 @@
 # Lesson 1.3 CODE — Clean, Typed, Consistent
 
-The Lesson 1.2 project, refactored: single-responsibility modules, a
-pipeline that bundles all preprocessing, a model object for prediction,
-and formatting + typing enforced by Ruff and mypy. Same pipeline, same
-metrics.
+The installed Lesson 1.2 package is now refactored: single-responsibility
+modules, one pipeline containing all preprocessing, a model object for
+prediction, and formatting plus typing enforced by Ruff and mypy. The model
+behavior and metrics stay the same.
 
 ## What's here
 
-```
-main.py            — entry point: orchestrates the full pipeline
+```text
 src/
-  config.py        — paths, features, target, training defaults (typed)
-  load.py          — load_csv(path) -> DataFrame
-  clean.py         — clean_flights(df) -> DataFrame
-  features.py      — build_model(...) -> Pipeline (all preprocessing inside)
-  train.py         — train_model(...), save_model(...)
-  evaluate.py      — evaluate_model(...) -> dict
-  predict.py       — FlightDelayModel: load() + predict_delay()
+  flight_delays/
+    __init__.py
+    __main__.py        — supports `python -m flight_delays`
+    cli.py             — installed command and pipeline orchestrator
+    config.py          — paths, features, target, training defaults (typed)
+    load.py            — load_csv(path) -> DataFrame
+    clean.py           — clean_flights(df, target) -> DataFrame
+    features.py        — build_model(...) -> Pipeline
+    train.py           — train_model(...), save_model(...)
+    evaluate.py        — evaluate_model(...) -> dict
+    predict.py         — FlightDelayModel: load() + predict_delay()
 ```
 
-## Install & run
+## Install and run
 
 ```bash
-uv sync                    # create venv + install all deps (incl. dev tools)
-uv run python main.py      # same metrics as L1.2
+uv sync
+uv run flight-delays
 ```
+
+The equivalent module command is `uv run python -m flight_delays`.
 
 Expected output:
 
-```
+```text
 accuracy: 0.8952
 f1:       0.7415
 
@@ -38,34 +43,34 @@ Probability of delay for first test flight: 0.0550
 ## Checks — the milestone
 
 ```bash
-uv run ruff format --check src main.py   # formatting is consistent
-uv run ruff check src main.py            # linting is clean
-uv run mypy src main.py                  # types are statically verified
+uv run ruff format --check src
+uv run ruff check src
+uv run mypy src
 ```
 
-All three must be green. Nothing changed the numbers: accuracy `0.8952`,
-F1 `0.7415` — the refactor only touched structure, not behavior.
+All three must be green. Nothing changed the numbers: accuracy `0.8952` and
+F1 `0.7415`; the refactor changed structure, not behavior.
 
-## Dev dependencies
+## Development dependencies
 
 `ruff`, `mypy`, and `pandas-stubs` live in the `[dependency-groups]` `dev`
-group in `pyproject.toml` — they are development tools, not runtime
+group in `pyproject.toml`. They are development tools, not runtime
 requirements. `uv run <command>` runs them inside the project environment
-without a manual `activate`.
+without a manual `activate` step.
 
-## Customise the data path
+## Customize the data path
 
 ```bash
-FLIGHT_DATA_DIR=/path/to/data uv run python main.py
+FLIGHT_DATA_DIR=/path/to/data uv run flight-delays
 ```
 
 ## What changed from Lesson 1.2
 
 | Before (L1.2) | After (L1.3) |
 |---|---|
-| `build_preprocessor()` + `build_model()` as two calls | `build_model()` — one pipeline owns all preprocessing (DRY) |
-| `joblib.dump` inline in `main.py` | `save_model()` in `train.py`, `FlightDelayModel.load()` for prediction |
-| Free-form `predict.py` functions | `FlightDelayModel` class wrapping the fitted `Pipeline` |
-| Magic strings in `main.py` | `DATA_FILE`, `MODEL_FILE`, `TARGET`, `FEATURES` in `config.py` |
+| `build_preprocessor()` + `build_model()` as two calls | `build_model()` owns all preprocessing |
+| `joblib.dump` inside `cli.py` | `save_model()` in `train.py` |
+| Free-form prediction functions | `FlightDelayModel` wraps the fitted pipeline |
+| Target repeated as a string | `TARGET` is passed from `cli.py` into cleaning and training |
 | No typing | Every function annotated; `mypy` passes |
 | No formatting/linting | `ruff format` + `ruff check` pass |

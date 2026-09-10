@@ -1,7 +1,7 @@
 """Flight-delay pipeline — entry point.
 
 Usage:
-    uv run python main.py
+    uv run flight-delays
 """
 
 import os
@@ -10,8 +10,8 @@ from pathlib import Path
 import joblib
 from sklearn.model_selection import train_test_split
 
-from src.clean import clean_flights
-from src.config import (
+from flight_delays.clean import clean_flights
+from flight_delays.config import (
     CATEGORICAL_FEATURES,
     DATA_DIR,
     MAX_ITER,
@@ -20,11 +20,11 @@ from src.config import (
     RANDOM_STATE,
     TEST_SIZE,
 )
-from src.evaluate import evaluate_model
-from src.features import build_model, build_preprocessor
-from src.load import load_csv
-from src.predict import load_model, predict_delay
-from src.train import train_model
+from flight_delays.evaluate import evaluate_model
+from flight_delays.features import build_model, build_preprocessor
+from flight_delays.load import load_csv
+from flight_delays.predict import load_model, predict_delay
+from flight_delays.train import train_model
 
 
 def main():
@@ -34,7 +34,7 @@ def main():
     df = load_csv(csv_path)
 
     # --- Clean ---------------------------------------------------------------
-    flights = clean_flights(df)
+    flights = clean_flights(df, target="ArrDel15")
     print(f"Modeling rows: {len(flights):,}")
 
     # --- Split ---------------------------------------------------------------

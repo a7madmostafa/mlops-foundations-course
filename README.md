@@ -95,7 +95,7 @@ New to machine learning? Start with the **[Arabic ML Bootcamp](https://github.co
 
 ## The project
 
-One binary-classification project — *will this flight arrive 15+ minutes late?* — is taken through the whole engineering journey. Real BTS on-time-performance data ships with every lesson, so you can reproduce every step from a clean clone.
+One binary-classification project — *will this flight arrive 15+ minutes late?* — is taken through the whole engineering journey. You download the real January 2025 BTS on-time-performance data once into the shared root `data/` directory, then reproduce every lesson from a clean clone.
 
 - **Lesson 1.1** starts you in a deliberately fragile notebook and lets you name its problems.
 - **Every later milestone** refactors, packages, tests, serves, containerizes, monitors, or automates the same project.

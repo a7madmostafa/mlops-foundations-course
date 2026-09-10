@@ -21,13 +21,13 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
-<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
-<button class="theme-toggle" aria-label="Toggle dark mode">
+<button class="sidebar-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="site-sidebar">&#9776;</button>
+<button class="theme-toggle" aria-label="Use dark theme" aria-pressed="false">
   <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
   <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
 </button>
 <div class="sidebar-backdrop"></div>
-<nav class="site-sidebar">
+<nav id="site-sidebar" class="site-sidebar" aria-label="Course navigation">
 <div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
 <a href="../../../index.html" class="home-entry">Home</a>
 <details class="side-module">
@@ -43,7 +43,7 @@
 <details class="side-module" open="">
   <summary><span class="daynum">Module 02</span><span class="mod-title">ML Lifecycle &amp; Reproducibility</span><span class="caret">&#9656;</span></summary>
   <div class="side-lessons">
-    <a href="01_reading.html" class="active"><span class="daynum">L2.1</span>Tracking Fundamentals</a>
+    <a href="01_reading.html" class="active" aria-current="page"><span class="daynum">L2.1</span>Tracking Fundamentals</a>
     <a href="../lesson-02/02_reading.html"><span class="daynum">L2.2</span>MLflow Tracking</a>
     <a href="../lesson-03/03_reading.html"><span class="daynum">L2.3</span>MLflow Registry</a>
     <a href="../lesson-04/04_reading.html"><span class="daynum">L2.4</span>Data Versioning</a>
@@ -106,7 +106,7 @@
 </nav>
 <main id="main-content" class="page">
 
-<svg width="0" height="0" style="position:absolute">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
       <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
@@ -122,7 +122,7 @@
 
 <div class="crumb-row">
   <span class="lesson-pill">L2.1 &#183; Lesson 1 of 6</span>
-  <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 2 &#183; ML Lifecycle &amp; Reproducibility</a><span class="crumb-sep">/</span><span>Lesson 2.1</span></nav>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 2 &#183; ML Lifecycle &amp; Reproducibility</a><span class="crumb-sep">/</span><span>Lesson 2.1</span></nav>
 </div>
 <h1 class="title">Tracking Fundamentals</h1>
 <p class="subtitle">Coming soon &#8212; this lesson is under development.</p>
@@ -151,13 +151,68 @@
   var sidebar = document.querySelector('.site-sidebar');
   var toggle = document.querySelector('.sidebar-toggle');
   var backdrop = document.querySelector('.sidebar-backdrop');
+  var mobile = window.matchMedia('(max-width: 900px)');
   if(!sidebar || !toggle || !backdrop) return;
-  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
-  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+
+  function isOpen(){ return sidebar.classList.contains('open'); }
+  function focusableItems(){
+    return Array.prototype.filter.call(
+      sidebar.querySelectorAll('a[href], summary'),
+      function(item){ return item.offsetParent !== null; }
+    );
+  }
+  function syncInert(){
+    if(mobile.matches && !isOpen()) sidebar.setAttribute('inert', '');
+    else sidebar.removeAttribute('inert');
+  }
+  function closeMenu(restoreFocus){
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+    syncInert();
+    if(restoreFocus) toggle.focus();
+  }
+  function openMenu(){
+    sidebar.removeAttribute('inert');
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close navigation');
+    var items = focusableItems();
+    if(items.length) items[0].focus();
+  }
+
   toggle.addEventListener('click', function(){
-    if (sidebar.classList.contains('open')) close(); else openMenu();
+    if(isOpen()) closeMenu(true); else openMenu();
   });
-  backdrop.addEventListener('click', close);
+  backdrop.addEventListener('click', function(){ closeMenu(false); });
+  document.addEventListener('keydown', function(event){
+    if(!isOpen()) return;
+    if(event.key === 'Escape'){
+      event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+    if(event.key !== 'Tab') return;
+    var items = focusableItems();
+    if(!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();
+      last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  function handleViewportChange(){ closeMenu(false); syncInert(); }
+  if(mobile.addEventListener) mobile.addEventListener('change', handleViewportChange);
+  else if(mobile.addListener) mobile.addListener(handleViewportChange);
+  syncInert();
 })();
 </script>
 <script>
@@ -169,10 +224,17 @@
     if(attr === 'dark' || attr === 'light') return attr;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
+  function syncButton(){
+    var dark = currentTheme() === 'dark';
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  }
+  syncButton();
   btn.addEventListener('click', function(){
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('theme', next); }catch(e){}
+    syncButton();
   });
 })();
 </script>

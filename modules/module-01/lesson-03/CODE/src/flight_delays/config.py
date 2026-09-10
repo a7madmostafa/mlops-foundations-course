@@ -6,10 +6,10 @@ from pathlib import Path
 
 # Data lives in the shared course data pool at the repository root.
 # The default works when you run from the lesson's CODE/ folder.
-REPO_ROOT: Path = Path(__file__).resolve().parents[5]
+REPO_ROOT: Path = Path(__file__).resolve().parents[6]
 DATA_DIR: Path = REPO_ROOT / "data"
 DATA_FILE: str = "flight_delays_2025_01.csv"
-MODEL_DIR: Path = Path(__file__).resolve().parent.parent / "models"
+MODEL_DIR: Path = Path(__file__).resolve().parents[2] / "models"
 MODEL_FILE: str = "model_2025_01.joblib"
 
 # --- Feature lists -----------------------------------------------------------

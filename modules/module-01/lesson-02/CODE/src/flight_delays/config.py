@@ -6,9 +6,9 @@ from pathlib import Path
 
 # Data lives in the shared course data pool at the repository root.
 # The default works when you run from the lesson's CODE/ folder.
-REPO_ROOT = Path(__file__).resolve().parents[5]
+REPO_ROOT = Path(__file__).resolve().parents[6]
 DATA_DIR = REPO_ROOT / "data"
-MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
+MODEL_DIR = Path(__file__).resolve().parents[2] / "models"
 
 # --- Feature lists -----------------------------------------------------------
 

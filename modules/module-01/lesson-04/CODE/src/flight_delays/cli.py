@@ -1,7 +1,7 @@
 """Flight-delay pipeline — entry point.
 
 Usage:
-    uv run python main.py
+    uv run flight-delays
 """
 
 import logging
@@ -10,8 +10,8 @@ from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 
-from src.clean import clean_flights
-from src.config import (
+from flight_delays.clean import clean_flights
+from flight_delays.config import (
     CATEGORICAL_FEATURES,
     DATA_DIR,
     DATA_FILE,
@@ -21,16 +21,17 @@ from src.config import (
     MODEL_FILE,
     NUMERIC_FEATURES,
     RANDOM_STATE,
+    REQUIRED_RAW_COLUMNS,
     TARGET,
     TEST_SIZE,
 )
-from src.evaluate import evaluate_model
-from src.features import build_model
-from src.load import load_csv
-from src.log_setup import setup_logging
-from src.predict import FlightDelayModel
-from src.train import save_model, train_model
-from src.validate import ensure_columns, ensure_file_exists, ensure_nonempty
+from flight_delays.evaluate import evaluate_model
+from flight_delays.features import build_model
+from flight_delays.load import load_csv
+from flight_delays.log_setup import setup_logging
+from flight_delays.predict import FlightDelayModel
+from flight_delays.train import save_model, train_model
+from flight_delays.validate import ensure_columns, ensure_file_exists, ensure_nonempty
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +43,11 @@ def main() -> None:
     csv_path = Path(os.environ.get("FLIGHT_DATA_DIR", DATA_DIR)) / DATA_FILE
     ensure_file_exists(csv_path)
     logger.info("Loading data from %s", csv_path)
-    flights = clean_flights(load_csv(csv_path))
-
+    raw_flights = load_csv(csv_path)
+    ensure_columns(raw_flights, REQUIRED_RAW_COLUMNS)
+    flights = clean_flights(raw_flights, target=TARGET)
     ensure_columns(flights, FEATURES + [TARGET])
-    ensure_nonempty(flights)
+    ensure_nonempty(flights, target=TARGET)
     logger.info("Modeling rows: %s", f"{len(flights):,}")
 
     # --- Split ----------------------------------------------------------------
@@ -89,10 +91,15 @@ def main() -> None:
     logger.info("Pipeline finished")
 
 
-if __name__ == "__main__":
+def run() -> None:
+    """Configure the command-line app, then run the pipeline."""
     setup_logging()
     try:
         main()
     except (FileNotFoundError, ValueError) as error:
         logger.error("Pipeline failed: %s", error)
         raise SystemExit(1) from error
+
+
+if __name__ == "__main__":
+    run()

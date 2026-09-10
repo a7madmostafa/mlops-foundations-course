@@ -21,19 +21,19 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
-<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
-<button class="theme-toggle" aria-label="Toggle dark mode">
+<button class="sidebar-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="site-sidebar">&#9776;</button>
+<button class="theme-toggle" aria-label="Use dark theme" aria-pressed="false">
   <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
   <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
 </button>
 <div class="sidebar-backdrop"></div>
-<nav class="site-sidebar">
+<nav id="site-sidebar" class="site-sidebar" aria-label="Course navigation">
 <div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
 <a href="../../../index.html" class="home-entry">Home</a>
 <details class="side-module" open="">
   <summary><span class="daynum">Module 01</span><span class="mod-title">The Software Foundation</span><span class="caret">&#9656;</span></summary>
   <div class="side-lessons">
-    <a href="../../../modules/module-01/lesson-01/01_reading.html" class="active"><span class="daynum">L1.1</span>Starting Point</a>
+    <a href="../../../modules/module-01/lesson-01/01_reading.html" class="active" aria-current="page"><span class="daynum">L1.1</span>Starting Point</a>
     <a href="../../../modules/module-01/lesson-02/02_reading.html"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
     <a href="../../../modules/module-01/lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
     <a href="../../../modules/module-01/lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
@@ -106,7 +106,7 @@
 </nav>
 <main id="main-content" class="page">
 
-<svg width="0" height="0" style="position:absolute">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
       <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
@@ -122,14 +122,14 @@
 
 <div class="crumb-row">
   <span class="lesson-pill">L1.1 &#183; Lesson 1 of 5</span>
-  <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.1</span></nav>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.1</span></nav>
 </div>
 <h1 class="title">Your Starting Point: The Flight Delay Notebook</h1>
 <p class="subtitle">You explore the flight data, build a sound ML baseline with a preprocessing pipeline, and identify the operational problems that keep the notebook from becoming a reliable ML system.</p>
 
 <div class="day-links">
-  <a class="primary" href="01_notebook.html"><svg class="dl-icon"><use href="#icon-external"/></svg>Notebook (HTML)</a>
-  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-01/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+  <a class="primary" href="01_notebook.html"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>Notebook (HTML)</a>
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-01/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
 </div>
 
 <div class="callout tip">
@@ -137,7 +137,7 @@
   <p>You need Jupyter, pandas, scikit-learn, matplotlib, and joblib &#8212; nothing else. No new tools, modules, tests, logging, packaging, or refactoring.</p>
   <p>First get the data. The course uses the US Flight Delays January 2025 file, one of 12 monthly files in the shared pool at the repo root in <code class="inline">data/</code>:</p>
   <div class="day-links">
-    <a class="primary" href="https://www.kaggle.com/datasets/a7madmostafa/us-flight-delays-2025-bts-on-time-performance"><svg class="dl-icon"><use href="#icon-download"/></svg>Download the dataset from Kaggle</a>
+    <a class="primary" href="https://www.kaggle.com/datasets/a7madmostafa/us-flight-delays-2025-bts-on-time-performance"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-download"/></svg>Download the dataset from Kaggle</a>
     <a href="../../../data/README.md">data/README.md &#8212; instructions</a>
   </div>
   <p>Or, from the repository root, run <code class="inline">kaggle datasets download a7madmostafa/us-flight-delays-2025-bts-on-time-performance -p data --unzip</code>.</p>
@@ -219,12 +219,12 @@
 
 <div class="compare">
   <div class="col">
-    <h4>A program</h4>
+    <h3>A program</h3>
     <p>Fixed entry point, declared inputs and outputs, deterministic: <strong>same inputs &#8594; same outputs</strong>. You can run it without you.</p>
     <ul><li>Runs on a server</li><li>Fails loudly</li><li>Records its results</li></ul>
   </div>
   <div class="col">
-    <h4>A notebook</h4>
+    <h3>A notebook</h3>
     <p>Its "inputs" are whatever is in the kernel when a cell runs. The file does not run &#8212; <em>you</em> run it, and the result depends on choices no one wrote down.</p>
     <ul><li>Depends on session state</li><li>Silently passes in wrong order</li><li>Prints results and forgets them</li></ul>
   </div>
@@ -260,7 +260,9 @@
 
 <figure class="scrollfig">
 <div class="figure-scroll">
-<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" role="img" aria-labelledby="pipeline-cells-title pipeline-cells-desc">
+  <title id="pipeline-cells-title">Flight-delay notebook cells from loading through saving</title>
+  <desc id="pipeline-cells-desc">A flow diagram separates the sound machine-learning pipeline from its fragile notebook-based operating workflow.</desc>
   <rect x="0" y="0" width="720" height="300" fill="#ffffff"/>
   <rect x="0" y="0" width="720" height="300" fill="url(#erd-grid)"/>
   <text x="360" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f6fb2">The cells of flight_delays.ipynb</text>
@@ -306,7 +308,7 @@
 
 <div class="card-grid one">
   <div class="card">
-    <h4>1 &#183; The machine is baked in</h4>
+    <h3>1 &#183; The machine is baked in</h3>
     <p>The data and artifact locations are hardcoded relative to the notebook's working directory. Launch Jupyter from a different folder or store the data elsewhere, and the run fails.</p>
     <div class="code-block">
       <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 3 + 43</span></div>
@@ -318,7 +320,7 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
     <div class="fixedby"><strong>FIXED IN:</strong> L1.2 &#183; paths become configuration</div>
   </div>
   <div class="card">
-    <h4>2 &#183; The environment is unrecorded</h4>
+    <h3>2 &#183; The environment is unrecorded</h3>
     <p>Which versions of pandas and scikit-learn produced these numbers? Nowhere, is where. On another machine the same code can silently behave differently.</p>
     <div class="code-block">
       <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cell 1 &#183; imports</span></div>
@@ -333,7 +335,7 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
 
 <div class="card-grid one">
   <div class="card">
-    <h4>3 &#183; The workflow is trapped in cells</h4>
+    <h3>3 &#183; The workflow is trapped in cells</h3>
     <p>The scikit-learn pipeline correctly keeps preprocessing with the classifier. But loading, cohort selection, feature creation, splitting, evaluation, and saving still live in separate notebook cells that cannot be imported or run as one command.</p>
     <div class="code-block">
       <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 3, 16, 35, 37, 43</span></div>
@@ -347,7 +349,7 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
     <div class="fixedby"><strong>FIXED IN:</strong> L1.2 &#183; importable modules &#183; and L1.3 &#183; single responsibility</div>
   </div>
   <div class="card">
-    <h4>4 &#183; Assumptions are unverified</h4>
+    <h3>4 &#183; Assumptions are unverified</h3>
     <p>The notebook assumes the expected columns exist, the target contains valid values, and raw prediction rows match the training schema. Those are sensible assumptions, but nothing checks them automatically.</p>
     <div class="code-block">
       <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 16 + 33</span></div>
@@ -363,7 +365,7 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
 
 <div class="card-grid one">
   <div class="card">
-    <h4>5 &#183; Results are printed, not produced</h4>
+    <h3>5 &#183; Results are printed, not produced</h3>
     <p>The most important numbers exist as text in a cell you ran once. The fitted pipeline is saved, but there is no durable record connecting it to its data, parameters, code, and metrics.</p>
     <div class="code-block">
       <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 39 + 43</span></div>
@@ -423,6 +425,16 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
   </ul>
 </div>
 
+<div class="callout warn">
+  <div class="ti">Before the next lesson &#8212; what still hurts?</div>
+  <ul>
+    <li>The workflow still depends on notebook cell order; there is no single command that starts from raw data and reaches the saved model.</li>
+    <li>The notebook never records the Python packages and versions it needs, so a clean machine cannot recreate its environment.</li>
+    <li>The CSV and model paths are embedded in cells, so moving the project or data breaks the run.</li>
+  </ul>
+  <p>Lesson 1.2 removes these three symptoms by turning the same pipeline into an installed, configurable project with one repeatable command.</p>
+</div>
+
 <div class="day-nav">
   <a class="day-nav-link prev" href="../../../index.html">
     <span class="dn-label">&larr; Back to</span>
@@ -442,13 +454,68 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
   var sidebar = document.querySelector('.site-sidebar');
   var toggle = document.querySelector('.sidebar-toggle');
   var backdrop = document.querySelector('.sidebar-backdrop');
+  var mobile = window.matchMedia('(max-width: 900px)');
   if(!sidebar || !toggle || !backdrop) return;
-  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
-  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+
+  function isOpen(){ return sidebar.classList.contains('open'); }
+  function focusableItems(){
+    return Array.prototype.filter.call(
+      sidebar.querySelectorAll('a[href], summary'),
+      function(item){ return item.offsetParent !== null; }
+    );
+  }
+  function syncInert(){
+    if(mobile.matches && !isOpen()) sidebar.setAttribute('inert', '');
+    else sidebar.removeAttribute('inert');
+  }
+  function closeMenu(restoreFocus){
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+    syncInert();
+    if(restoreFocus) toggle.focus();
+  }
+  function openMenu(){
+    sidebar.removeAttribute('inert');
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close navigation');
+    var items = focusableItems();
+    if(items.length) items[0].focus();
+  }
+
   toggle.addEventListener('click', function(){
-    if (sidebar.classList.contains('open')) close(); else openMenu();
+    if(isOpen()) closeMenu(true); else openMenu();
   });
-  backdrop.addEventListener('click', close);
+  backdrop.addEventListener('click', function(){ closeMenu(false); });
+  document.addEventListener('keydown', function(event){
+    if(!isOpen()) return;
+    if(event.key === 'Escape'){
+      event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+    if(event.key !== 'Tab') return;
+    var items = focusableItems();
+    if(!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();
+      last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  function handleViewportChange(){ closeMenu(false); syncInert(); }
+  if(mobile.addEventListener) mobile.addEventListener('change', handleViewportChange);
+  else if(mobile.addListener) mobile.addListener(handleViewportChange);
+  syncInert();
 })();
 </script>
 <script>
@@ -460,10 +527,17 @@ joblib.<span class="fn">dump</span>(model, model_path)</div>
     if(attr === 'dark' || attr === 'light') return attr;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
+  function syncButton(){
+    var dark = currentTheme() === 'dark';
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  }
+  syncButton();
   btn.addEventListener('click', function(){
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('theme', next); }catch(e){}
+    syncButton();
   });
 })();
 </script>

@@ -1,7 +1,7 @@
 """Flight-delay pipeline — entry point.
 
 Usage:
-    uv run python main.py
+    uv run flight-delays
 """
 
 import os
@@ -9,8 +9,8 @@ from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 
-from src.clean import clean_flights
-from src.config import (
+from flight_delays.clean import clean_flights
+from flight_delays.config import (
     CATEGORICAL_FEATURES,
     DATA_DIR,
     DATA_FILE,
@@ -23,18 +23,18 @@ from src.config import (
     TARGET,
     TEST_SIZE,
 )
-from src.evaluate import evaluate_model
-from src.features import build_model
-from src.load import load_csv
-from src.predict import FlightDelayModel
-from src.train import save_model, train_model
+from flight_delays.evaluate import evaluate_model
+from flight_delays.features import build_model
+from flight_delays.load import load_csv
+from flight_delays.predict import FlightDelayModel
+from flight_delays.train import save_model, train_model
 
 
 def main() -> None:
     # --- Load + clean ---------------------------------------------------------
     csv_path = Path(os.environ.get("FLIGHT_DATA_DIR", DATA_DIR)) / DATA_FILE
     print(f"Loading {csv_path} ...")
-    flights = clean_flights(load_csv(csv_path))
+    flights = clean_flights(load_csv(csv_path), target=TARGET)
     print(f"Modeling rows: {len(flights):,}")
 
     # --- Split ----------------------------------------------------------------

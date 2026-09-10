@@ -3,7 +3,7 @@
    reading pages (NN_reading.html), and converted notes pages. */
 
 :root{
-  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#9CA3AF;
+  --ink:#141414; --blue:#2F63E8; --blue-dark:#1E4BC4; --gray:#5B6472; --gray-muted:#6B7280;
   --border:#E5E7EB; --panel:#F3F4F6; --white:#FFFFFF; --paper:#FAFBFC; --card-bg:#FFFFFF;
   --code-bg:#1E1E1E; --code-default:#D4D4D4; --code-kw:#569CD6; --code-fn:#DCDCAA;
   --code-str:#CE9178; --code-com:#6A9955;
@@ -16,7 +16,7 @@
   --shadow:rgba(20,20,30,.05);
 }
 :root[data-theme="dark"]{
-  --ink:#E7E9EC; --blue:#4C8DFF; --blue-dark:#9DBBFF; --gray:#A6ADB8; --gray-muted:#767D89;
+  --ink:#E7E9EC; --blue:#4C8DFF; --blue-dark:#9DBBFF; --gray:#A6ADB8; --gray-muted:#9AA3AF;
   --border:#2A2E37; --panel:#191C22; --white:#FFFFFF; --paper:#101216; --card-bg:#1A1D23;
   --annotations-bg:#14171C; --divider:#242830;
   --insight-bg:#152A1B; --insight-bd:#3D9964; --insight-ti:#6FDB98;
@@ -28,7 +28,7 @@
 }
 @media(prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --ink:#E7E9EC; --blue:#4C8DFF; --blue-dark:#9DBBFF; --gray:#A6ADB8; --gray-muted:#767D89;
+    --ink:#E7E9EC; --blue:#4C8DFF; --blue-dark:#9DBBFF; --gray:#A6ADB8; --gray-muted:#9AA3AF;
     --border:#2A2E37; --panel:#191C22; --white:#FFFFFF; --paper:#101216; --card-bg:#1A1D23;
     --annotations-bg:#14171C; --divider:#242830;
     --insight-bg:#152A1B; --insight-bd:#3D9964; --insight-ti:#6FDB98;
@@ -40,6 +40,7 @@
   }
 }
 *{box-sizing:border-box} html,body{margin:0;padding:0}
+img,svg{max-width:100%}
 body{transition:background-color .15s ease,color .15s ease}
 body{background:var(--paper);color:var(--ink);font-family:'Nunito Sans',-apple-system,'Segoe UI',sans-serif;line-height:1.7;font-size:16px}
 a{color:var(--blue)}
@@ -82,7 +83,7 @@ code.inline{font-family:'IBM Plex Mono',monospace;font-size:.88em;background:var
 .intro-box li{font-size:14.5px;margin-bottom:5px}
 .pitch-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 28px}
 .pitch-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px 20px;box-shadow:0 2px 8px var(--shadow)}
-.pitch-card h4{margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-dark)}
+.pitch-card h2,.pitch-card h3{margin:0 0 10px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue-dark)}
 .pitch-card ul{list-style:none;margin:0;padding:0}
 .pitch-card li{font-size:14.5px;margin-bottom:7px;padding-left:22px;position:relative}
 .pitch-card li:last-child{margin-bottom:0}
@@ -133,7 +134,7 @@ table.api tbody tr:last-child td{border-bottom:none}
 
 .compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
 .compare .col{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:17px 19px;box-shadow:0 2px 8px var(--shadow);min-width:0}
-.compare .col h4{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
+.compare .col h3{margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink)}
 .compare .col p,.compare .col li{font-size:14.5px}
 .compare .col ul{margin:6px 0 0;padding-left:18px}
 .compare .col.good{background:var(--good-bg);border-color:var(--good-border)}
@@ -144,7 +145,7 @@ table.api tbody tr:last-child td{border-bottom:none}
 .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0 26px}
 .card-grid.three{grid-template-columns:repeat(3,1fr)}
 .card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:0 2px 8px var(--shadow)}
-.card h4{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
+.card h3{margin:0 0 7px;color:var(--ink);font-size:16px;font-weight:700}
 .card p{font-size:14.5px;margin:0 0 6px;color:var(--gray)}
 .card p:last-child{margin-bottom:0}
 .card code.inline{font-size:.82em}
@@ -225,6 +226,10 @@ body{margin-left:220px;background:var(--paper)}
   .sidebar-toggle{display:flex}
   .sidebar-backdrop.open{display:block}
   body{margin-left:0}
+  body.nav-open{overflow:hidden}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
 @media(max-width:520px){.day-nav-link{flex:1 1 100%;max-width:none}.day-nav-link.next{text-align:left;align-items:flex-start;margin-left:0}}
 
@@ -247,7 +252,7 @@ body{margin-left:220px;background:var(--paper)}
 /* Disease cards — one column, full-width snapshots with horizontal scroll */
 .card-grid.one{grid-template-columns:1fr}
 .card-grid.one .card{display:flex;flex-direction:column;gap:12px;padding:22px 24px}
-.card-grid.one .card h4{margin:0}
+.card-grid.one .card h3{margin:0}
 .card-grid.one .card p{margin:0}
 .card-grid.one .code-block{margin:2px 0 0;min-width:0;overflow:hidden}
 .card-grid.one .code-body{white-space:pre;overflow-x:auto;-webkit-overflow-scrolling:touch}

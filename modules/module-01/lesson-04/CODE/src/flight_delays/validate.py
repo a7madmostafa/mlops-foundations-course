@@ -25,10 +25,10 @@ def ensure_columns(df: pd.DataFrame, required: list[str]) -> None:
         )
 
 
-def ensure_nonempty(df: pd.DataFrame) -> None:
+def ensure_nonempty(df: pd.DataFrame, target: str) -> None:
     """Raise ValueError if there are no rows left to model on."""
     if len(df) == 0:
         raise ValueError(
             "No modeling rows after cleaning. Check that the CSV contains "
-            "completed flights with a known ArrDel15 value."
+            f"completed flights with a known {target} value."
         )

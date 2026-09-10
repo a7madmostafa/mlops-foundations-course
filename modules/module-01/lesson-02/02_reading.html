@@ -21,20 +21,20 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
-<button class="sidebar-toggle" aria-label="Toggle navigation" aria-expanded="false">&#9776;</button>
-<button class="theme-toggle" aria-label="Toggle dark mode">
+<button class="sidebar-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="site-sidebar">&#9776;</button>
+<button class="theme-toggle" aria-label="Use dark theme" aria-pressed="false">
   <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
   <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
 </button>
 <div class="sidebar-backdrop"></div>
-<nav class="site-sidebar">
+<nav id="site-sidebar" class="site-sidebar" aria-label="Course navigation">
 <div class="brand">From ML to MLOps<span class="brand-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></span></div>
 <a href="../../../index.html" class="home-entry">Home</a>
 <details class="side-module" open="">
   <summary><span class="daynum">Module 01</span><span class="mod-title">The Software Foundation</span><span class="caret">&#9656;</span></summary>
   <div class="side-lessons">
     <a href="../../../modules/module-01/lesson-01/01_reading.html"><span class="daynum">L1.1</span>Starting Point</a>
-    <a href="../../../modules/module-01/lesson-02/02_reading.html" class="active"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
+    <a href="../../../modules/module-01/lesson-02/02_reading.html" class="active" aria-current="page"><span class="daynum">L1.2</span>Notebook &#8594; Project</a>
     <a href="../../../modules/module-01/lesson-03/03_reading.html"><span class="daynum">L1.3</span>Clean, Typed, Consistent</a>
     <a href="../../../modules/module-01/lesson-04/04_reading.html"><span class="daynum">L1.4</span>Robustness &amp; Logging</a>
     <a href="../../../modules/module-01/lesson-05/05_reading.html"><span class="daynum">L1.5</span>Automated Testing</a>
@@ -106,7 +106,7 @@
 </nav>
 <main id="main-content" class="page">
 
-<svg width="0" height="0" style="position:absolute">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <pattern id="erd-grid" width="18" height="18" patternUnits="userSpaceOnUse">
       <path d="M 18 0 L 0 0 0 18" fill="none" stroke="#e6edf3" stroke-width="1"/>
@@ -122,13 +122,13 @@
 
 <div class="crumb-row">
   <span class="lesson-pill">L1.2 &#183; Lesson 2 of 5</span>
-  <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.2</span></nav>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.2</span></nav>
 </div>
 <h1 class="title">Notebook &#8594; Project</h1>
-<p class="subtitle">You split the flight-delay notebook into importable modules, manage dependencies with <code class="inline">uv</code>, and make every path configurable. One command reproduces the baseline on any machine.</p>
+<p class="subtitle">You turn the flight-delay notebook into an installed Python package, manage its dependencies with <code class="inline">uv</code>, and reproduce the baseline through one reliable command.</p>
 
 <div class="day-links">
-  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-02/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-02/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
 </div>
 
 <div class="callout tip">
@@ -140,9 +140,9 @@
   <h2>What you'll do in this lesson</h2>
   <ul>
     <li>Install <code class="inline">uv</code> and use it to create a virtual environment with recorded dependencies.</li>
-    <li>Split the notebook into seven importable Python modules under <code class="inline">src/</code>.</li>
+    <li>Split the notebook into importable modules under <code class="inline">src/flight_delays/</code>.</li>
     <li>Move hardcoded paths into a central <code class="inline">config.py</code> with sensible defaults.</li>
-    <li>Create a <code class="inline">main.py</code> entry point that reproduces the baseline with one command.</li>
+    <li>Install the package and expose a <code class="inline">flight-delays</code> command that reproduces the baseline.</li>
   </ul>
 </div>
 
@@ -155,7 +155,7 @@
 
 <div class="compare">
   <div class="col">
-    <h4>Before</h4>
+    <h3>Before</h3>
     <ul>
       <li>One <code class="inline">.ipynb</code> file</li>
       <li>Hardcoded path <code class="inline">../../../../data/...</code></li>
@@ -164,12 +164,12 @@
     </ul>
   </div>
   <div class="col">
-    <h4>After</h4>
+    <h3>After</h3>
     <ul>
-      <li>Seven importable <code class="inline">.py</code> modules</li>
+      <li>An installed <code class="inline">flight_delays</code> package</li>
       <li>Paths live in <code class="inline">config.py</code></li>
       <li><code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code></li>
-      <li><code class="inline">uv run python main.py</code></li>
+      <li><code class="inline">uv run flight-delays</code></li>
     </ul>
   </div>
 </div>
@@ -263,11 +263,11 @@ build-backend = <span class="str">"uv_build"</span></div>
 <ol>
   <li><strong><code class="inline">name</code> comes from the folder name.</strong> Since you created <code class="inline">scratch-uv</code>, that is what <code class="inline">uv</code> used. In our real project we rename it to <code class="inline">flight-delays</code>.</li>
   <li><strong><code class="inline">description</code> is a placeholder.</strong> It waits for you to write a real one.</li>
-  <li><strong><code class="inline">[project.scripts]</code> is a demo.</strong> It installs a console command named <code class="inline">scratch-uv</code> that calls the starter package's <code class="inline">main()</code>. Our entry point is a plain <code class="inline">main.py</code> script that we run with <code class="inline">uv run</code> &#8212; no console command needed &#8212; so we remove this section.</li>
-  <li><strong><code class="inline">[build-system]</code> is for publishers.</strong> It tells tools how to build the project into a distributable package. We are not publishing anything in this course, so we drop it too.</li>
+  <li><strong><code class="inline">[project.scripts]</code> creates a command.</strong> The generated command calls a Python function. In our project, we rename it to <code class="inline">flight-delays</code> and point it at <code class="inline">flight_delays.cli:main</code>.</li>
+  <li><strong><code class="inline">[build-system]</code> makes installation possible.</strong> It tells <code class="inline">uv</code> how to install the code under <code class="inline">src/</code>. This matters even when you are not publishing: your environment imports the installed package, not a folder that happens to be nearby.</li>
 </ol>
 
-<p>After editing the name, writing a real description, and removing what we do not need, our file is nearly ready. You will see the finished <code class="inline">CODE/pyproject.toml</code> in the next subsection, once the dependencies are filled in.</p>
+<p>After editing the name, description, command, and package target, our file is nearly ready. You will see the finished <code class="inline">CODE/pyproject.toml</code> in the next subsection, once the dependencies are filled in.</p>
 
 <div class="callout warn">
   <div class="ti">These commands run in <code class="inline">scratch-uv</code>, not in <code class="inline">CODE/</code></div>
@@ -299,16 +299,23 @@ build-backend = <span class="str">"uv_build"</span></div>
 name = <span class="str">"flight-delays"</span>
 version = <span class="str">"0.1.0"</span>
 description = <span class="str">"US flight-delay prediction pipeline"</span>
-requires-python = <span class="str">">=3.11"</span>
+requires-python = <span class="str">">=3.12"</span>
 dependencies = [
     <span class="str">"pandas&gt;=2.2"</span>,
     <span class="str">"scikit-learn&gt;=1.5"</span>,
     <span class="str">"numpy&gt;=1.26"</span>,
     <span class="str">"joblib&gt;=1.4"</span>,
-]</div>
+]
+
+[project.scripts]
+flight-delays = <span class="str">"flight_delays.cli:main"</span>
+
+[build-system]
+requires = [<span class="str">"uv_build&gt;=0.12.9,&lt;0.13.0"</span>]
+build-backend = <span class="str">"uv_build"</span></div>
 </div>
 
-<p>Each line under <code class="inline">dependencies</code> names a package and a minimum version. The <code class="inline">&gt;=</code> means "this version or newer." You do not need to list every sub-dependency &#8212; <code class="inline">uv</code> resolves those automatically.</p>
+<p>Each line under <code class="inline">dependencies</code> names a package and a minimum version. The <code class="inline">&gt;=</code> means "this version or newer." You do not need to list every sub-dependency &#8212; <code class="inline">uv</code> resolves those automatically. The final two sections install <code class="inline">src/flight_delays/</code> and turn its <code class="inline">cli.main()</code> function into the command learners run.</p>
 
 <h3>Or <code class="inline">uv sync</code>: the reverse direction</h3>
 
@@ -362,7 +369,7 @@ dependencies = [
     <tr><td><code class="inline">uv add pandas</code></td><td>Add a package to <code class="inline">pyproject.toml</code>, install it, and update the lockfile &#8212; all in one step. Add several at once: <code class="inline">uv add pandas scikit-learn</code>.</td></tr>
     <tr><td><code class="inline">uv remove pandas</code></td><td>Remove a package from <code class="inline">pyproject.toml</code>, uninstall it, and update the lockfile.</td></tr>
     <tr><td><code class="inline">uv sync</code></td><td>Reverse direction: recreate the environment to match the recorded <code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code>. Run this after cloning a repo or on a shipped project.</td></tr>
-    <tr><td><code class="inline">uv run python main.py</code></td><td>Run a Python script inside the virtual environment. The script sees the installed packages.</td></tr>
+    <tr><td><code class="inline">uv run flight-delays</code></td><td>Run the command installed from <code class="inline">[project.scripts]</code> inside the project environment.</td></tr>
     <tr><td><code class="inline">uv run python</code></td><td>Open an interactive Python shell inside the environment.</td></tr>
   </tbody>
 </table>
@@ -375,9 +382,9 @@ dependencies = [
 
 <p>Now that you have an environment, let us define how Python code is organized.</p>
 
-<p>A <strong>script</strong> is a <code class="inline">.py</code> file you run directly: <code class="inline">uv run python main.py</code>. A <strong>module</strong> is a <code class="inline">.py</code> file you <code class="inline">import</code>: <code class="inline">from src.load import load_csv</code>. The same file can be both, but the distinction matters because modules can be reused, tested, and composed &#8212; scripts cannot.</p>
+<p>A <strong>script</strong> is a <code class="inline">.py</code> file you run directly. A <strong>module</strong> is a <code class="inline">.py</code> file you import, such as <code class="inline">from flight_delays.load import load_csv</code>. A <strong>package</strong> groups related modules under one import name. Here that name is <code class="inline">flight_delays</code>.</p>
 
-<p>A <strong>package</strong> is a folder that contains an <code class="inline">__init__.py</code> file. The file tells Python "this folder is something I can import from." It can be completely empty &#8212; its presence alone marks the folder as a package. Our package is called <code class="inline">src</code>:</p>
+<p>The outer <code class="inline">src/</code> folder is a <strong>source layout</strong>, not the package name. Keeping importable code one level below the repository root prevents Python from importing an uninstalled checkout by accident. If <code class="inline">uv sync</code> has not installed the package correctly, the import fails immediately instead of giving you a misleading success.</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">project layout</span></div>
@@ -385,20 +392,22 @@ dependencies = [
   pyproject.toml     <span class="com"># project metadata + dependencies (from uv init + uv add)</span>
   uv.lock            <span class="com"># locked package versions (from uv add / uv sync)</span>
   .python-version    <span class="com"># Python version for this project (from uv init)</span>
-  main.py            <span class="com"># entry point &#8212; you run this</span>
-  <span class="def">src/</span>               <span class="com"># package &#8212; you import from this</span>
-    __init__.py      <span class="com"># marks src/ as a package (can be empty)</span>
-    config.py
-    load.py
-    clean.py
-    features.py
-    train.py
-    evaluate.py
-    predict.py
+  <span class="def">src/</span>               <span class="com"># source-layout boundary</span>
+    <span class="def">flight_delays/</span> <span class="com"># installed package &#8212; you import this</span>
+      __init__.py    <span class="com"># initializes the package</span>
+      __main__.py    <span class="com"># supports python -m flight_delays</span>
+      cli.py         <span class="com"># command entry point</span>
+      config.py
+      load.py
+      clean.py
+      features.py
+      train.py
+      evaluate.py
+      predict.py
   <span class="def">.venv/</span>             <span class="com"># virtual environment (gitignored)</span></div>
 </div>
 
-<p>The rule is simple: <code class="inline">main.py</code> calls functions from <code class="inline">src/</code>. Everything in <code class="inline">src/</code> is importable by other code, by tests, and by future lessons.</p>
+<p>The rule is simple: <code class="inline">cli.py</code> orchestrates the workflow, while the other modules do focused jobs. The build system installs <code class="inline">flight_delays</code>, and the console entry point gives users a stable command even if files are reorganized later. The same installed package can be imported by later tests and services.</p>
 
 <h2 class="section"><span class="num">4</span>The config module</h2>
 <p class="section-intro">One place for all paths and constants.</p>
@@ -408,7 +417,7 @@ dependencies = [
 <p>We use <code class="inline">pathlib.Path</code> instead of raw strings. <code class="inline">Path</code> objects know your operating system's separator (<code class="inline">/</code> on Mac/Linux, <code class="inline">\</code> on Windows), so paths work on any machine without extra code.</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/config.py</span></div>
   <div class="code-body"><span class="str">"""Project configuration — paths, feature lists, and constants."""</span>
 
 <span class="def">from</span> pathlib <span class="def">import</span> Path
@@ -417,9 +426,9 @@ dependencies = [
 
 <span class="com"># Data lives in the shared course data pool at the repository root.</span>
 <span class="com"># The default works when you run from the lesson's CODE/ folder.</span>
-<span class="def">REPO_ROOT</span> = Path(__file__).resolve().parents[<span class="fn">5</span>]
+<span class="def">REPO_ROOT</span> = Path(__file__).resolve().parents[<span class="fn">6</span>]
 <span class="def">DATA_DIR</span> = REPO_ROOT / <span class="str">"data"</span>
-<span class="def">MODEL_DIR</span> = Path(__file__).resolve().parent.parent / <span class="str">"models"</span>
+<span class="def">MODEL_DIR</span> = Path(__file__).resolve().parents[<span class="fn">2</span>] / <span class="str">"models"</span>
 
 <span class="com"># --- Feature lists -----------------------------------------------------------</span>
 
@@ -440,7 +449,7 @@ dependencies = [
 <span class="def">MAX_ITER</span> = <span class="fn">500</span></div>
 </div>
 
-<p><code class="inline">Path(__file__).resolve().parents[5]</code> walks up five folders from <code class="inline">config.py</code> to reach the repository root (src &#8594; CODE &#8594; lesson-02 &#8594; module-01 &#8594; modules &#8594; repo root). From there, <code class="inline">REPO_ROOT / "data"</code> points to the shared data pool.</p>
+<p><code class="inline">Path(__file__).resolve().parents[6]</code> reaches the repository root from the installed package file (flight_delays &#8594; src &#8594; CODE &#8594; lesson-02 &#8594; module-01 &#8594; modules &#8594; repo root). From there, <code class="inline">REPO_ROOT / "data"</code> points to the shared data pool. <code class="inline">parents[2]</code> reaches this lesson's <code class="inline">CODE/</code> folder for generated models.</p>
 
 <p>The feature lists and training defaults live here too. Later lessons will add to this file; for now it gives you one place to change the random seed or the test size.</p>
 
@@ -453,7 +462,7 @@ dependencies = [
 <p>The notebook's cell 2 reads a CSV. We wrap it in a function so the path can be passed in instead of hardcoded:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/load.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/load.py</span></div>
   <div class="code-body"><span class="str">"""Load the flight-delays CSV into a DataFrame."""</span>
 
 <span class="def">import</span> pandas <span class="def">as</span> pd
@@ -468,19 +477,19 @@ dependencies = [
 <p>Cells 7 &#8211; 13 filter out cancelled and diverted flights, remove duplicates, and derive <code class="inline">scheduled_departure_hour</code>. This is the cleaning step &#8212; it takes raw data in and returns a clean cohort:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/clean.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/clean.py</span></div>
   <div class="code-body"><span class="str">"""Clean raw flight data into a modeling cohort."""</span>
 
 <span class="def">import</span> pandas <span class="def">as</span> pd
 
 
-<span class="def">def</span> <span class="fn">clean_flights</span>(df):
+<span class="def">def</span> <span class="fn">clean_flights</span>(df, target):
     <span class="str">"""Drop cancelled/diverted flights, duplicates, and add features."""</span>
     flights = (
         df.<span class="fn">loc</span>[
             df[<span class="str">"Cancelled"</span>].<span class="fn">eq</span>(<span class="fn">0</span>)
             &amp; df[<span class="str">"Diverted"</span>].<span class="fn">eq</span>(<span class="fn">0</span>)
-            &amp; df[<span class="str">"ArrDel15"</span>].<span class="fn">notna</span>()
+            &amp; df[target].<span class="fn">notna</span>()
         ]
         .<span class="fn">drop_duplicates</span>()
         .<span class="fn">copy</span>()
@@ -497,7 +506,7 @@ dependencies = [
 <p>Cells 20 &#8211; 21 build the scikit-learn preprocessing pipeline and the classifier. We extract two functions &#8212; one for the preprocessor, one for the full model:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/features.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/features.py</span></div>
   <div class="code-body"><span class="str">"""Feature lists and pipeline construction."""</span>
 
 <span class="def">from</span> sklearn.compose <span class="def">import</span> ColumnTransformer
@@ -552,7 +561,7 @@ dependencies = [
 <p>Cells 22 &#8211; 23 fit the model and compute metrics. We keep these as thin wrappers so they are easy to swap out later (e.g., when you try a different classifier in L1.3):</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/train.py</span></div>
   <div class="code-body"><span class="str">"""Train the flight-delay model."""</span>
 
 
@@ -563,7 +572,7 @@ dependencies = [
 </div>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/evaluate.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/evaluate.py</span></div>
   <div class="code-body"><span class="str">"""Evaluate a fitted model on test data."""</span>
 
 <span class="def">from</span> sklearn.metrics <span class="def">import</span> accuracy_score, f1_score
@@ -582,7 +591,7 @@ dependencies = [
 <p>The pipeline saves the fitted model at the end. <code class="inline">predict.py</code> is the other half of that deal &#8212; it loads the artifact back and turns flight rows into delay probabilities. This mirrors what a serving system will do after training, on data the pipeline has never seen:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/predict.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/predict.py</span></div>
   <div class="code-body"><span class="str">"""Load a saved model and predict delay probabilities."""</span>
 
 <span class="def">import</span> joblib
@@ -601,12 +610,12 @@ dependencies = [
 <p><code class="inline">predict_proba(...)[:, 1]</code> reads the column of a binary classifier's two probability columns that belongs to class 1 &#8212; our <em>delayed</em> class. The function returns one probability per row.</p>
 
 <h2 class="section"><span class="num">6</span>The entry point</h2>
-<p class="section-intro">One script that wires everything together.</p>
+<p class="section-intro">One installed command that wires everything together.</p>
 
-<p><code class="inline">main.py</code> sits at the project root (not inside <code class="inline">src/</code>) and imports from the package. It runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save &#8594; predict. This is what a teammate (or a future CI job) runs:</p>
+<p><code class="inline">src/flight_delays/cli.py</code> contains <code class="inline">main()</code>, the function named by <code class="inline">[project.scripts]</code>. It runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save &#8594; predict. A teammate runs it through the installed command:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
   <div class="code-body"><span class="str">"""Flight-delay pipeline — entry point."""</span>
 
 <span class="def">import</span> os
@@ -615,16 +624,16 @@ dependencies = [
 <span class="def">import</span> joblib
 <span class="def">from</span> sklearn.model_selection <span class="def">import</span> train_test_split
 
-<span class="def">from</span> src.clean <span class="def">import</span> clean_flights
-<span class="def">from</span> src.config <span class="def">import</span> (
+<span class="def">from</span> flight_delays.clean <span class="def">import</span> clean_flights
+<span class="def">from</span> flight_delays.config <span class="def">import</span> (
     CATEGORICAL_FEATURES, DATA_DIR, MAX_ITER, MODEL_DIR,
     NUMERIC_FEATURES, RANDOM_STATE, TEST_SIZE,
 )
-<span class="def">from</span> src.evaluate <span class="def">import</span> evaluate_model
-<span class="def">from</span> src.features <span class="def">import</span> build_model, build_preprocessor
-<span class="def">from</span> src.load <span class="def">import</span> load_csv
-<span class="def">from</span> src.predict <span class="def">import</span> load_model, predict_delay
-<span class="def">from</span> src.train <span class="def">import</span> train_model
+<span class="def">from</span> flight_delays.evaluate <span class="def">import</span> evaluate_model
+<span class="def">from</span> flight_delays.features <span class="def">import</span> build_model, build_preprocessor
+<span class="def">from</span> flight_delays.load <span class="def">import</span> load_csv
+<span class="def">from</span> flight_delays.predict <span class="def">import</span> load_model, predict_delay
+<span class="def">from</span> flight_delays.train <span class="def">import</span> train_model
 
 
 <span class="def">def</span> <span class="fn">main</span>():
@@ -632,7 +641,7 @@ dependencies = [
     <span class="fn">print</span>(<span class="str">f"Loading {csv_path} ..."</span>)
     df = <span class="fn">load_csv</span>(csv_path)
 
-    flights = <span class="fn">clean_flights</span>(df)
+    flights = <span class="fn">clean_flights</span>(df, target=<span class="str">"ArrDel15"</span>)
     <span class="fn">print</span>(<span class="str">f"Modeling rows: {len(flights):,}"</span>)
 
     X = flights[NUMERIC_FEATURES + CATEGORICAL_FEATURES]
@@ -674,14 +683,14 @@ dependencies = [
 
 <p><strong>Predicting right after training.</strong> The script does not stop after saving. It loads the artifact back with <code class="inline">load_model</code> and predicts a delay probability for the first test flight. This round-trip proves the file you keep is the model you will actually serve later. The preprocessing never re-runs here &#8212; the fitted pipeline already contains it, so one feature row (<code class="inline">X_test.iloc[:1]</code>) goes straight to <code class="inline">predict_proba</code>. This is the shape of serving we will build in Module 4.</p>
 
-<p><strong>The <code class="inline">if __name__ == "__main__"</code> guard.</strong> This means <code class="inline">main.py</code> only runs when you execute it directly with <code class="inline">python main.py</code>. If another file does <code class="inline">import main</code>, the function does not fire. This is a Python convention that prevents side effects on import.</p>
+<p><strong>Two ways into the same function.</strong> <code class="inline">uv run flight-delays</code> calls <code class="inline">cli.main()</code> through the console entry point. The small <code class="inline">__main__.py</code> file calls that same function, so <code class="inline">uv run python -m flight_delays</code> is an equivalent Python-native form. There is one workflow, not two copies.</p>
 
 <h2 class="section"><span class="num">7</span>Run it &#8212; the milestone</h2>
 <p class="section-intro">This is your verification step: one command reproduces the notebook numbers.</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run python main.py</div>
+  <div class="code-body"><span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <p>Run it from the <code class="inline">CODE/</code> folder and you should see:</p>
@@ -706,21 +715,21 @@ Done.</div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="def">FLIGHT_DATA_DIR</span>=/other/path <span class="fn">uv</span> run python main.py</div>
+  <div class="code-body"><span class="def">FLIGHT_DATA_DIR</span>=/other/path <span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <p>On Windows PowerShell:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="def">$env:FLIGHT_DATA_DIR</span>=<span class="str">"C:\other\path"</span>; <span class="fn">uv</span> run python main.py</div>
+  <div class="code-body"><span class="def">$env:FLIGHT_DATA_DIR</span>=<span class="str">"C:\other\path"</span>; <span class="fn">uv</span> run flight-delays</div>
 </div>
 
 <div class="callout warn">
   <div class="ti">Common mistakes</div>
   <ul>
     <li><strong>Running from the wrong folder.</strong> <code class="inline">uv sync</code> and <code class="inline">uv run</code> must run from the <code class="inline">CODE/</code> folder &#8212; that is where <code class="inline">pyproject.toml</code> lives. Elsewhere, <code class="inline">uv</code> will not find your project.</li>
-    <li><strong>Skipping <code class="inline">uv run</code>.</strong> If you type <code class="inline">python main.py</code> without <code class="inline">uv run</code>, your system Python runs and will not see the packages installed in <code class="inline">.venv/</code>.</li>
+    <li><strong>Skipping <code class="inline">uv run</code>.</strong> Typing only <code class="inline">flight-delays</code> may use the wrong environment or fail to find the installed command. <code class="inline">uv run</code> selects this project's environment.</li>
     <li><strong>Committing <code class="inline">.venv/</code>.</strong> The code in this lesson ignores it via <code class="inline">.gitignore</code>. Never add it to git.</li>
     <li><strong>Editing <code class="inline">pyproject.toml</code> by hand to change dependencies.</strong> Let <code class="inline">uv add</code> / <code class="inline">uv remove</code> do it for you &#8212; they update the file, the environment, and the lockfile together. If you do edit it by hand, re-run <code class="inline">uv sync</code> so the environment and lockfile catch up.</li>
   </ul>
@@ -735,16 +744,16 @@ Done.</div>
     <tr><th>Aspect</th><th>Before (Lesson 1.1)</th><th>After (Lesson 1.2)</th></tr>
   </thead>
   <tbody>
-    <tr><td>File structure</td><td>1 notebook</td><td>7 modules + entry point</td></tr>
+    <tr><td>File structure</td><td>1 notebook</td><td>Installed modules under <code class="inline">src/flight_delays/</code></td></tr>
     <tr><td>Data path</td><td>Hardcoded <code class="inline">../../../../data/...</code></td><td><code class="inline">config.py</code> + env var override</td></tr>
     <tr><td>Dependencies</td><td>Not recorded</td><td><code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code></td></tr>
-    <tr><td>Run command</td><td><code class="inline">jupyter notebook</code></td><td><code class="inline">uv run python main.py</code></td></tr>
+    <tr><td>Run command</td><td><code class="inline">jupyter notebook</code></td><td><code class="inline">uv run flight-delays</code></td></tr>
     <tr><td>Reproducible on another machine</td><td>No</td><td>Yes</td></tr>
   </tbody>
 </table>
 </div>
 
-<p>Verify the milestone: run <code class="inline">uv run python main.py</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>.</p>
+<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>.</p>
 
 <div class="callout try">
   <div class="ti">Try it</div>
@@ -758,13 +767,13 @@ Done.</div>
     <li><strong><code class="inline">pyproject.toml</code></strong> declares what your project needs; <strong><code class="inline">uv.lock</code></strong> records what was actually installed.</li>
     <li>A <strong>script</strong> is a <code class="inline">.py</code> file you run; a <strong>module</strong> is one you import; a <strong>package</strong> is a folder with <code class="inline">__init__.py</code>.</li>
     <li><strong><code class="inline">config.py</code></strong> centralises paths and constants so the rest of the code never hardcodes them.</li>
-    <li>One entry point (<code class="inline">main.py</code>) replaces the notebook-as-program: same numbers, importable code, configurable paths.</li>
+    <li>One installed entry point (<code class="inline">uv run flight-delays</code>) replaces the notebook-as-program: same numbers, importable code, configurable paths.</li>
   </ul>
 </div>
 
 <div class="callout warn">
   <div class="ti">Before the next lesson &#8212; what still hurts?</div>
-  <p>Your project runs, but a teammate handed it to you, you would notice three cracks:</p>
+  <p>Your project runs, but if a teammate handed it to you, you would notice three cracks:</p>
   <ul>
     <li><code class="inline">main()</code> still does everything &#8212; it loads, cleans, splits, trains, evaluates, and saves. Any change means reading the whole function.</li>
     <li>Nothing checks the code's style or catches simple mistakes before run time &#8212; two people will hand back two differently formatted <code class="inline">src/</code> folders, and a typo in a column name only explodes when a cell calls it.</li>
@@ -792,13 +801,68 @@ Done.</div>
   var sidebar = document.querySelector('.site-sidebar');
   var toggle = document.querySelector('.sidebar-toggle');
   var backdrop = document.querySelector('.sidebar-backdrop');
+  var mobile = window.matchMedia('(max-width: 900px)');
   if(!sidebar || !toggle || !backdrop) return;
-  function close(){ sidebar.classList.remove('open'); backdrop.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
-  function openMenu(){ sidebar.classList.add('open'); backdrop.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+
+  function isOpen(){ return sidebar.classList.contains('open'); }
+  function focusableItems(){
+    return Array.prototype.filter.call(
+      sidebar.querySelectorAll('a[href], summary'),
+      function(item){ return item.offsetParent !== null; }
+    );
+  }
+  function syncInert(){
+    if(mobile.matches && !isOpen()) sidebar.setAttribute('inert', '');
+    else sidebar.removeAttribute('inert');
+  }
+  function closeMenu(restoreFocus){
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open navigation');
+    syncInert();
+    if(restoreFocus) toggle.focus();
+  }
+  function openMenu(){
+    sidebar.removeAttribute('inert');
+    sidebar.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Close navigation');
+    var items = focusableItems();
+    if(items.length) items[0].focus();
+  }
+
   toggle.addEventListener('click', function(){
-    if (sidebar.classList.contains('open')) close(); else openMenu();
+    if(isOpen()) closeMenu(true); else openMenu();
   });
-  backdrop.addEventListener('click', close);
+  backdrop.addEventListener('click', function(){ closeMenu(false); });
+  document.addEventListener('keydown', function(event){
+    if(!isOpen()) return;
+    if(event.key === 'Escape'){
+      event.preventDefault();
+      closeMenu(true);
+      return;
+    }
+    if(event.key !== 'Tab') return;
+    var items = focusableItems();
+    if(!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();
+      last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();
+      first.focus();
+    }
+  });
+  function handleViewportChange(){ closeMenu(false); syncInert(); }
+  if(mobile.addEventListener) mobile.addEventListener('change', handleViewportChange);
+  else if(mobile.addListener) mobile.addListener(handleViewportChange);
+  syncInert();
 })();
 </script>
 <script>
@@ -810,10 +874,17 @@ Done.</div>
     if(attr === 'dark' || attr === 'light') return attr;
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
+  function syncButton(){
+    var dark = currentTheme() === 'dark';
+    btn.setAttribute('aria-pressed', String(dark));
+    btn.setAttribute('aria-label', dark ? 'Use light theme' : 'Use dark theme');
+  }
+  syncButton();
   btn.addEventListener('click', function(){
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     try{ localStorage.setItem('theme', next); }catch(e){}
+    syncButton();
   });
 })();
 </script>
