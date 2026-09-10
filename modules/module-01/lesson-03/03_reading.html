@@ -132,11 +132,6 @@
   <p>You need Lesson 1.2 complete with the data pool at the repo root. If you have a <code>src/</code> folder and <code>uv run python main.py</code> prints <code>accuracy: 0.8952</code>, you are ready.</p>
 </div>
 
-<div class="callout warn">
-  <div class="ti">Out of scope</div>
-  <p>This lesson does not cover error handling, logging, tests, or changing the model pipeline. Those come in L1.4 (errors + logging) and L1.5 (tests). The OOP class you see here is the same Python class you learned in any introductory course &#8212; nothing about abstract base classes, inheritance, or decorators.</p>
-</div>
-
 <div class="callout insight">
   <div class="ti">Goal</div>
   <p>Install Ruff and mypy, add type annotations to every function, consolidate duplicate pipeline logic, centralise config, and introduce a <code>FlightDelayModel</code> class &#8212; then prove the pipeline still produces the same metrics.</p>
@@ -343,7 +338,8 @@ DATA_DIR: Path = REPO_ROOT / "data"
 DATA_FILE: str = "flight_delays_2025_01.csv"
 FEATURES: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 TARGET: str = "ArrDel15"
-RANDOM_STATE: int = 42</div>
+RANDOM_STATE: int = 42
+MAX_ITER: int = 500</div>
 </div>
 
 <h3>Running mypy</h3>
@@ -404,7 +400,7 @@ ignore_missing_imports = true</div>
     max_iter: int = 500,
     random_state: int = 42,
 ) -&gt; Pipeline:
-    """Return the full pipeline: scaling, encoding, classification.
+    """Return the full pipeline: scaling, one-hot encoding, then logistic regression.
 
     Everything a feature row needs before classification &#8212; impute,
     scale, encode &#8212; lives inside this one pipeline.
@@ -478,7 +474,7 @@ model = build_model(preprocessor)</code></pre>
 
 from pathlib import Path
 
-# --- Paths ---------------------------------------------------------------
+# --- Paths -----------------------------------------------------------
 
 REPO_ROOT: Path = Path(__file__).resolve().parents[5]
 DATA_DIR: Path = REPO_ROOT / "data"
@@ -486,7 +482,7 @@ DATA_FILE: str = "flight_delays_2025_01.csv"
 MODEL_DIR: Path = Path(__file__).resolve().parent.parent / "models"
 MODEL_FILE: str = "model_2025_01.joblib"
 
-# --- Feature lists -------------------------------------------------------
+# --- Feature lists -----------------------------------------------------------
 
 NUMERIC_FEATURES: list[str] = [
     "DepDelay",
@@ -502,7 +498,7 @@ FEATURES: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
 TARGET: str = "ArrDel15"
 
-# --- Training defaults ---------------------------------------------------
+# --- Training defaults -------------------------------------------------------
 
 TEST_SIZE: float = 0.2
 RANDOM_STATE: int = 42
