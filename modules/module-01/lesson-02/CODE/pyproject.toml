@@ -1,0 +1,11 @@
+[project]
+name = "flight-delays"
+version = "0.1.0"
+description = "US flight-delay prediction pipeline"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "scikit-learn>=1.5",
+    "numpy>=1.26",
+    "joblib>=1.4",
+]

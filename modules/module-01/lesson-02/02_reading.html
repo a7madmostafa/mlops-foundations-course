@@ -125,11 +125,605 @@
   <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.2</span></nav>
 </div>
 <h1 class="title">Notebook &#8594; Project</h1>
-<p class="subtitle">Coming soon &#8212; this lesson is under development.</p>
+<p class="subtitle">You split the flight-delay notebook into importable modules, manage dependencies with <code class="inline">uv</code>, and make every path configurable. One command reproduces the baseline on any machine.</p>
+
+<div class="day-links">
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-02/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+</div>
 
 <div class="callout tip">
-  <div class="ti">This lesson is being written</div>
-  <p>Check back soon.</p>
+  <div class="ti">Before you start</div>
+  <p>You need the data pool present (see <code class="inline">data/README.md</code>) and the Lesson 1.1 notebook metrics recorded. No new ML concepts today &#8212; same data, same pipeline, same numbers. You will learn a new <em>tool</em> (<code class="inline">uv</code>) as you go &#8212; no prior experience needed.</p>
+</div>
+
+<div class="objectives">
+  <h2>What you'll do in this lesson</h2>
+  <ul>
+    <li>Install <code class="inline">uv</code> and use it to create a virtual environment with recorded dependencies.</li>
+    <li>Split the notebook into six importable Python modules under <code class="inline">src/</code>.</li>
+    <li>Move hardcoded paths into a central <code class="inline">config.py</code> with sensible defaults.</li>
+    <li>Create a <code class="inline">main.py</code> entry point that reproduces the baseline with one command.</li>
+  </ul>
+</div>
+
+<h2 class="section"><span class="num">1</span>Why a notebook is not enough</h2>
+<p class="section-intro">The fragility audit from L1.1 pointed here first.</p>
+
+<p>In Lesson 1.1 you recorded five risks the notebook carries. Two of them are about <em>structure</em>: the workflow is trapped across cells that cannot be imported or run as one command, and the machine is baked in through hardcoded relative paths. This lesson fixes both.</p>
+
+<p>Consider what happens when a teammate asks: "Can I reproduce your model?" Today you would hand them the notebook, tell them to launch Jupyter from the right folder, and hope they have the same library versions. That is not reproducibility &#8212; it is a favour request.</p>
+
+<div class="compare">
+  <div class="col">
+    <h4>Before</h4>
+    <ul>
+      <li>One <code class="inline">.ipynb</code> file</li>
+      <li>Hardcoded path <code class="inline">../../../../data/...</code></li>
+      <li>No dependency record</li>
+      <li>Requires Jupyter to run</li>
+    </ul>
+  </div>
+  <div class="col">
+    <h4>After</h4>
+    <ul>
+      <li>Six importable <code class="inline">.py</code> modules</li>
+      <li>Paths live in <code class="inline">config.py</code></li>
+      <li><code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code></li>
+      <li><code class="inline">uv run python main.py</code></li>
+    </ul>
+  </div>
+</div>
+
+<h2 class="section"><span class="num">2</span>Meet <code class="inline">uv</code></h2>
+<p class="section-intro">The tool that records your dependencies and makes your project reproducible.</p>
+
+<h3>The problem</h3>
+
+<p>Your notebook uses pandas, scikit-learn, numpy, and others. But <em>which versions</em>? The notebook does not say. If a teammate installs different versions, the same code can produce different numbers &#8212; or fail outright. You need two things:</p>
+
+<ol>
+  <li><strong>A list of what your project needs</strong> &#8212; so anyone can install the same packages.</li>
+  <li><strong>An isolated environment</strong> &#8212; so this project's packages do not clash with other projects on the same machine.</li>
+</ol>
+
+<h3>What is a virtual environment?</h3>
+
+<p>A <strong>virtual environment</strong> is a self-contained folder with its own Python interpreter and installed packages. Your system Python stays untouched. When you "activate" the environment, commands like <code class="inline">python</code> and <code class="inline">pip</code> point to the isolated copy instead of the system one.</p>
+
+<p>Why does this matter? Without it, Project A might need pandas 2.1 while Project B needs 2.2. On the system Python, only one version can exist. With virtual environments, each project has its own.</p>
+
+<h3>What is <code class="inline">uv</code>?</h3>
+
+<p><code class="inline">uv</code> is a fast Python package manager that handles everything in one tool:</p>
+
+<ul>
+  <li><strong>Create</strong> a virtual environment</li>
+  <li><strong>Install</strong> packages into it</li>
+  <li><strong>Lock</strong> exact versions in a reproducible file</li>
+  <li><strong>Run</strong> commands inside the environment</li>
+</ul>
+
+<p>It replaces the older <code class="inline">pip</code> + <code class="inline">venv</code> + <code class="inline">pip-tools</code> workflow with a single, fast tool. You will use <code class="inline">uv</code> for the rest of this course.</p>
+
+<h3>Install <code class="inline">uv</code></h3>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">pip</span> install uv</div>
+</div>
+
+<p>Or see the <a href="https://docs.astral.sh/uv/getting-started/installation/">official installation guide</a> for other methods (standalone installer, Homebrew, etc.). Verify it worked:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> --version</div>
+</div>
+
+<h3>Initialize the project</h3>
+
+<p><code class="inline">uv init</code> scaffolds a brand-new project in an <em>empty</em> folder. Our <code class="inline">CODE/</code> folder already ships a finished project, so you cannot run it there &#8212; <code class="inline">uv</code> will refuse with <code class="inline">Project is already initialized</code>. Instead, create a scratch folder outside the course, and run it there to see exactly what a fresh project contains:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">mkdir</span> scratch-uv &amp;&amp; <span class="fn">cd</span> scratch-uv
+<span class="fn">uv</span> init</div>
+</div>
+
+<p>This creates:</p>
+
+<ul>
+  <li><strong><code class="inline">pyproject.toml</code></strong> &#8212; the project description file, pre-filled with <em>placeholder</em> values (more on this below).</li>
+  <li><strong><code class="inline">.python-version</code></strong> &#8212; tells <code class="inline">uv</code> which Python version this project uses.</li>
+  <li><strong><code class="inline">README.md</code></strong> &#8212; a starter readme.</li>
+  <li><strong><code class="inline">.gitignore</code> and a <code class="inline">.git/</code> folder</strong> &#8212; it even runs <code class="inline">git init</code> for you and adds a reasonable ignore list.</li>
+  <li><strong><code class="inline">src/scratch_uv/__init__.py</code></strong> &#8212; a starter package (note the name: the folder name with hyphens swapped for underscores) containing a demo <code class="inline">main()</code> that prints <code class="inline">Hello from scratch-uv!</code>.</li>
+</ul>
+
+<p>Open the generated <code class="inline">pyproject.toml</code> and you will see several things we need to deal with:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">scratch-uv/pyproject.toml</span></div>
+  <div class="code-body">[project]
+name = <span class="str">"scratch-uv"</span>                  <span class="com"># defaults to the FOLDER name</span>
+version = <span class="str">"0.1.0"</span>
+description = <span class="str">"Add your description here"</span>  <span class="com"># placeholder text</span>
+requires-python = <span class="str">">=3.12"</span>
+dependencies = []                    <span class="com"># empty until you run uv add</span>
+
+[project.scripts]                    <span class="com"># demo console command</span>
+scratch-uv = <span class="str">"scratch_uv:main"</span>
+
+[build-system]                       <span class="com"># for building/publishing a package</span>
+requires = [<span class="str">"uv_build&gt;=0.12,&lt;0.13"</span>]
+build-backend = <span class="str">"uv_build"</span></div>
+</div>
+
+<p>Four things to understand here:</p>
+
+<ol>
+  <li><strong><code class="inline">name</code> comes from the folder name.</strong> Since you created <code class="inline">scratch-uv</code>, that is what <code class="inline">uv</code> used. In our real project we rename it to <code class="inline">flight-delays</code>.</li>
+  <li><strong><code class="inline">description</code> is a placeholder.</strong> It waits for you to write a real one.</li>
+  <li><strong><code class="inline">[project.scripts]</code> is a demo.</strong> It installs a console command named <code class="inline">scratch-uv</code> that calls the starter package's <code class="inline">main()</code>. Our entry point is a plain <code class="inline">main.py</code> script that we run with <code class="inline">uv run</code> &#8212; no console command needed &#8212; so we remove this section.</li>
+  <li><strong><code class="inline">[build-system]</code> is for publishers.</strong> It tells tools how to build the project into a distributable package. We are not publishing anything in this course, so we drop it too.</li>
+</ol>
+
+<p>After editing the name, writing a real description, and removing what we do not need, our file is nearly ready. You will see the finished <code class="inline">CODE/pyproject.toml</code> in the next subsection, once the dependencies are filled in.</p>
+
+<div class="callout warn">
+  <div class="ti">These commands run in <code class="inline">scratch-uv</code>, not in <code class="inline">CODE/</code></div>
+  <p>The <code class="inline">CODE/</code> folder ships the finished result, so <code class="inline">uv init</code> inside it fails by design, and <code class="inline">uv add</code> there would re-write the shipped dependency minimums. Use <code class="inline">scratch-uv</code> as your playground pad to watch every command work on a live project &#8212; that is the best way to learn a tool. When you are ready to run the real project, head to <code class="inline">CODE/</code> and just run <code class="inline">uv sync</code> &#8212; its <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code> are already in place. Delete the <code class="inline">scratch-uv</code> folder when you are done.</p>
+</div>
+
+<h3>Add the dependencies</h3>
+
+<p>Our pipeline needs four packages. Add them all in one command:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> add pandas scikit-learn numpy joblib</div>
+</div>
+
+<p><code class="inline">uv add</code> does <em>everything</em> for you &#8212; no separate sync needed afterwards. In one command it:</p>
+
+<ol>
+  <li>Adds each package to <code class="inline">pyproject.toml</code> under <code class="inline">dependencies</code>.</li>
+  <li>Installs the packages into <code class="inline">.venv/</code> right away (creating the environment on its first run).</li>
+  <li>Updates <code class="inline">uv.lock</code> with the exact resolved versions.</li>
+</ol>
+
+<p>Note that <code class="inline">uv add</code> wrote the <em>newest</em> versions it found (e.g. <code class="inline">pandas&gt;=3.0.5</code>). The file shipped in <code class="inline">CODE/</code> states lower minimums (e.g. <code class="inline">pandas&gt;=2.2</code>) &#8212; that is fine, and irrelevant to how it runs, because the lockfile decides the exact installed version. Here is the shipped <code class="inline">pyproject.toml</code>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml</span></div>
+  <div class="code-body">[project]
+name = <span class="str">"flight-delays"</span>
+version = <span class="str">"0.1.0"</span>
+description = <span class="str">"US flight-delay prediction pipeline"</span>
+requires-python = <span class="str">">=3.11"</span>
+dependencies = [
+    <span class="str">"pandas&gt;=2.2"</span>,
+    <span class="str">"scikit-learn&gt;=1.5"</span>,
+    <span class="str">"numpy&gt;=1.26"</span>,
+    <span class="str">"joblib&gt;=1.4"</span>,
+]</div>
+</div>
+
+<p>Each line under <code class="inline">dependencies</code> names a package and a minimum version. The <code class="inline">&gt;=</code> means "this version or newer." You do not need to list every sub-dependency &#8212; <code class="inline">uv</code> resolves those automatically.</p>
+
+<h3>Or <code class="inline">uv sync</code>: the reverse direction</h3>
+
+<p>With <code class="inline">uv add</code>, everything is already installed and locked, so why would you ever run <code class="inline">uv sync</code>? <code class="inline">uv sync</code> goes the <em>other</em> way: instead of recording what you need, it makes your environment <em>match what is already recorded</em>. You run it whenever you get a project that already has a <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code> &#8212; after cloning a repo, or here, in the already-shipped <code class="inline">CODE/</code> folder:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> sync</div>
+</div>
+
+<p>It installs every dependency listed in <code class="inline">pyproject.toml</code> at the exact versions frozen in <code class="inline">uv.lock</code>, and creates <code class="inline">.venv/</code> if it is missing. Anyone who runs <code class="inline">uv sync</code> on the same two files gets the same runtime.</p>
+
+<div class="callout tip">
+  <div class="ti">Which command do I use?</div>
+  <p><strong>You are adding a new package or changing a version</strong> &#8594; <code class="inline">uv add</code> (installs and locks in one step).<br>
+  <strong>You just received a project with its files already in place</strong> &#8594; <code class="inline">uv sync</code> (recreate its environment).</p>
+</div>
+
+<h3>What files did <code class="inline">uv</code> create?</h3>
+
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>File</th><th>What it is</th><th>Who creates it</th><th>Committed to git?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code class="inline">pyproject.toml</code></td><td>Your project description &#8212; name, Python version, dependencies</td><td><code class="inline">uv init</code> + you edit it</td><td>Yes</td></tr>
+    <tr><td><code class="inline">uv.lock</code></td><td>Exact resolved versions of every package (the lockfile)</td><td><code class="inline">uv add</code> / <code class="inline">uv sync</code></td><td>Yes</td></tr>
+    <tr><td><code class="inline">.python-version</code></td><td>The Python version this project uses</td><td><code class="inline">uv init</code></td><td>Yes</td></tr>
+    <tr><td><code class="inline">.venv/</code></td><td>The isolated environment folder (packages, scripts, Python binary)</td><td><code class="inline">uv add</code> / <code class="inline">uv sync</code></td><td>No &#8212; gitignored</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <div class="ti">The <code class="inline">.venv/</code> folder is gitignored</div>
+  <p>You never commit the virtual environment or its packages. You commit <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code>. Anyone who clones the repo runs <code class="inline">uv sync</code> to rebuild the environment from those two files. This is how reproducibility works: the lockfile guarantees the same package versions on every machine.</p>
+</div>
+
+<h3>Common <code class="inline">uv</code> commands</h3>
+
+<p>You will only need a handful of commands. Here they are with what they do:</p>
+
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>Command</th><th>What it does</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code class="inline">uv init</code></td><td>Scaffold a project in an <em>empty</em> folder: <code class="inline">pyproject.toml</code>, <code class="inline">.python-version</code>, <code class="inline">README.md</code>, <code class="inline">.gitignore</code>, a starter <code class="inline">src/&lt;name&gt;/__init__.py</code>, and a <code class="inline">.git/</code> repo. Fails if a <code class="inline">pyproject.toml</code> already exists.</td></tr>
+    <tr><td><code class="inline">uv add pandas</code></td><td>Add a package to <code class="inline">pyproject.toml</code>, install it, and update the lockfile &#8212; all in one step. Add several at once: <code class="inline">uv add pandas scikit-learn</code>.</td></tr>
+    <tr><td><code class="inline">uv remove pandas</code></td><td>Remove a package from <code class="inline">pyproject.toml</code>, uninstall it, and update the lockfile.</td></tr>
+    <tr><td><code class="inline">uv sync</code></td><td>Reverse direction: recreate the environment to match the recorded <code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code>. Run this after cloning a repo or on a shipped project.</td></tr>
+    <tr><td><code class="inline">uv run python main.py</code></td><td>Run a Python script inside the virtual environment. The script sees the installed packages.</td></tr>
+    <tr><td><code class="inline">uv run python</code></td><td>Open an interactive Python shell inside the environment.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>You do not need to "activate" the environment manually. <code class="inline">uv run</code> handles that for you &#8212; it runs the command inside the environment automatically.</p>
+
+<h2 class="section"><span class="num">3</span>Scripts, modules, and packages</h2>
+<p class="section-intro">Three terms you will see everywhere &#8212; defined once, used for the rest of the course.</p>
+
+<p>Now that you have an environment, let us define how Python code is organized.</p>
+
+<p>A <strong>script</strong> is a <code class="inline">.py</code> file you run directly: <code class="inline">uv run python main.py</code>. A <strong>module</strong> is a <code class="inline">.py</code> file you <code class="inline">import</code>: <code class="inline">from src.load import load_csv</code>. The same file can be both, but the distinction matters because modules can be reused, tested, and composed &#8212; scripts cannot.</p>
+
+<p>A <strong>package</strong> is a folder that contains an <code class="inline">__init__.py</code> file. The file tells Python "this folder is something I can import from." It can be completely empty &#8212; its presence alone marks the folder as a package. Our package is called <code class="inline">src</code>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">project layout</span></div>
+  <div class="code-body"><span class="def">CODE/</span>
+  pyproject.toml     <span class="com"># project metadata + dependencies (from uv init + uv add)</span>
+  uv.lock            <span class="com"># locked package versions (from uv add / uv sync)</span>
+  .python-version    <span class="com"># Python version for this project (from uv init)</span>
+  main.py            <span class="com"># entry point &#8212; you run this</span>
+  <span class="def">src/</span>               <span class="com"># package &#8212; you import from this</span>
+    __init__.py      <span class="com"># marks src/ as a package (can be empty)</span>
+    config.py
+    load.py
+    clean.py
+    features.py
+    train.py
+    evaluate.py
+  <span class="def">.venv/</span>             <span class="com"># virtual environment (gitignored)</span></div>
+</div>
+
+<p>The rule is simple: <code class="inline">main.py</code> calls functions from <code class="inline">src/</code>. Everything in <code class="inline">src/</code> is importable by other code, by tests, and by future lessons.</p>
+
+<h2 class="section"><span class="num">4</span>The config module</h2>
+<p class="section-intro">One place for all paths and constants.</p>
+
+<p>Hardcoded paths are the first thing that breaks when you change machines or folders. A <code class="inline">config.py</code> module collects every path and constant in one file. Change it there, and the whole project follows.</p>
+
+<p>We use <code class="inline">pathlib.Path</code> instead of raw strings. <code class="inline">Path</code> objects know your operating system's separator (<code class="inline">/</code> on Mac/Linux, <code class="inline">\</code> on Windows), so paths work on any machine without extra code.</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py</span></div>
+  <div class="code-body"><span class="str">"""Project configuration — paths, feature lists, and constants."""</span>
+
+<span class="def">from</span> pathlib <span class="def">import</span> Path
+
+<span class="com"># --- Paths -------------------------------------------------------------------</span>
+
+<span class="com"># Data lives in the shared course data pool at the repository root.</span>
+<span class="com"># The default works when you run from the lesson's CODE/ folder.</span>
+<span class="def">REPO_ROOT</span> = Path(__file__).resolve().parents[<span class="fn">5</span>]
+<span class="def">DATA_DIR</span> = REPO_ROOT / <span class="str">"data"</span>
+<span class="def">MODEL_DIR</span> = Path(__file__).resolve().parent.parent / <span class="str">"models"</span>
+
+<span class="com"># --- Feature lists -----------------------------------------------------------</span>
+
+<span class="def">NUMERIC_FEATURES</span> = [
+    <span class="str">"DepDelay"</span>,
+    <span class="str">"Distance"</span>,
+    <span class="str">"CRSElapsedTime"</span>,
+    <span class="str">"scheduled_departure_hour"</span>,
+    <span class="str">"DayOfWeek"</span>,
+]
+
+<span class="def">CATEGORICAL_FEATURES</span> = [<span class="str">"Reporting_Airline"</span>, <span class="str">"Origin"</span>, <span class="str">"Dest"</span>]
+
+<span class="com"># --- Training defaults -------------------------------------------------------</span>
+
+<span class="def">TEST_SIZE</span> = <span class="fn">0.2</span>
+<span class="def">RANDOM_STATE</span> = <span class="fn">42</span>
+<span class="def">MAX_ITER</span> = <span class="fn">500</span></div>
+</div>
+
+<p><code class="inline">Path(__file__).resolve().parents[5]</code> walks up five folders from <code class="inline">config.py</code> to reach the repository root (src &#8594; CODE &#8594; lesson-02 &#8594; module-01 &#8594; modules &#8594; repo root). From there, <code class="inline">REPO_ROOT / "data"</code> points to the shared data pool.</p>
+
+<p>The feature lists and training defaults live here too. Later lessons will add to this file; for now it gives you one place to change the random seed or the test size.</p>
+
+<h2 class="section"><span class="num">5</span>Extract the pipeline functions</h2>
+<p class="section-intro">One function per file, one responsibility per function.</p>
+
+<p>The notebook has the entire pipeline in a linear sequence of cells. We split it into functions that each do one thing. Each function goes in its own file so it can be imported independently.</p>
+
+<h3>5.1 Load</h3>
+<p>The notebook's cell 2 reads a CSV. We wrap it in a function so the path can be passed in instead of hardcoded:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/load.py</span></div>
+  <div class="code-body"><span class="str">"""Load the flight-delays CSV into a DataFrame."""</span>
+
+<span class="def">import</span> pandas <span class="def">as</span> pd
+
+
+<span class="def">def</span> <span class="fn">load_csv</span>(path):
+    <span class="str">"""Read a flight-delays CSV and return a DataFrame."""</span>
+    <span class="def">return</span> pd.<span class="fn">read_csv</span>(path)</div>
+</div>
+
+<h3>5.2 Clean</h3>
+<p>Cells 7 &#8211; 13 filter out cancelled and diverted flights, remove duplicates, and derive <code class="inline">scheduled_departure_hour</code>. This is the cleaning step &#8212; it takes raw data in and returns a clean cohort:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/clean.py</span></div>
+  <div class="code-body"><span class="str">"""Clean raw flight data into a modeling cohort."""</span>
+
+<span class="def">import</span> pandas <span class="def">as</span> pd
+
+
+<span class="def">def</span> <span class="fn">clean_flights</span>(df):
+    <span class="str">"""Drop cancelled/diverted flights, duplicates, and add features."""</span>
+    flights = (
+        df.<span class="fn">loc</span>[
+            df[<span class="str">"Cancelled"</span>].<span class="fn">eq</span>(<span class="fn">0</span>)
+            &amp; df[<span class="str">"Diverted"</span>].<span class="fn">eq</span>(<span class="fn">0</span>)
+            &amp; df[<span class="str">"ArrDel15"</span>].<span class="fn">notna</span>()
+        ]
+        .<span class="fn">drop_duplicates</span>()
+        .<span class="fn">copy</span>()
+    )
+
+    flights[<span class="str">"scheduled_departure_hour"</span>] = (
+        flights[<span class="str">"CRSDepTime"</span>].<span class="fn">floordiv</span>(<span class="fn">100</span>).<span class="fn">clip</span>(<span class="fn">0</span>, <span class="fn">23</span>).<span class="fn">astype</span>(<span class="fn">int</span>)
+    )
+
+    <span class="def">return</span> flights</div>
+</div>
+
+<h3>5.3 Features</h3>
+<p>Cells 20 &#8211; 21 build the scikit-learn preprocessing pipeline and the classifier. We extract two functions &#8212; one for the preprocessor, one for the full model:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/features.py</span></div>
+  <div class="code-body"><span class="str">"""Feature lists and pipeline construction."""</span>
+
+<span class="def">from</span> sklearn.compose <span class="def">import</span> ColumnTransformer
+<span class="def">from</span> sklearn.impute <span class="def">import</span> SimpleImputer
+<span class="def">from</span> sklearn.linear_model <span class="def">import</span> LogisticRegression
+<span class="def">from</span> sklearn.pipeline <span class="def">import</span> Pipeline
+<span class="def">from</span> sklearn.preprocessing <span class="def">import</span> OneHotEncoder, StandardScaler
+
+
+<span class="def">def</span> <span class="fn">build_preprocessor</span>(numeric_features, categorical_features):
+    <span class="str">"""Return a ColumnTransformer that scales numerics and one-hot encodes categoricals."""</span>
+    numeric_pipeline = Pipeline(
+        steps=[
+            (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"median"</span>)),
+            (<span class="str">"scaler"</span>, StandardScaler()),
+        ]
+    )
+
+    categorical_pipeline = Pipeline(
+        steps=[
+            (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"most_frequent"</span>)),
+            (<span class="str">"onehot"</span>, OneHotEncoder(handle_unknown=<span class="str">"ignore"</span>)),
+        ]
+    )
+
+    <span class="def">return</span> ColumnTransformer(
+        transformers=[
+            (<span class="str">"numeric"</span>, numeric_pipeline, numeric_features),
+            (<span class="str">"categorical"</span>, categorical_pipeline, categorical_features),
+        ]
+    )
+
+
+<span class="def">def</span> <span class="fn">build_model</span>(preprocessor, max_iter=<span class="fn">500</span>, random_state=<span class="fn">42</span>):
+    <span class="str">"""Return a Pipeline that preprocesses then classifies."""</span>
+    <span class="def">return</span> Pipeline(
+        steps=[
+            (<span class="str">"preprocessor"</span>, preprocessor),
+            (
+                <span class="str">"classifier"</span>,
+                LogisticRegression(
+                    max_iter=max_iter,
+                    class_weight=<span class="str">"balanced"</span>,
+                    random_state=random_state,
+                ),
+            ),
+        ]
+    )</div>
+</div>
+
+<h3>5.4 Train and evaluate</h3>
+<p>Cells 22 &#8211; 23 fit the model and compute metrics. We keep these as thin wrappers so they are easy to swap out later (e.g., when you try a different classifier in L1.3):</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py</span></div>
+  <div class="code-body"><span class="str">"""Train the flight-delay model."""</span>
+
+
+<span class="def">def</span> <span class="fn">train_model</span>(model, X_train, y_train):
+    <span class="str">"""Fit the pipeline on training data and return the fitted model."""</span>
+    model.<span class="fn">fit</span>(X_train, y_train)
+    <span class="def">return</span> model</div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/evaluate.py</span></div>
+  <div class="code-body"><span class="str">"""Evaluate a fitted model on test data."""</span>
+
+<span class="def">from</span> sklearn.metrics <span class="def">import</span> accuracy_score, f1_score
+
+
+<span class="def">def</span> <span class="fn">evaluate_model</span>(model, X_test, y_test):
+    <span class="str">"""Return a dict with accuracy and F1 on the test set."""</span>
+    y_pred = model.<span class="fn">predict</span>(X_test)
+    <span class="def">return</span> {
+        <span class="str">"accuracy"</span>: <span class="fn">accuracy_score</span>(y_test, y_pred),
+        <span class="str">"f1"</span>: <span class="fn">f1_score</span>(y_test, y_pred),
+    }</div>
+</div>
+
+<h2 class="section"><span class="num">6</span>The entry point</h2>
+<p class="section-intro">One script that wires everything together.</p>
+
+<p><code class="inline">main.py</code> sits at the project root (not inside <code class="inline">src/</code>) and imports from the package. It runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save. This is what a teammate (or a future CI job) runs:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py</span></div>
+  <div class="code-body"><span class="str">"""Flight-delay pipeline — entry point."""</span>
+
+<span class="def">import</span> os
+<span class="def">from</span> pathlib <span class="def">import</span> Path
+
+<span class="def">import</span> joblib
+<span class="def">from</span> sklearn.model_selection <span class="def">import</span> train_test_split
+
+<span class="def">from</span> src.clean <span class="def">import</span> clean_flights
+<span class="def">from</span> src.config <span class="def">import</span> (
+    CATEGORICAL_FEATURES, DATA_DIR, MAX_ITER, MODEL_DIR,
+    NUMERIC_FEATURES, RANDOM_STATE, TEST_SIZE,
+)
+<span class="def">from</span> src.evaluate <span class="def">import</span> evaluate_model
+<span class="def">from</span> src.features <span class="def">import</span> build_model, build_preprocessor
+<span class="def">from</span> src.load <span class="def">import</span> load_csv
+<span class="def">from</span> src.train <span class="def">import</span> train_model
+
+
+<span class="def">def</span> <span class="fn">main</span>():
+    csv_path = <span class="fn">Path</span>(os.<span class="fn">environ.get</span>(<span class="str">"FLIGHT_DATA_DIR"</span>, DATA_DIR)) / <span class="str">"flight_delays_2025_01.csv"</span>
+    <span class="fn">print</span>(<span class="str">f"Loading {csv_path} ..."</span>)
+    df = <span class="fn">load_csv</span>(csv_path)
+
+    flights = <span class="fn">clean_flights</span>(df)
+    <span class="fn">print</span>(<span class="str">f"Modeling rows: {len(flights):,}"</span>)
+
+    X = flights[NUMERIC_FEATURES + CATEGORICAL_FEATURES]
+    y = flights[<span class="str">"ArrDel15"</span>].<span class="fn">astype</span>(<span class="fn">int</span>)
+
+    X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(
+        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y,
+    )
+
+    preprocessor = <span class="fn">build_preprocessor</span>(NUMERIC_FEATURES, CATEGORICAL_FEATURES)
+    model = <span class="fn">build_model</span>(preprocessor, max_iter=MAX_ITER, random_state=RANDOM_STATE)
+    <span class="fn">train_model</span>(model, X_train, y_train)
+
+    metrics = <span class="fn">evaluate_model</span>(model, X_test, y_test)
+    <span class="fn">print</span>(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)
+    <span class="fn">print</span>(<span class="str">f"f1:       {metrics['f1']:.4f}"</span>)
+
+    MODEL_DIR.<span class="fn">mkdir</span>(parents=<span class="fn">True</span>, exist_ok=<span class="fn">True</span>)
+    model_path = MODEL_DIR / <span class="str">"model_2025_01.joblib"</span>
+    joblib.<span class="fn">dump</span>(model, model_path)
+    <span class="fn">print</span>(<span class="str">f"\nSaved pipeline to {model_path}"</span>)
+
+
+<span class="def">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">main</span>()</div>
+</div>
+
+<p>Three things in this file are worth stopping on.</p>
+
+<p><strong>Environment variables.</strong> An <strong>environment variable</strong> is a named value stored outside your code, usually in your terminal session or operating system. The line <code class="inline">os.environ.get("FLIGHT_DATA_DIR", DATA_DIR)</code> says: "look for a variable named <code class="inline">FLIGHT_DATA_DIR</code>; if it does not exist, use the default from <code class="inline">config.py</code>." This lets you override the data path per machine <em>without changing code</em>. This is the "code vs configuration" pattern &#8212; the code is fixed, the configuration changes per machine.</p>
+
+<p><strong>Saving the model.</strong> <code class="inline">joblib</code> is a library that serializes Python objects &#8212; it writes a fitted scikit-learn pipeline to a file so you can load it later without retraining. It is the last step of this lesson's pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; <em>save</em>. The saved <code class="inline">models/model_2025_01.joblib</code> file is what a later lesson will load to make predictions.</p>
+
+<p><strong>The <code class="inline">if __name__ == "__main__"</code> guard.</strong> This means <code class="inline">main.py</code> only runs when you execute it directly with <code class="inline">python main.py</code>. If another file does <code class="inline">import main</code>, the function does not fire. This is a Python convention that prevents side effects on import.</p>
+
+<h2 class="section"><span class="num">7</span>Run it &#8212; the milestone</h2>
+<p class="section-intro">This is your verification step: one command reproduces the notebook numbers.</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run python main.py</div>
+</div>
+
+<p>Run it from the <code class="inline">CODE/</code> folder and you should see:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">Loading /path/to/data/flight_delays_2025_01.csv ...
+Modeling rows: 522,269
+accuracy: <span class="fn">0.8952</span>
+f1:       <span class="fn">0.7415</span>
+
+Saved pipeline to models/model_2025_01.joblib</div>
+</div>
+
+<p>The same accuracy and F1 as the notebook &#8212; same data, same pipeline, same random seed. But now the result is produced by a program, not a session transcript.</p>
+
+<p>If your data lives somewhere else, override the path with an environment variable. On Mac/Linux:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="def">FLIGHT_DATA_DIR</span>=/other/path <span class="fn">uv</span> run python main.py</div>
+</div>
+
+<p>On Windows PowerShell:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="def">$env:FLIGHT_DATA_DIR</span>=<span class="str">"C:\other\path"</span>; <span class="fn">uv</span> run python main.py</div>
+</div>
+
+<div class="callout warn">
+  <div class="ti">Common mistakes</div>
+  <ul>
+    <li><strong>Running from the wrong folder.</strong> <code class="inline">uv sync</code> and <code class="inline">uv run</code> must run from the <code class="inline">CODE/</code> folder &#8212; that is where <code class="inline">pyproject.toml</code> lives. Elsewhere, <code class="inline">uv</code> will not find your project.</li>
+    <li><strong>Skipping <code class="inline">uv run</code>.</strong> If you type <code class="inline">python main.py</code> without <code class="inline">uv run</code>, your system Python runs and will not see the packages installed in <code class="inline">.venv/</code>.</li>
+    <li><strong>Committing <code class="inline">.venv/</code>.</strong> The code in this lesson ignores it via <code class="inline">.gitignore</code>. Never add it to git.</li>
+    <li><strong>Editing <code class="inline">pyproject.toml</code> by hand to change dependencies.</strong> Let <code class="inline">uv add</code> / <code class="inline">uv remove</code> do it for you &#8212; they update the file, the environment, and the lockfile together. If you do edit it by hand, re-run <code class="inline">uv sync</code> so the environment and lockfile catch up.</li>
+  </ul>
+</div>
+
+<h2 class="section"><span class="num">8</span>What changed in our project?</h2>
+<p class="section-intro">Before vs after &#8212; the milestone is verifiable.</p>
+
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>Aspect</th><th>Before (Lesson 1.1)</th><th>After (Lesson 1.2)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>File structure</td><td>1 notebook</td><td>6 modules + entry point</td></tr>
+    <tr><td>Data path</td><td>Hardcoded <code class="inline">../../../../data/...</code></td><td><code class="inline">config.py</code> + env var override</td></tr>
+    <tr><td>Dependencies</td><td>Not recorded</td><td><code class="inline">pyproject.toml</code> + <code class="inline">uv.lock</code></td></tr>
+    <tr><td>Run command</td><td><code class="inline">jupyter notebook</code></td><td><code class="inline">uv run python main.py</code></td></tr>
+    <tr><td>Reproducible on another machine</td><td>No</td><td>Yes</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Verify the milestone: run <code class="inline">uv run python main.py</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>.</p>
+
+<div class="callout try">
+  <div class="ti">Try it</div>
+  <p>The project currently lists <code class="inline">pandas</code>, <code class="inline">scikit-learn</code>, <code class="inline">numpy</code>, and <code class="inline">joblib</code> as dependencies. Try adding another package with <code class="inline">uv add matplotlib</code>. Look at what changed in <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code>. Then remove it with <code class="inline">uv remove matplotlib</code> and confirm both files revert. A clean project records only the dependencies it actually uses.</p>
+</div>
+
+<div class="callout recap">
+  <div class="ti">Takeaways</div>
+  <ul>
+    <li><strong><code class="inline">uv init</code></strong> creates the project skeleton; <strong><code class="inline">uv add</code></strong> records, installs, and locks a dependency in one step; <strong><code class="inline">uv sync</code></strong> rebuilds the environment from the recorded files.</li>
+    <li><strong><code class="inline">pyproject.toml</code></strong> declares what your project needs; <strong><code class="inline">uv.lock</code></strong> records what was actually installed.</li>
+    <li>A <strong>script</strong> is a <code class="inline">.py</code> file you run; a <strong>module</strong> is one you import; a <strong>package</strong> is a folder with <code class="inline">__init__.py</code>.</li>
+    <li><strong><code class="inline">config.py</code></strong> centralises paths and constants so the rest of the code never hardcodes them.</li>
+    <li>One entry point (<code class="inline">main.py</code>) replaces the notebook-as-program: same numbers, importable code, configurable paths.</li>
+  </ul>
 </div>
 
 <div class="day-nav">
