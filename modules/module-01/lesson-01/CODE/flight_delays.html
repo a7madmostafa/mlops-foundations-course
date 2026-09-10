@@ -8717,7 +8717,64 @@ strongest obvious feature for this shortly-after-departure prediction.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="8.-Split-raw-features-before-preprocessing">8. Split raw features before preprocessing<a class="anchor-link" href="#8.-Split-raw-features-before-preprocessing">¶</a></h2><p>Keep numeric and categorical columns separate. Split the raw rows now;
+<h2 id="8.-Choose-the-features-(8-of-40-columns)">8. Choose the features (8 of 40 columns)<a class="anchor-link" href="#8.-Choose-the-features-(8-of-40-columns)">¶</a></h2><p>The prediction is made shortly after departure. Most of the 40 columns
+cannot be features: some are the answer itself, some are only known at
+arrival, some duplicate each other, and some are identifiers. The 8
+that survive are exactly what a model can legitimately see at
+prediction time.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Why it is a feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DepDelay</code> (numeric)</td>
+<td>the strongest predictor (section 7)</td>
+</tr>
+<tr>
+<td><code>Distance</code> (numeric)</td>
+<td>known before departure</td>
+</tr>
+<tr>
+<td><code>CRSElapsedTime</code> (numeric)</td>
+<td>scheduled duration, known in advance</td>
+</tr>
+<tr>
+<td><code>scheduled_departure_hour</code></td>
+<td>engineered from CRSDepTime (section 3)</td>
+</tr>
+<tr>
+<td><code>DayOfWeek</code> (numeric)</td>
+<td>calendar context</td>
+</tr>
+<tr>
+<td><code>Reporting_Airline</code> (cat)</td>
+<td>who operates the flight</td>
+</tr>
+<tr>
+<td><code>Origin</code> (cat)</td>
+<td>where the flight departs</td>
+</tr>
+<tr>
+<td><code>Dest</code> (cat)</td>
+<td>where the flight arrives</td>
+</tr>
+</tbody>
+</table>
+<p>Why the other 32 stay out:</p>
+<ul>
+<li><strong>The target</strong> — <code>ArrDel15</code> is what we predict, so it cannot be a feature.</li>
+<li><strong>Only known after arrival (leakage)</strong> — <code>ArrTime</code>, <code>ArrDelay</code>, <code>ArrDelayMinutes</code>, <code>ActualElapsedTime</code>, <code>AirTime</code>, <code>TaxiIn</code>, <code>WheelsOn</code>. Not available at prediction time.</li>
+<li><strong>Delay-cause columns</strong> — <code>CarrierDelay</code>, <code>WeatherDelay</code>, <code>NASDelay</code>, <code>SecurityDelay</code>, <code>LateAircraftDelay</code>. Filled in only after the flight and ~82% missing (section 2).</li>
+<li><strong>Duplicates</strong> — <code>DepDelayMinutes</code> restates <code>DepDelay</code>; <code>DepDel15</code> is the same delay as a 0/1 flag; <code>DepTime</code> is <code>CRSDepTime + DepDelay</code>; <code>OriginCityName</code>/<code>OriginState</code> repeat <code>Origin</code>; <code>DestCityName</code>/<code>DestState</code> repeat <code>Dest</code>.</li>
+<li><strong>Identifiers / constants</strong> — <code>FlightDate</code> and <code>Flight_Number_Reporting_Airline</code> identify one row each; <code>Year</code>, <code>Quarter</code>, <code>Month</code> are constant in this file; <code>DayofMonth</code> was not selected.</li>
+<li><strong>Row filters</strong> — <code>Cancelled</code>, <code>CancellationCode</code>, <code>Diverted</code> already decided which rows stay (section 3).</li>
+<li><strong>Summarized elsewhere</strong> — <code>CRSDepTime</code> is replaced by <code>scheduled_departure_hour</code>; <code>CRSArrTime</code> and <code>CRSElapsedTime</code> say the same thing about the timetable; <code>TaxiOut</code>/<code>WheelsOff</code> are measured during departure and add little beyond <code>DepDelay</code>.</li>
+</ul>
+<p>Keep numeric and categorical columns separate. Split the raw rows now;
 the preprocessing pipeline will learn medians, scales, and categories
 from the training set only.</p>
 </div>
