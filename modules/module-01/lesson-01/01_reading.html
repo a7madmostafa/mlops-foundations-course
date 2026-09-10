@@ -125,7 +125,7 @@
   <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.1</span></nav>
 </div>
 <h1 class="title">Your Starting Point: The Flight Delay Notebook</h1>
-<p class="subtitle">You get familiar with the data, build your own baseline model in a notebook, and see the problems that make notebooks dangerous in production &#8212; problems every later lesson will fix.</p>
+<p class="subtitle">You explore the flight data, build a sound ML baseline with a preprocessing pipeline, and identify the operational problems that keep the notebook from becoming a reliable ML system.</p>
 
 <div class="day-links">
   <a class="primary" href="01_notebook.html"><svg class="dl-icon"><use href="#icon-external"/></svg>Notebook (HTML)</a>
@@ -146,11 +146,11 @@
 <div class="objectives">
   <h2>What you'll do in this lesson</h2>
   <ul>
-    <li>Understand the project &#8212; what you predict, when you predict it, and what the target means.</li>
-    <li>Build your own notebook: explore the data, clean it, engineer features, train a baseline model.</li>
-    <li>Run our reference notebook from a fresh kernel and record its baseline metrics.</li>
-    <li>Write a six-row <strong>Fragility Audit</strong> &#8212; a table of risks supported by evidence from the notebook.</li>
-    <li>Map each problem to the later lesson that will fix it.</li>
+    <li>Explore the data and explain useful patterns with focused visualizations.</li>
+    <li>Build a leakage-safe preprocessing pipeline with scaling and one-hot encoding.</li>
+    <li>Train and evaluate a logistic-regression baseline from a fresh kernel and record its metrics.</li>
+    <li>Meet the five-row <strong>Fragility Audit</strong> &#8212; the operating risks our notebook carries, each with cell evidence, introduced in Section 6.</li>
+    <li>See each risk mapped to the later lesson that removes it &#8212; the mapping is the course roadmap.</li>
   </ul>
 </div>
 
@@ -173,7 +173,7 @@
 11        AA       JFK   LAX        700      2475       1.0</div>
 </div>
 
-<p>Features you can use at that prediction point include carrier, origin/destination airports, scheduled departure time, day of week, distance, actual departure delay, and scheduled elapsed time. The dataset is rich enough for real feature engineering &#8212; and small enough that a baseline model fits comfortably on a laptop (a random forest over half a million rows takes a few minutes at most).</p>
+<p>Features you can use at that prediction point include carrier, origin/destination airports, scheduled departure time, day of week, distance, actual departure delay, and scheduled elapsed time. The dataset is rich enough for meaningful EDA and feature engineering, while a linear baseline over the full month still fits comfortably on a laptop.</p>
 
 <h2 class="section"><span class="num">2</span>Build your own notebook</h2>
 <p class="section-intro">This is your hands-on work for this lesson.</p>
@@ -194,20 +194,20 @@
 <h2 class="section"><span class="num">3</span>Our notebook as a reference</h2>
 <p class="section-intro">One way to do it &#8212; not the only way.</p>
 
-<p>Open <code class="inline">CODE/flight_delays.ipynb</code> (or read the <a href="CODE/flight_delays.html">HTML export</a>). This is our version. It loads the data, cleans it, engineers a few features, trains a random forest, and prints the metrics. It is deliberately simple &#8212; the point is not a fancy model, but a working baseline.</p>
+<p>Open <code class="inline">CODE/flight_delays.ipynb</code> (or read the <a href="CODE/flight_delays.html">HTML export</a>). This is our version. It checks data quality, creates four focused EDA views, records an insight after each one, and trains a logistic-regression baseline. A scikit-learn pipeline keeps imputation, <code class="inline">StandardScaler</code>, <code class="inline">OneHotEncoder</code>, and the classifier together.</p>
 
 <p>When you run it cold (kernel restart &#8594; Run All), it prints:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cell 16 &#183; output</span></div>
-  <div class="code-body"><span class="def">accuracy:</span> <span class="fn">0.9184</span>
-<span class="def">f1:</span> <span class="fn">0.7587</span>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cell 39 &#183; output</span></div>
+  <div class="code-body"><span class="def">accuracy:</span> <span class="fn">0.8952</span>
+<span class="def">f1:</span> <span class="fn">0.7415</span>
               <span class="def">precision</span>    <span class="def">recall</span>   <span class="def">f1-score</span>   <span class="def">support</span>
 
-         0.0       0.93      0.97      0.95     84941
-         1.0       0.85      0.69      0.76     19513
+           0     0.9520    0.9171    0.9342     84828
+           1     0.6908    0.8003    0.7415     19626
 
-    accuracy                           0.92    104454</div>
+    accuracy                         0.8952    104454</div>
 </div>
 
 <p>Compare these numbers with yours. Different preprocessing, different features, different model &#8212; your numbers will be different, and that is fine. What matters is that you have a baseline: a number that every future change must not silently make worse.</p>
@@ -249,12 +249,14 @@
 <h2 class="section"><span class="num">5</span>Read the notebook like an engineer</h2>
 <p class="section-intro">Cell by cell: what is pipeline, and what is exploration?</p>
 
-<p>You have read notebooks a hundred times as a data scientist &#8212; visual by visual, insight by insight. Today, read ours once more, differently. Classify every cell into one of two buckets:</p>
+<p>The data-quality block, the four EDA views, and the baseline are the best part &#8212; and the part you already did yourself. The engineering question starts <em>after</em> the ML is sound. Read our notebook once more, differently: every cell falls into one of two buckets.</p>
 
 <ul>
   <li><strong>Pipeline cells</strong> &#8212; the ones that <em>should</em> be a program: load, clean, features, encode, split, train, evaluate, save.</li>
   <li><strong>Exploration cells</strong> &#8212; the ones that belong to a session: plots, notes, "let me see the distribution", throwaway tries.</li>
 </ul>
+
+<p>The line between the two is where your course starts. The pipeline here is credible; the <em>operating workflow</em> around it is not. Over the next lessons we turn that workflow into project code, and along the way we name each operating risk it carries.</p>
 
 <figure class="scrollfig">
 <div class="figure-scroll">
@@ -264,52 +266,53 @@
   <text x="360" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f6fb2">The cells of flight_delays.ipynb</text>
   <rect x="30" y="50" width="200" height="60" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
   <rect x="30" y="50" width="200" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="130" y="67" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 3&#8211;6 &#183; load &amp; look</text>
-  <text x="130" y="93" text-anchor="middle" font-size="12" fill="#333">imports, CSV, shape, target</text>
+  <text x="130" y="67" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 3&#8211;13 &#183; load &amp; inspect</text>
+  <text x="130" y="93" text-anchor="middle" font-size="12" fill="#333">read, schema, missingness, target</text>
   <rect x="250" y="50" width="200" height="60" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
   <rect x="250" y="50" width="200" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="350" y="67" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 8&#8211;9 &#183; clean</text>
-  <text x="350" y="93" text-anchor="middle" font-size="12" fill="#333">the same filter, twice</text>
+  <text x="350" y="67" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 16&#8211;30 &#183; clean &amp; explore</text>
+  <text x="350" y="93" text-anchor="middle" font-size="12" fill="#333">cohort, four plots, insights</text>
   <rect x="470" y="50" width="200" height="60" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
   <rect x="470" y="50" width="200" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="570" y="67" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 11&#8211;13 &#183; features</text>
-  <text x="570" y="93" text-anchor="middle" font-size="12" fill="#333">engineer, encode, scale</text>
+  <text x="570" y="67" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 33&#8211;35 &#183; prepare</text>
+  <text x="570" y="93" text-anchor="middle" font-size="12" fill="#333">split, encode, scale</text>
   <rect x="30" y="140" width="200" height="64" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
   <rect x="30" y="140" width="200" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="130" y="157" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cell 15 &#183; split &amp; fit</text>
-  <text x="130" y="184" text-anchor="middle" font-size="12" fill="#333">train_test_split &#183; forest</text>
+  <text x="130" y="157" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cell 37 &#183; train</text>
+  <text x="130" y="184" text-anchor="middle" font-size="12" fill="#333">fit the full ML pipeline</text>
   <rect x="250" y="140" width="200" height="64" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
   <rect x="250" y="140" width="200" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="350" y="157" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cell 16 &#183; evaluate</text>
-  <text x="350" y="184" text-anchor="middle" font-size="12" fill="#333">metrics printed, not saved</text>
+  <text x="350" y="157" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 39&#8211;41 &#183; evaluate</text>
+  <text x="350" y="184" text-anchor="middle" font-size="12" fill="#333">metrics, matrix, predictions</text>
   <rect x="470" y="140" width="200" height="64" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
   <rect x="470" y="140" width="200" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
-  <text x="570" y="157" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 17&#8211;18 &#183; save &amp; scratch</text>
-  <text x="570" y="184" text-anchor="middle" font-size="12" fill="#333">dump model &#183; throwaway cell</text>
+  <text x="570" y="157" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">cells 43&#8211;44 &#183; save &amp; note</text>
+  <text x="570" y="184" text-anchor="middle" font-size="12" fill="#333">dump pipeline &#183; risks list</text>
   <line x1="230" y1="80" x2="250" y2="80" stroke="#333" stroke-width="1.4"/>
   <line x1="450" y1="80" x2="470" y2="80" stroke="#333" stroke-width="1.4"/>
   <line x1="130" y1="110" x2="130" y2="140" stroke="#333" stroke-width="1.4"/>
   <line x1="350" y1="110" x2="350" y2="140" stroke="#333" stroke-width="1.4"/>
   <line x1="570" y1="110" x2="570" y2="140" stroke="#333" stroke-width="1.4"/>
-  <text x="360" y="236" text-anchor="middle" font-size="12.5" fill="#C0392B" font-weight="bold">diseases are hiding in this map</text>
-  <text x="360" y="258" text-anchor="middle" font-size="12" fill="#333">repeated clean &#183; encode before split &#183; metrics only printed &#183; model dumped, no record of how</text>
-  <text x="360" y="280" text-anchor="middle" font-size="11.5" fill="#666">vs. a program, where each stage is one named, importable, verifiable unit</text>
+  <text x="360" y="236" text-anchor="middle" font-size="12.5" fill="#C0392B" font-weight="bold">the ML pipeline is sound; the operating workflow is not</text>
+  <text x="360" y="258" text-anchor="middle" font-size="12" fill="#333">hardcoded paths &#183; no environment record &#183; no tests &#183; no run history</text>
+  <text x="360" y="280" text-anchor="middle" font-size="11.5" fill="#666">loading through saving still depends on manually executing notebook cells</text>
 </svg>
 </div>
-<figcaption>The pipeline is scattered across cells in no enforced order, mixed with exploration. The problems below are hiding in this map.</figcaption>
+<figcaption>The scikit-learn pipeline safely couples preprocessing and prediction. The larger operating workflow &#8212; load, clean, explore, train, evaluate, save &#8212; is still trapped across notebook cells.</figcaption>
 </figure>
 
-<h2 class="section"><span class="num">6</span>What is wrong with this notebook</h2>
-<p class="section-intro">Six problems, each with a code snapshot from the actual cell. Every problem maps to a future lesson.</p>
+<h2 class="section"><span class="num">6</span>Our notebook carries five risks</h2>
+<p class="section-intro">You did the data work and ran a credible baseline. Now we name the five operating risks that stop it from being a system &#8212; and the lesson that removes each one. You are not expected to see these on your own yet; they are introduced here, and solved in the coming lessons.</p>
 
 <div class="card-grid one">
   <div class="card">
     <h4>1 &#183; The machine is baked in</h4>
-    <p>The data path and model path are hardcoded relative to wherever you launched Jupyter. On anyone else's machine, these point nowhere.</p>
+    <p>The data and artifact locations are hardcoded relative to the notebook's working directory. Launch Jupyter from a different folder or store the data elsewhere, and the run fails.</p>
     <div class="code-block">
-      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 4 + 17</span></div>
+      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 3 + 43</span></div>
       <div class="code-body"><span class="def">df</span> = pd.<span class="fn">read_csv</span>(<span class="str">"../../../../data/flight_delays_2025_01.csv"</span>)
-joblib.<span class="fn">dump</span>(model, <span class="str">"models/model_2025_01.joblib"</span>)</div>
+<span class="def">model_path</span> = <span class="str">"models/model_2025_01.joblib"</span>
+joblib.<span class="fn">dump</span>(model, model_path)</div>
     </div>
     <p><em>Why it matters:</em> the exact file these numbers came from lives only in your head. Two weeks later, even you will not know.</p>
     <div class="fixedby"><strong>FIXED IN:</strong> L1.2 &#183; paths become configuration</div>
@@ -318,10 +321,10 @@ joblib.<span class="fn">dump</span>(model, <span class="str">"models/model_2025_
     <h4>2 &#183; The environment is unrecorded</h4>
     <p>Which versions of pandas and scikit-learn produced these numbers? Nowhere, is where. On another machine the same code can silently behave differently.</p>
     <div class="code-block">
-      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cell 3 &#183; imports</span></div>
+      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cell 1 &#183; imports</span></div>
       <div class="code-body"><span class="def">import</span> pandas <span class="def">as</span> pd
 <span class="def">import</span> numpy <span class="def">as</span> np
-<span class="def">from</span> sklearn.ensemble <span class="def">import</span> <span class="fn">RandomForestClassifier</span></div>
+<span class="def">from</span> sklearn.linear_model <span class="def">import</span> <span class="fn">LogisticRegression</span></div>
     </div>
     <p><em>Why it matters:</em> no <code class="inline">requirements.txt</code>, no <code class="inline">pyproject.toml</code>, no lockfile &#8212; nothing records the runtime that made the model.</p>
     <div class="fixedby"><strong>FIXED IN:</strong> L1.2 &#183; dependency management, <code class="inline">uv</code> + lockfile</div>
@@ -330,75 +333,63 @@ joblib.<span class="fn">dump</span>(model, <span class="str">"models/model_2025_
 
 <div class="card-grid one">
   <div class="card">
-    <h4>3 &#183; The pipeline is invisible</h4>
-    <p>"Preprocessing" is spread across cells 8&#8211;13 &#8212; cleaning, feature engineering, encoding, scaling &#8212; in no enforced order. You cannot import it, run it alone, or prove the model used the steps you are staring at.</p>
+    <h4>3 &#183; The workflow is trapped in cells</h4>
+    <p>The scikit-learn pipeline correctly keeps preprocessing with the classifier. But loading, cohort selection, feature creation, splitting, evaluation, and saving still live in separate notebook cells that cannot be imported or run as one command.</p>
     <div class="code-block">
-      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 8&#8211;13 (fragment)</span></div>
-      <div class="code-body"><span class="com"># cell 8: clean</span>
-df = df[df[<span class="str">"Cancelled"</span>] == <span class="fn">0</span>]
-<span class="com"># cell 12: one-hot encoding</span>
-cat = pd.<span class="fn">get_dummies</span>(df[[<span class="str">"Reporting_Airline"</span>, <span class="str">"Origin"</span>, <span class="str">"Dest"</span>]])
-<span class="com"># cell 13: scaling</span>
-sc_num = sc.<span class="fn">fit_transform</span>(num)</div>
+      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 3, 16, 35, 37, 43</span></div>
+      <div class="code-body"><span class="def">df</span> = pd.<span class="fn">read_csv</span>(...)
+<span class="def">flights</span> = df.<span class="fn">loc</span>[...].<span class="fn">copy</span>()
+<span class="def">model</span> = <span class="fn">Pipeline</span>(...)
+model.<span class="fn">fit</span>(X_train, y_train)
+joblib.<span class="fn">dump</span>(model, model_path)</div>
     </div>
-    <p><em>Why it matters:</em> the recipe for the model is only as trustworthy as a wall of manually-walked-in-order cells.</p>
+    <p><em>Why it matters:</em> a sound estimator pipeline is not yet an executable training workflow. Reproducing the result still depends on a person remembering which cells to run and from where.</p>
     <div class="fixedby"><strong>FIXED IN:</strong> L1.2 &#183; importable modules &#183; and L1.3 &#183; single responsibility</div>
   </div>
   <div class="card">
-    <h4>4 &#183; Code is repeated and unverified</h4>
-    <p>Cells 8 and 9 both drop cancelled and diverted flights &#8212; the same filter, twice, already drifting in wording. And nothing checks that any intermediate output is correct.</p>
+    <h4>4 &#183; Assumptions are unverified</h4>
+    <p>The notebook assumes the expected columns exist, the target contains valid values, and raw prediction rows match the training schema. Those are sensible assumptions, but nothing checks them automatically.</p>
     <div class="code-block">
-      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 8 + 9</span></div>
-      <div class="code-body"><span class="com"># cell 8</span>
-df = df[df[<span class="str">"Cancelled"</span>] == <span class="fn">0</span>]
-df = df[df[<span class="str">"Diverted"</span>] == <span class="fn">0</span>]
-<span class="com"># cell 9</span>
-df = df[df[<span class="str">"Cancelled"</span>] == <span class="fn">0</span>]
-df = df[df[<span class="str">"Diverted"</span>] == <span class="fn">0</span>]</div>
+      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 16 + 33</span></div>
+      <div class="code-body"><span class="def">flights</span> = df.<span class="fn">loc</span>[
+    df[<span class="str">"Cancelled"</span>].<span class="fn">eq</span>(<span class="fn">0</span>) &amp; df[<span class="str">"ArrDel15"</span>].<span class="fn">notna</span>()
+]
+<span class="def">numeric_features</span> = [<span class="str">"DepDelay"</span>, <span class="str">"Distance"</span>, ...]</div>
     </div>
-    <p><em>Why it matters:</em> the copy drifts (first it says "cancelled/diverted", then "no survivor"), and nobody notices &#8212; or proves &#8212; anything.</p>
-    <div class="fixedby"><strong>FIXED IN:</strong> L1.3 &#183; DRY &#183; and L1.5 &#183; tests</div>
+    <p><em>Why it matters:</em> a renamed or missing column fails late, while a subtly wrong value can flow through and produce a plausible prediction.</p>
+    <div class="fixedby"><strong>FIXED IN:</strong> L1.4 &#183; clear failures &#183; and L1.5 &#183; schema and prediction-contract tests</div>
   </div>
 </div>
 
 <div class="card-grid one">
   <div class="card">
     <h4>5 &#183; Results are printed, not produced</h4>
-    <p>The most important number in the project exists as text in a cell you ran once. There is no record of how this model was made &#8212; data, features, parameters.</p>
+    <p>The most important numbers exist as text in a cell you ran once. The fitted pipeline is saved, but there is no durable record connecting it to its data, parameters, code, and metrics.</p>
     <div class="code-block">
-      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cell 16</span></div>
-      <div class="code-body"><span class="fn">print</span>(<span class="str">"accuracy:"</span>, <span class="fn">accuracy_score</span>(y_test, y_pred))
-<span class="fn">print</span>(<span class="str">"f1:"</span>, <span class="fn">f1_score</span>(y_test, y_pred))</div>
+      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 39 + 43</span></div>
+      <div class="code-body"><span class="fn">print</span>(<span class="str">f"accuracy: {accuracy:.4f}"</span>)
+<span class="fn">print</span>(<span class="str">f"f1: {f1:.4f}"</span>)
+joblib.<span class="fn">dump</span>(model, model_path)</div>
     </div>
     <p><em>Why it matters:</em> a metric that only exists as a printed float cannot be compared, tracked, or verified later.</p>
     <div class="fixedby"><strong>FIXED IN:</strong> L1.4 &#183; logging &#183; and later L2.x &#183; experiment tracking</div>
   </div>
-  <div class="card">
-    <h4>6 &#183; Data leakage inflates the metrics</h4>
-    <p>Cells 12&#8211;13 one-hot encode and scale <em>before</em> the train/test split in cell 15. The scaler and encoder have already seen the test rows, so the test metrics are quietly optimistic.</p>
-    <div class="code-block">
-      <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">cells 12&#8211;13 then cell 15</span></div>
-      <div class="code-body"><span class="com"># cell 12: encode (before split!)</span>
-cat = pd.<span class="fn">get_dummies</span>(df[[<span class="str">"Reporting_Airline"</span>, <span class="str">"Origin"</span>, <span class="str">"Dest"</span>]])
-<span class="com"># cell 13: scale (before split!)</span>
-sc_num = sc.<span class="fn">fit_transform</span>(num)
-<span class="com"># cell 15: split happens after encoding</span>
-X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y, ...)</div>
-    </div>
-    <p><em>Why it matters:</em> no crash, just a lying score. The reported 0.7587 F1 is higher than what you would see on genuinely unseen data.</p>
-    <div class="fixedby"><strong>FIXED IN:</strong> L1.5 &#183; tests that catch it</div>
-  </div>
+</div>
+
+<div class="callout tip">
+  <div class="ti">One more, in the same spirit</div>
+  <p><code class="inline">seaborn</code> is imported in cell 1 but never used &#8212; dead code left over from when the opening plot was a different chart. Harmless here, but it is exactly the kind of leftover a linter will catch in L1.3.</p>
 </div>
 
 <div class="callout warn">
   <div class="ti">Notebooks are not the enemy</div>
-  <p>Jupyter is the right tool for exploration &#8212; this disease hunt lives in one, after all. The problem is using it (only) as the vehicle for code that must run reliably later. Every line above is about the <em>use</em>, not the tool.</p>
+  <p>Jupyter is the right tool for exploration &#8212; the audited notebook itself lives in one, after all. The problem is using it (only) as the vehicle for code that must run reliably later. Every risk above is about the <em>use</em>, not the tool.</p>
 </div>
 
 <h2 class="section"><span class="num">7</span>What changed in our project?</h2>
 <p class="section-intro">You now have a recorded baseline and a named audit of what must change next.</p>
 
-<p><strong>Before:</strong> you had a notebook that produced a model, but no explicit record of what made the workflow fragile. <strong>After:</strong> you have cold-run baseline metrics and a six-row Fragility Audit that points to the lessons where each risk will be removed.</p>
+<p><strong>Before:</strong> you had a notebook that produced a model, but no explicit record of what made the workflow fragile. <strong>After:</strong> you have cold-run baseline metrics and a five-row Fragility Audit that points to the lessons where each operational risk will be removed.</p>
 
 <div class="table-scroll">
 <table class="api">
@@ -406,12 +397,11 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
     <tr><th>Problem</th><th>Where in the notebook</th><th>Fixed in</th></tr>
   </thead>
   <tbody>
-    <tr><td>Machine baked in &#8212; hardcoded paths</td><td>cells 4, 17</td><td>L1.2</td></tr>
+    <tr><td>Machine baked in &#8212; hardcoded paths</td><td>cells 3, 43</td><td>L1.2</td></tr>
     <tr><td>Environment unrecorded &#8212; no dependency file</td><td>entire notebook</td><td>L1.2</td></tr>
-    <tr><td>Pipeline invisible &#8212; scattered, not importable</td><td>cells 8&#8211;13</td><td>L1.2, L1.3</td></tr>
-    <tr><td>Code repeated and unverified</td><td>cells 8 vs 9</td><td>L1.3, L1.5</td></tr>
-    <tr><td>Results printed, not produced</td><td>cells 16&#8211;17</td><td>L1.4, L2.x</td></tr>
-    <tr><td>Data leakage &#8212; encode/scale before split</td><td>cells 12&#8211;13 before 15</td><td>L1.5</td></tr>
+    <tr><td>Workflow trapped in notebook cells</td><td>cells 3&#8211;43</td><td>L1.2, L1.3</td></tr>
+    <tr><td>Schema and preprocessing assumptions unverified</td><td>cells 16, 33</td><td>L1.4, L1.5</td></tr>
+    <tr><td>Metrics printed without run history</td><td>cells 39, 43</td><td>L1.4, L2.x</td></tr>
   </tbody>
 </table>
 </div>
@@ -420,15 +410,17 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
 
 <div class="callout tip">
   <div class="ti">Verify the milestone</div>
-  <p>Restart the notebook kernel, choose <strong>Run All</strong>, and confirm accuracy is approximately <code class="inline">0.9184</code> and F1 is approximately <code class="inline">0.7587</code>. Your Fragility Audit is complete when it contains the six rows above, with notebook evidence and the lesson that will fix each problem.</p>
+  <p>Restart the notebook kernel, choose <strong>Run All</strong>, and confirm accuracy is approximately <code class="inline">0.8952</code> and F1 is approximately <code class="inline">0.7415</code>. You met this lesson's milestone when your notebook reproduces the baseline from a fresh kernel and you can explain the five risks above &#8212; what each one is, where it lives (cells), and which lesson removes it.</p>
 </div>
 
 <div class="callout recap">
   <div class="ti">Takeaways</div>
-  <p>You know the data: 539,747 US flights from January 2025, 40 columns, binary target <code class="inline">ArrDel15</code>.<br>
-  You built your own baseline and saw our reference &#8212; accuracy ≈ 0.918, F1 ≈ 0.759.<br>
-  A notebook is a <strong>transcript of a session</strong>, not a program: its result depends on what has already run, and the file never records that.<br>
-  Our notebook has six concrete problems, each mapped to the lesson that fixes it. That mapping is the course roadmap.</p>
+  <ul>
+    <li>You know the data: 539,747 US flights from January 2025, 40 columns, binary target <code class="inline">ArrDel15</code>.</li>
+    <li>You built your own baseline and saw our reference &#8212; accuracy ≈ 0.895, F1 ≈ 0.742.</li>
+    <li>A notebook is a <strong>transcript of a session</strong>, not a program: its result depends on what has already run, and the file never records that.</li>
+    <li>Our notebook carries five operating risks, each introduced here and mapped to the lesson that removes it &#8212; that mapping is the course roadmap.</li>
+  </ul>
 </div>
 
 <div class="day-nav">
@@ -443,14 +435,7 @@ X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y
 </div>
 </main>
 <footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">From ML to MLOps</div>
-    <p class="footer-tagline">Software engineering &amp; MLOps foundations for ML practitioners &#8212; one US flight-delay project, engineered end to end.</p>
-    <p class="footer-byline">by <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a></p>
-    <div class="footer-bottom">
-      <span>&#169; 2026 Ahmad Mostafa</span><span>&#183;</span><span>From ML to MLOps &#183; self-paced</span>
-    </div>
-  </div>
+  <p class="footer-cr">&#169; 2026 <a href="https://github.com/a7madmostafa" target="_blank" rel="noopener">Ahmad Mostafa</a> &#183; From ML to MLOps &#183; self-paced</p>
 </footer>
 <script>
 (function(){

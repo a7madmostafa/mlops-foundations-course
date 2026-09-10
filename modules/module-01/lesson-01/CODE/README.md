@@ -6,9 +6,11 @@ it is a reference you compare against after building your own.
 
 ## What's here
 
-- `flight_delays.ipynb` &#8212; our baseline. It runs end-to-end and prints
-  accuracy and F1. It also carries every problem the course will teach
-  you to fix (see the reading page for the labeled list).
+- `flight_delays.ipynb` &#8212; our baseline. It explores the data, records
+  insights from four EDA views, and trains a logistic-regression model with
+  a leakage-safe scikit-learn preprocessing pipeline. It also carries the
+  five operational problems the course will teach you to fix (see the
+  reading page for the labeled list).
 - `flight_delays.html` &#8212; browser-readable HTML export of the notebook.
 - The data does **not** live in `CODE/` &#8212; it lives in the course data pool
   at the repo root (`data/`, see `data/README.md`). This lesson reads
@@ -27,7 +29,10 @@ Restart the kernel, then **Run All**. Run it from the `CODE/` folder so
 the relative data path resolves. The notebook has no dependencies beyond
 the usual scientific stack (pandas, scikit-learn, matplotlib, joblib).
 
-The baseline is: **accuracy 0.9184, F1 0.7587** on 522,269 clean rows.
+The baseline is: **accuracy 0.8952, F1 0.7415** on 522,269 clean rows. The
+prediction is made shortly after departure, so actual departure delay is an
+available feature. The saved artifact contains the fitted imputers,
+`StandardScaler`, `OneHotEncoder`, and classifier together.
 
 > Note: running it creates a `models/` folder &#8212; that generated artifact is
 > git-ignored here, as it would be in a real project.
