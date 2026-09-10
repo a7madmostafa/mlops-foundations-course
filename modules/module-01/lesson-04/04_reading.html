@@ -125,11 +125,450 @@
   <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.4</span></nav>
 </div>
 <h1 class="title">Robustness &amp; Logging</h1>
-<p class="subtitle">Coming soon &#8212; this lesson is under development.</p>
+<p class="subtitle">Your pipeline crashes with a wall of traceback text and prints its results to nowhere. This lesson makes it fail loudly with a clear error on expected breakage and talk with timestamped logs.</p>
+
+<div class="day-links">
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-04/CODE"><svg class="dl-icon"><use href="#icon-external"/></svg>CODE/</a>
+</div>
 
 <div class="callout tip">
-  <div class="ti">This lesson is being written</div>
-  <p>Check back soon.</p>
+  <div class="ti">Before you start</div>
+  <p>You need Lesson 1.3 complete: <code class="inline">uv run python main.py</code> prints <code class="inline">accuracy: 0.8952</code> and <code class="inline">f1: 0.7415</code>, and Ruff + mypy are installed and green in the lesson's <code class="inline">CODE/</code> folder.</p>
+</div>
+
+<div class="objectives">
+  <h2>What you'll do in this lesson</h2>
+  <ul>
+    <li>Break the pipeline on purpose and learn to read what its traceback actually tells you.</li>
+    <li>Add validation checks that raise clear errors when the file, the columns, or the rows are wrong.</li>
+    <li>Understand exceptions, <code class="inline">raise</code>, and <code class="inline">try</code>/<code class="inline">except</code>/<code class="inline">else</code>/<code class="inline">finally</code> &#8212; and when to use each.</li>
+    <li>Replace every <code class="inline">print()</code> with the standard <code class="inline">logging</code> module and its five severity levels.</li>
+    <li>Add one shared logging setup so every run leaves timestamped, leveled messages.</li>
+    <li>Confirm the pipeline still logs accuracy <code class="inline">0.8952</code>/<code class="inline">f1 0.7415</code> and Ruff + mypy stay green.</li>
+  </ul>
+</div>
+
+<!-- ================================================================
+     SECTION 1 — A crash that tells you nothing
+     ================================================================ -->
+<h2 class="section"><span class="num">1</span>A crash that tells you nothing</h2>
+<p class="section-intro">The symptom this lesson fixes, and what a traceback is for.</p>
+
+<p>Open the Lesson 1.3 <code class="inline">CODE/</code>, run <code class="inline">uv run python main.py</code>, and it works &#8212; numbers on screen. Now point the pipeline at a folder that has no CSV:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="com"># macOS / Linux</span>
+FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
+
+<span class="com"># Windows PowerShell</span>
+<span class="fn">$env</span>:FLIGHT_DATA_DIR=<span class="str">"C:\no\such\dir"</span>; <span class="fn">uv</span> run python main.py</div>
+</div>
+
+<p>The tail of what Python prints looks like this:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body">Traceback (most recent call last):
+  File <span class="str">"...\src\load.py"</span>, line 10, <span class="kw">in</span> load_csv
+    <span class="kw">return</span> pd.read_csv(path)
+           ^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\flight_delays_2025_01.csv'</span></div>
+</div>
+
+<p>Do not close that window yet &#8212; it just failed in a very educational way. This printout is a <strong>traceback</strong>: a top-to-bottom list of the call frames that were active when the failure happened. Python prints it whenever an unhandled <strong>exception</strong> &#8212; its word for "something went wrong" &#8212; reaches the top of your program.</p>
+
+<ul class="callout-body">
+  <li><strong>Exception</strong> &#8212; a signal that something went wrong at runtime. Built-in types include <code class="inline">FileNotFoundError</code>, <code class="inline">ValueError</code>, <code class="inline">KeyError</code>, <code class="inline">ZeroDivisionError</code>; each carries a message.</li>
+  <li><strong>Traceback</strong> &#8212; Python's report of <em>where</em> the exception travelled: each frame (file + line + function), with the exception type and message on the last line.</li>
+</ul>
+
+<p>Read the traceback correctly and the last line is the one that matters: <code class="inline">FileNotFoundError</code>, plus the path. The frames above tell you <em>where</em> the failure surfaced (<code class="inline">load.py</code> line 10). But notice what the message does <em>not</em> say: it does not tell you the CSV is missing, that it is something <em>you</em> can fix, or what to do about it. A colleague tasked with re-running the pipeline would have to guess.</p>
+
+<p>Separate failures into two families, because they deserve different treatment:</p>
+
+<ul class="callout-body">
+  <li><strong>Expected breakage</strong> &#8212; inputs we can predict will sometimes be wrong: the file is missing, a column is renamed, a data pull returned zero rows. These deserve a <em>designed</em> message: what happened + what to do.</li>
+  <li><strong>Unexpected errors</strong> &#8212; a bug nobody predicted, like a column of text that should be numbers. Keep the traceback for these. It is your debugging microscope: it shows exactly which call and line blew up.</li>
+</ul>
+
+<p><strong>Robust</strong> means: expected failure is caught, named, and explained; unexpected failure still leaves the traceback behind for debugging. Lesson 1.3's pipeline does neither on expected breakage. It dumps raw <code class="inline">FileNotFoundError</code> text with no guidance, and its only voice on success is a <code class="inline">print()</code>. Fix both.</p>
+
+<!-- ================================================================
+     SECTION 2 — Failing loudly with clear errors
+     ================================================================ -->
+<h2 class="section"><span class="num">2</span>Failing loudly with clear errors</h2>
+<p class="section-intro">Validate at the boundary and raise exceptions that say what to do.</p>
+
+<h3>The practice: fail fast at the boundary</h3>
+
+<p>Checks belong at the edge of the pipeline, right where the raw input arrives &#8212; not deep inside a training function where the original source of the problem is far away. That is the <strong>fail fast</strong> principle: stop the moment you know the input is wrong, with a message that says so.</p>
+
+<p>The new <code class="inline">src/validate.py</code> adds three such checks. Each one <code class="inline">raise</code>s a specific exception type with a message that says <em>what is wrong</em> and <em>what to do about it</em>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/validate.py</span></div>
+  <div class="code-body"><span class="str">"""Clear, loud checks for the data the pipeline depends on."""</span>
+
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+
+<span class="kw">def</span> <span class="fn">ensure_file_exists</span>(path: Path) -&gt; None:
+    <span class="str">"""Raise FileNotFoundError with a helpful hint if the CSV is missing."""</span>
+    <span class="kw">if</span> <span class="kw">not</span> path.is_file():
+        <span class="kw">raise</span> FileNotFoundError(
+            <span class="str">f"Data file not found: {path}. Download the flight-delays CSV "</span>
+            <span class="str">"first, then run again. See the download command in "</span>
+            <span class="str">"data/README.md."</span>
+        )
+
+
+<span class="kw">def</span> <span class="fn">ensure_columns</span>(df: pd.DataFrame, required: list[str]) -&gt; None:
+    <span class="str">"""Raise ValueError if any required column is missing from the data."""</span>
+    missing = [col <span class="kw">for</span> col <span class="kw">in</span> required <span class="kw">if</span> col <span class="kw">not in</span> df.columns]
+    <span class="kw">if</span> missing:
+        <span class="kw">raise</span> ValueError(
+            <span class="str">f"Data is missing required columns: {missing}. "</span>
+            <span class="str">f"Found {len(df.columns)} columns instead."</span>
+        )
+
+
+<span class="kw">def</span> <span class="fn">ensure_nonempty</span>(df: pd.DataFrame) -&gt; None:
+    <span class="str">"""Raise ValueError if there are no rows left to model on."""</span>
+    <span class="kw">if</span> len(df) == 0:
+        <span class="kw">raise</span> ValueError(
+            <span class="str">"No modeling rows after cleaning. Check that the CSV contains "</span>
+            <span class="str">"completed flights with a known ArrDel15 value."</span>
+        )</div>
+</div>
+
+<p><code class="inline">raise FileNotFoundError("...")</code> creates an exception object and throws it. That is a statement of intent: <em>this is not a normal path through the program</em>. Notice the messages name the expected failure mode, not the raw OS error. The type matters too: a missing file is <code class="inline">FileNotFoundError</code>, a schema problem is <code class="inline">ValueError</code> &#8212; the two families the pipeline will actually handle.</p>
+
+<h3>The control flow: try / except / else / finally</h3>
+
+<p>Validating is half the fix. The other half is what the program does when a check (or any risky call) raises. Four clauses do the job:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">minimal example</span></div>
+  <div class="code-body"><span class="kw">try</span>:
+    result = <span class="fn">int</span>(user_input)        <span class="com"># risky step: may raise ValueError</span>
+<span class="kw">except</span> ValueError:
+    print(<span class="str">"Not a number, using 0"</span>)  <span class="com"># only on failure</span>
+    result = 0
+<span class="kw">else</span>:
+    print(<span class="str">"Parsed a real number"</span>)  <span class="com"># only on success</span>
+<span class="kw">finally</span>:
+    print(<span class="str">"Input check finished"</span>)   <span class="com"># always runs</span></div>
+</div>
+
+<ul class="callout-body">
+  <li><code class="inline">try</code> wraps the call that might fail.</li>
+  <li><code class="inline">except ValueError:</code> runs only when that exception type is raised. Catch exactly what you can handle; let everything else propagate.</li>
+  <li><code class="inline">else:</code> runs only when <code class="inline">try</code> completed without raising.</li>
+  <li><code class="inline">finally:</code> always runs &#8212; success or failure &#8212; the place for cleanup.</li>
+</ul>
+
+<p>The <code class="inline">print()</code> calls above are stand-ins. They fail the moment a message is not for the user but for the record &#8212; which is the next section. Keep the control-flow shape in mind; the output mechanism changes next.</p>
+
+<!-- ================================================================
+     SECTION 3 — Prints are a dead end
+     ================================================================ -->
+<h2 class="section"><span class="num">3</span>Prints are a dead end</h2>
+<p class="section-intro">Why print() cannot be the project's voice as it grows.</p>
+
+<p>Lesson 1.3's <code class="inline">main.py</code> reports success with <code class="inline">print(f"accuracy: {metrics['accuracy']:.4f}")</code> and failure with an unhandled traceback. That was fine at two files. Now ask what you need from a pipeline that will be re-run on new data, by schedulers, from CI, on servers:</p>
+
+<ul class="callout-body">
+  <li><strong>Severity.</strong> A warning and an error are not equal. You want to filter them, and to silence the noise when good is good enough.</li>
+  <li><strong>When and where.</strong> Was this from Monday's run of <code class="inline">load</code> or Wednesday's of <code class="inline">train</code>? Each message needs a timestamp and a source name.</li>
+  <li><strong>Destinations.</strong> Console today, a file tomorrow, an error-tracking service later. One line of output should be re-routable without editing every call site.</li>
+</ul>
+
+<p><code class="inline">print()</code> has none of this: no levels, no timestamps, no source, no routing. The moment something is not you watching a terminal, prints are a dead end. The standard-library <code class="inline">logging</code> module is the replacement built into Python &#8212; nothing new to install.</p>
+
+<div class="compare">
+  <div class="col">
+    <h4>Before (L1.3 print)</h4>
+<pre><code class="code-body">print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)</code></pre>
+  </div>
+  <div class="col">
+    <h4>After (L1.4 logging)</h4>
+<pre><code class="code-body">logger.info(<span class="str">"accuracy: %.4f"</span>, metrics[<span class="str">"accuracy"</span>])</code></pre>
+  </div>
+</div>
+
+<p>The two lines output almost the same characters &#8212; the difference is everything around the message: it now has a level, a timestamp, a source, and a pluggable destination. An "almost identical line" staying consistent through a refactor to files, JSON, or a monitoring service is exactly the leverage you buy. Now the vocabulary:</p>
+
+<!-- ================================================================
+     SECTION 4 — Logging fundamentals
+     ================================================================ -->
+<h2 class="section"><span class="num">4</span>Logging fundamentals</h2>
+<p class="section-intro">Levels, loggers, handlers, and formatters &#8212; the four pieces.</p>
+
+<p>The <code class="inline">logging</code> module has one job: emitting <strong>log records</strong>. Every record is produced with a <em>level</em>, tagged with a <em>logger name</em>, and carries a <em>timestamp</em>. Four concepts govern what happens next:</p>
+
+<ul class="callout-body">
+  <li><strong>Level</strong> &#8212; severity, in increasing order: <code class="inline">DEBUG</code>, <code class="inline">INFO</code>, <code class="inline">WARNING</code>, <code class="inline">ERROR</code>, <code class="inline">CRITICAL</code>. Every logger has a threshold; levels below it are dropped.</li>
+  <li><strong>Logger</strong> &#8212; the named channel you call: <code class="inline">logger.info(...)</code>. Each module owns one via <code class="inline">logging.getLogger(__name__)</code>.</li>
+  <li><strong>Handler</strong> &#8212; the destination a record is sent to: console, a file, HTTP. A logger can have several; without one, nothing happens.</li>
+  <li><strong>Formatter</strong> &#8212; the layout of each line: what order timestamp, level, name, and message appear in.</li>
+</ul>
+
+<h3>One logger per module</h3>
+
+<p>At the top of a file that will log, add one line:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (top)</span></div>
+  <div class="code-body">logger = <span class="fn">logging.getLogger</span>(__name__)</div>
+</div>
+
+<p><code class="inline">__name__</code> is the module's name (here <code class="inline">__main__</code>). The logger name does two jobs: it appears in the output (so "who said that" is free), and it is the key you reuse if you ever want to tune one module only. This is why production code rarely logs on a single global logger &#8212; a global logger loses the "which module" answer.</p>
+
+<h3>printf-style formatting</h3>
+
+<p>Notice the call replaces string interpolation with a format string plus arguments:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">comparison</span></div>
+  <div class="code-body">logger.info(<span class="str">"accuracy: %.4f"</span>, metrics[<span class="str">"accuracy"</span>])  <span class="com"># logging idiom</span>
+print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)             <span class="com"># what we replace</span></div>
+</div>
+
+<p>The message string stays a template; the values are passed separately. Two reasons: the template is named and readable, and the formatting work only happens if the record is actually emitted &#8212; at <code class="inline">DEBUG</code> level under an <code class="inline">INFO</code> threshold, the expensive part never runs. Follow this idiom everywhere.</p>
+
+<h3>The shared setup</h3>
+
+<p>Every module logger feeds a shared root logger, so the whole project needs exactly <em>one</em> configuration place. The new <code class="inline">src/log_setup.py</code> is that place:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/log_setup.py</span></div>
+  <div class="code-body"><span class="str">"""Shared logging configuration for the flight-delay pipeline."""</span>
+
+<span class="kw">import</span> logging
+<span class="kw">import</span> sys
+
+<span class="def">LOG_FORMAT</span> = <span class="str">"%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"</span>
+<span class="def">DATE_FORMAT</span> = <span class="str">"%Y-%m-%d %H:%M:%S"</span>
+
+
+<span class="kw">def</span> <span class="fn">setup_logging</span>(level: int = logging.INFO) -&gt; None:
+    <span class="str">"""Configure the root logger once, at process start.
+
+    Every module builds its own logger with ``logging.getLogger(__name__)``;
+    this one call sets the format, level, and destination for all of them.
+    """</span>
+    logging.basicConfig(
+        level=level,
+        format=LOG_FORMAT,
+        datefmt=DATE_FORMAT,
+        stream=sys.stdout,
+        force=True,
+    )</div>
+</div>
+
+<p><code class="inline">basicConfig</code> is the one-call configurator: it installs a handler on the root logger and sets the level, format string, and date format.</p>
+
+<ul class="callout-body">
+  <li><code class="inline">%(asctime)s</code> &#8212; the timestamp, in the shape given by <code class="inline">datefmt</code>.</li>
+  <li><code class="inline">%(levelname)-8s</code> &#8212; the level, left-justified in 8 characters, so <code class="inline">INFO</code> and <code class="inline">ERROR</code> align in a column.</li>
+  <li><code class="inline">%(name)s</code> &#8212; the logger name (<code class="inline">__main__</code>, <code class="inline">src.load</code>, &#8230;).</li>
+  <li><code class="inline">%(message)s</code> &#8212; the formatted message you passed.</li>
+</ul>
+
+<p>Decode a real line against the format string:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">real output</span></div>
+  <div class="code-body"><span class="com">%(asctime)s      %(levelname)-8s  %(name)s      %(message)s</span>
+2026-09-10 16:17:23  <span class="fn">INFO</span>     <span class="fn">__main__</span>  accuracy: 0.8952</div>
+</div>
+
+<p><code class="inline">setup_logging()</code> must run <em>before</em> anything logs, so it belongs at the program's entry point &#8212; the one block at the bottom of <code class="inline">main.py</code>. <code class="inline">force=True</code> makes the call safe to repeat (e.g. when a notebook re-imports the module) instead of silently ignoring the second call.</p>
+
+<p>One detail that surprises everyone: until <code class="inline">logging.basicConfig</code> runs, the root logger's default threshold is <code class="inline">WARNING</code>. Drop <code class="inline">setup_logging()</code> and your <code class="inline">INFO</code> lines vanish, not because they fail &#8212; because no handler and no permissive threshold exist yet. That is the severity gate working as designed: silence below the threshold is a feature.</p>
+
+<!-- ================================================================
+     SECTION 5 — Wiring logging into the pipeline
+     ================================================================ -->
+<h2 class="section"><span class="num">5</span>Wire logging into the pipeline</h2>
+<p class="section-intro">main.py grows a logger, per-stage messages, and a guarded entry point.</p>
+
+<p>Open this lesson's <code class="inline">main.py</code>. It now imports <code class="inline">logging</code> and the two new modules, defines a module logger, logs one <code class="inline">INFO</code> line per stage, and guards the entry point:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (excerpt)</span></div>
+  <div class="code-body">logger = <span class="fn">logging.getLogger</span>(__name__)
+
+<span class="kw">def</span> <span class="fn">main</span>() -&gt; None:
+    logger.info(<span class="str">"Pipeline started"</span>)
+
+    <span class="com"># --- Load + validate + clean -----------------------------------------</span>
+    csv_path = <span class="fn">Path</span>(os.environ.get(<span class="str">"FLIGHT_DATA_DIR"</span>, DATA_DIR)) / DATA_FILE
+    <span class="fn">ensure_file_exists</span>(csv_path)
+    logger.info(<span class="str">"Loading data from %s"</span>, csv_path)
+    flights = <span class="fn">clean_flights</span>(<span class="fn">load_csv</span>(csv_path))
+
+    <span class="fn">ensure_columns</span>(flights, FEATURES + [TARGET])
+    <span class="fn">ensure_nonempty</span>(flights)
+    logger.info(<span class="str">"Modeling rows: %s"</span>, <span class="str">f"{len(flights):,}"</span>)
+
+    <span class="com"># ... train + evaluate ...</span>
+    logger.info(<span class="str">"Training finished"</span>)
+    logger.info(<span class="str">"accuracy: %.4f"</span>, metrics[<span class="str">"accuracy"</span>])
+    logger.info(<span class="str">"f1:       %.4f"</span>, metrics[<span class="str">"f1"</span>])
+
+    <span class="com"># ... save + predict ...</span>
+    logger.info(<span class="str">"Saved pipeline to %s"</span>, model_path)
+    logger.info(<span class="str">"Pipeline finished"</span>)
+
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="fn">setup_logging</span>()
+    <span class="kw">try</span>:
+        <span class="fn">main</span>()
+    <span class="kw">except</span> (FileNotFoundError, ValueError) <span class="kw">as</span> error:
+        logger.error(<span class="str">"Pipeline failed: %s"</span>, error)
+        <span class="kw">raise</span> SystemExit(1) <span class="kw">from</span> error</div>
+</div>
+
+<p>Walk the pieces:</p>
+
+<ul class="callout-body">
+  <li><strong>The validation chain.</strong> The CSV path is decided first &#8212; <code class="inline">FLIGHT_DATA_DIR</code> if set, else the configured <code class="inline">DATA_DIR</code> (an environment variable is a name&#8594;value pair handed to the process at launch, so you can switch data folders without editing code) &#8212; then <code class="inline">ensure_file_exists</code> checks it before pandas ever touches a missing file. Columns and row count are checked right after cleaning, close to the source, with messages that name the exact missing column.</li>
+  <li><strong>One message per stage.</strong> Loaded, trained, saved, done &#8212; each phase announces itself. Anyone skimming logs can now answer "where did it get to?" without reading code.</li>
+  <li><strong>The guard.</strong> The only two exceptions the pipeline deliberately handles are the two the validation can raise. On either, it logs one <code class="inline">ERROR</code> line and <em>exits with code 1</em>.</li>
+</ul>
+
+<p><strong>Exit codes</strong> are how one program reports to another: <code class="inline">0</code> means success, anything else means failure. <code class="inline">raise SystemExit(1)</code> does two things: it stops the process with code <code class="inline">1</code>, and <code class="inline">from error</code> keeps the original exception attached to the exit so a debugger still finds the true cause. A scheduler or a CI job checks that code &#8212; a human reading one clean <code class="inline">ERROR</code> line is just a bonus. Because only expected families are caught, an unexpected bug still crashes with the full traceback: that is the microscope, kept on purpose.</p>
+
+<!-- ================================================================
+     SECTION 6 — Run it
+     ================================================================ -->
+<h2 class="section"><span class="num">6</span>Run it &#8212; the milestone</h2>
+<p class="section-intro">Same metrics, but the run talks: timestamped stages, and a clean failure path.</p>
+
+<p>Open the lesson's <code class="inline">CODE/</code> folder and run the happy path:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">cd</span> modules/module-01/lesson-04/CODE
+<span class="fn">uv</span> sync
+<span class="fn">uv</span> run python main.py</div>
+</div>
+
+<p>Expected output (timestamps and absolute paths differ):</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">2026-09-10 16:17:16 | <span class="fn">INFO</span>     | __main__ | Pipeline started
+2026-09-10 16:17:16 | <span class="fn">INFO</span>     | __main__ | Loading data from .../data/flight_delays_2025_01.csv
+2026-09-10 16:17:19 | <span class="fn">INFO</span>     | __main__ | Modeling rows: 522,269
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | accuracy: 0.8952
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | f1:       0.7415
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | Saved pipeline to .../models/model_2025_01.joblib
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | Probability of delay for first test flight: 0.0550
+2026-09-10 16:17:23 | <span class="fn">INFO</span>     | __main__ | Pipeline finished</div>
+</div>
+
+<p>Same numbers as Lesson 1.3 &#8212; the model and the data did not change, only the project's voice. Every line now tells you <em>when</em> (<code class="inline">%(asctime)s</code>), <em>who</em> (<code class="inline">__main__</code>), and <em>how important</em> (<code class="inline">INFO</code>).</p>
+
+<p>Now break it. Point the pipeline at a folder with no CSV, using the same <code class="inline">FLIGHT_DATA_DIR</code> mechanism from earlier:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="com"># macOS / Linux</span>
+FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run python main.py
+
+<span class="com"># Windows PowerShell</span>
+<span class="fn">$env</span>:FLIGHT_DATA_DIR=<span class="str">"C:\no\such\dir"</span>; <span class="fn">uv</span> run python main.py</div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">2026-09-10 16:18:01 | <span class="fn">INFO</span>  | __main__ | Pipeline started
+2026-09-10 16:18:01 | <span class="fn">ERROR</span> | __main__ | Pipeline failed: Data file not found: C:\no\such\dir\flight_delays_2025_01.csv. Download the flight-delays CSV first, then run again. See the download command in data/README.md.</div>
+</div>
+
+<p>One <code class="inline">ERROR</code> line, no traceback wall, and the process stops. Confirm the failure is visible to other programs: run <code class="inline">$LASTEXITCODE</code> (PowerShell) or <code class="inline">echo $?</code> (macOS/Linux) and read <code class="inline">1</code>. Unset the variable before continuing:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal (PowerShell)</span></div>
+  <div class="code-body"><span class="fn">Remove-Item</span> Env:FLIGHT_DATA_DIR</div>
+</div>
+
+<p>Finally, confirm the quality checks from Lesson 1.3 still pass with the two new modules:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run ruff format --check src main.py
+<span class="fn">uv</span> run ruff check src main.py
+<span class="fn">uv</span> run mypy src main.py</div>
+</div>
+
+<p>All three green &#8212; mypy now reports <code class="inline">Success: no issues found in 11 source files</code>. That is the milestone: <strong>expected breakage becomes one clear error and exit code 1, every run leaves a timestamped, leveled log trail, and the numbers did not move.</strong></p>
+
+<!-- ================================================================
+     SECTION 7 — What changed?
+     ================================================================ -->
+<h2 class="section"><span class="num">7</span>What changed in our project?</h2>
+<p class="section-intro">Before vs after &#8212; the milestone is verifiable.</p>
+
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>Aspect</th><th>Before (Lesson 1.3)</th><th>After (Lesson 1.4)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Missing CSV</td><td>Raw <code class="inline">FileNotFoundError</code> traceback</td><td>One <code class="inline">ERROR</code> line with a fix hint; exit code 1</td></tr>
+    <tr><td>Schema / data checks</td><td>None &#8212; silent failure or crash deep in training</td><td><code class="inline">ensure_columns</code> + <code class="inline">ensure_nonempty</code> fail fast with the missing names</td></tr>
+    <tr><td>Output</td><td><code class="inline">print()</code> on success, nothing else</td><td><code class="inline">logging</code>: levels, timestamps, module names</td></tr>
+    <tr><td>Logging config</td><td>None</td><td><code class="inline">src/log_setup.py</code> &#8212; one <code class="inline">setup_logging()</code> for every module</td></tr>
+    <tr><td>Failure handling</td><td>Unhandled exception to the top</td><td><code class="inline">try</code>/<code class="inline">except</code> catches expected families; traceback kept for bugs</td></tr>
+    <tr><td>Data location</td><td>Constant <code class="inline">DATA_DIR</code> only</td><td>Overridable per-run via <code class="inline">FLIGHT_DATA_DIR</code></td></tr>
+    <tr><td>Quality checks</td><td>ruff + mypy green over 9 files</td><td>ruff + mypy green over 11 files; metrics unchanged</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Verify the milestone: run <code class="inline">uv run python main.py</code> from the <code class="inline">CODE/</code> folder and confirm the log shows accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src main.py</code>, <code class="inline">uv run ruff check src main.py</code>, and <code class="inline">uv run mypy src main.py</code> &#8212; all three green. Finally, re-run the <code class="inline">FLIGHT_DATA_DIR</code> failure demo above and confirm one <code class="inline">ERROR</code> line and exit code <code class="inline">1</code>.</p>
+
+<!-- ================================================================
+     TRY IT
+     ================================================================ -->
+<div class="callout try">
+  <div class="ti">Try it</div>
+  <p>Open <code class="inline">CODE/src/config.py</code> and change <code class="inline">DATA_FILE: str = "flight_delays_2025_01.csv"</code> to <code class="inline">"flight_delays_9999_01.csv"</code>. Run <code class="inline">uv run python main.py</code> and read the error message &#8212; it should name a file and a remedy, not just an OS path. Revert and re-run.</p>
+  <p>Now provoke the schema check: in <code class="inline">CODE/main.py</code>, add a fake column to the validation call (<code class="inline">ensure_columns(flights, FEATURES + [TARGET] + ["Not_A_Real_Column"])</code>). Run again &#8212; the <code class="inline">ERROR</code> line should name the exact missing column. Revert, re-run, and see the timestamped <code class="inline">INFO</code> trail return.</p>
+</div>
+
+<!-- ================================================================
+     TAKEAWAYS
+     ================================================================ -->
+<div class="callout recap">
+  <div class="ti">Takeaways</div>
+  <ul>
+    <li>A <strong>traceback</strong> is your WHERE-map: read the last line (exception type + message), then the frames for the call path. Keep it for unexpected bugs.</li>
+    <li><strong>Expected breakage</strong> gets a designed message: validate at the boundary with <code class="inline">raise</code>, and catch only the exception families you can actually handle.</li>
+    <li><code class="inline">try</code>/<code class="inline">except</code>/<code class="inline">else</code>/<code class="inline">finally</code> is the complete control flow: catch failures, act on the success path, always clean up.</li>
+    <li><code class="inline">logging</code> replaces <code class="inline">print()</code>: five levels, per-module loggers via <code class="inline">getLogger(__name__)</code>, printf-style formatting, and thresholds that can silence noise.</li>
+    <li>Configure once at the entry point. <code class="inline">setup_logging()</code> + one format string gives every future module the same timestamped, leveled voice.</li>
+  </ul>
+</div>
+
+<!-- ================================================================
+     CHAIN HOOK
+     ================================================================ -->
+<div class="callout warn">
+  <div class="ti">Before the next lesson &#8212; what still hurts?</div>
+  <p>The pipeline now tells you when it fails. But look at what it cannot tell you: after the happy path runs, nothing checked that the metrics are actually still <em>right</em> &#8212; change one preprocessing line and the accuracy could silently drift and nobody would know. And the log lines themselves are plain text for a human: a scheduler or dashboard cannot count <code class="inline">ERROR</code> lines or chart accuracy over time. Finally, <code class="inline">data/</code> and <code class="inline">models/</code> are still just files &#8212; there is no record of which data and code produced the model sitting on disk.</p>
+  <ul>
+    <li>Nothing proves the pipeline still works after you touch it &#8594; L1.5 checks the pipeline's behaviour automatically and repeatedly.</li>
+    <li>Logs are human-readable text that no tool can parse into metrics &#8594; L4.4 makes machine-parseable, structured logs.</li>
+    <li>No record of which data + code version produced which model &#8594; L2.1 starts recording experiments and their inputs.</li>
+  </ul>
 </div>
 
 <div class="day-nav">
