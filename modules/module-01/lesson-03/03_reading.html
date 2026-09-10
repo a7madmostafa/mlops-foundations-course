@@ -180,8 +180,8 @@
 <p>Add Ruff to your dev dependencies:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">uv add --dev ruff</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> add --dev ruff</div>
 </div>
 
 <p>This writes <code class="inline">"ruff>=0.9"</code> into the <code class="inline">[dependency-groups] dev</code> section of <code>pyproject.toml</code>. Dev-only tools do not ship with your model; they are for local development only.</p>
@@ -191,30 +191,30 @@
 <p>Run the formatter on every <code>.py</code> file:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">uv run ruff format src main.py</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run ruff format src main.py</div>
 </div>
 
 <p>Ruff rewrites files in place. Here is what it does to a poorly formatted function:</p>
 
 <div class="compare">
   <div class="col">
-    <div class="ch">Before ruff format</div>
-<pre><code class="code-body">def evaluate_model(model,X_test,y_test):
+    <h4>Before ruff format</h4>
+<pre><code class="code-body"><span class="kw">def</span> <span class="fn">evaluate_model</span>(model,X_test,y_test):
   y_pred=model.predict(X_test)
-  return {"accuracy":accuracy_score(y_test,y_pred),"f1":f1_score(y_test,y_pred)}</code></pre>
+  <span class="kw">return</span> {<span class="str">"accuracy"</span>:accuracy_score(y_test,y_pred),<span class="str">"f1"</span>:f1_score(y_test,y_pred)}</code></pre>
   </div>
   <div class="col">
-    <div class="ch">After ruff format</div>
-<pre><code class="code-body">def evaluate_model(
+    <h4>After ruff format</h4>
+<pre><code class="code-body"><span class="kw">def</span> <span class="fn">evaluate_model</span>(
     model,
     X_test,
     y_test,
 ):
     y_pred = model.predict(X_test)
-    return {
-        "accuracy": accuracy_score(y_test, y_pred),
-        "f1": f1_score(y_test, y_pred),
+    <span class="kw">return</span> {
+        <span class="str">"accuracy"</span>: accuracy_score(y_test, y_pred),
+        <span class="str">"f1"</span>: f1_score(y_test, y_pred),
     }</code></pre>
   </div>
 </div>
@@ -224,12 +224,12 @@
 <p>The formatter config lives in <code>pyproject.toml</code>. The default 88-character line length is the PEP 8 community convention &#8212; just leave it:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">pyproject.toml</span></div>
-  <div class="code-body" style="color:#d4d4d4;">[tool.ruff]
-target-version = "py311"
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml</span></div>
+  <div class="code-body"><span class="com">[tool.ruff]</span>
+target-version = <span class="str">"py311"</span>
 
-[tool.ruff.lint]
-select = ["E", "F", "I"]</div>
+<span class="com">[tool.ruff.lint]</span>
+select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span class="str">"I"</span>]</div>
 </div>
 
 <p><code class="inline">["E", "F", "I"]</code> enables pycodestyle errors (<code>E</code>), pyflakes (<code>F</code>), and isort import ordering (<code>I</code>) &#8212; the three rule sets that catch real bugs and noise without overwhelming you.</p>
@@ -239,8 +239,8 @@ select = ["E", "F", "I"]</div>
 <p>The formatter fixes whitespace. The linter catches structural problems:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">uv run ruff check src main.py</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run ruff check src main.py</div>
 </div>
 
 <p>Common linter catches: <code>F841</code> (variable assigned but never used), <code>E402</code> (import at the top, not buried in code), <code>F821</code> (undefined name). Fix what it reports. If a rule does not apply to your case, add a <code># noqa</code> comment on that line with a short reason.</p>
@@ -261,10 +261,10 @@ select = ["E", "F", "I"]</div>
 <p>Open <code>train.py</code> from Lesson 1.2:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">src/train.py (L1.2)</span></div>
-  <div class="code-body" style="color:#d4d4d4;">def train_model(model, X_train, y_train):
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py (L1.2)</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(model, X_train, y_train):
     model.fit(X_train, y_train)
-    return model</div>
+    <span class="kw">return</span> model</div>
 </div>
 
 <p>What is <code class="inline">model</code>? A list? A <code>Pipeline</code>? A custom object? What does the function return? You cannot tell from the signature. You have to open the file and read the body. Every caller must reverse-engineer the contract.</p>
@@ -280,8 +280,8 @@ select = ["E", "F", "I"]</div>
 <p><a href="https://mypy-lang.org/" target="_blank" rel="noopener">mypy</a> is the Python static type checker. It reads your hints and reports mismatches. Install it as a dev dependency:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">uv add --dev mypy pandas-stubs</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> add --dev mypy pandas-stubs</div>
 </div>
 
 <p><code class="inline">pandas-stubs</code> provides type information for pandas &#8212; without it, mypy treats every DataFrame column as <code>Any</code> and misses real errors.</p>
@@ -292,29 +292,29 @@ select = ["E", "F", "I"]</div>
 
 <div class="compare">
   <div class="col">
-    <div class="ch">Before (untyped)</div>
-<pre><code class="code-body">def train_model(model, X_train, y_train):
+    <h4>Before (untyped)</h4>
+<pre><code class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(model, X_train, y_train):
     model.fit(X_train, y_train)
-    return model</code></pre>
+    <span class="kw">return</span> model</code></pre>
   </div>
   <div class="col">
-    <div class="ch">After (typed)</div>
-<pre><code class="code-body">def train_model(
+    <h4>After (typed)</h4>
+<pre><code class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(
     model: Pipeline,
     X_train: pd.DataFrame,
     y_train: pd.Series,
 ) -&gt; Pipeline:
-    """Fit the pipeline on training data."""
+    <span class="str">"""Fit the pipeline on training data."""</span>
     model.fit(X_train, y_train)
-    return model</code></pre>
+    <span class="kw">return</span> model</code></pre>
   </div>
 </div>
 
 <p>Do the same for every function in <code>load.py</code>, <code>clean.py</code>, <code>features.py</code>, <code>evaluate.py</code>, and <code>predict.py</code>. The pattern is always:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">annotation pattern</span></div>
-  <div class="code-body" style="color:#d4d4d4;">def function_name(arg: Type, ...) -> ReturnType:</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">annotation pattern</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">function_name</span>(arg: Type, ...) -&gt; ReturnType:</div>
 </div>
 
 <p>The full list of new annotations in the project:</p>
@@ -332,21 +332,21 @@ select = ["E", "F", "I"]</div>
 <p><code class="inline">config.py</code> is all module-level constants &#8212; annotate them too:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">src/config.py (excerpt)</span></div>
-  <div class="code-body" style="color:#d4d4d4;">REPO_ROOT: Path = Path(__file__).resolve().parents[5]
-DATA_DIR: Path = REPO_ROOT / "data"
-DATA_FILE: str = "flight_delays_2025_01.csv"
-FEATURES: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
-TARGET: str = "ArrDel15"
-RANDOM_STATE: int = 42
-MAX_ITER: int = 500</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py (excerpt)</span></div>
+  <div class="code-body"><span class="def">REPO_ROOT</span>: Path = Path(__file__).resolve().parents[5]
+<span class="def">DATA_DIR</span>: Path = REPO_ROOT / <span class="str">"data"</span>
+<span class="def">DATA_FILE</span>: str = <span class="str">"flight_delays_2025_01.csv"</span>
+<span class="def">FEATURES</span>: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+<span class="def">TARGET</span>: str = <span class="str">"ArrDel15"</span>
+<span class="def">RANDOM_STATE</span>: int = 42
+<span class="def">MAX_ITER</span>: int = 500</div>
 </div>
 
 <h3>Running mypy</h3>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">uv run mypy src main.py</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run mypy src main.py</div>
 </div>
 
 <p>mypy reads all files, follows imports, and checks every annotation against every call. A clean run prints <code class="inline">Success: no issues found in 9 source files</code>.</p>
@@ -360,14 +360,14 @@ MAX_ITER: int = 500</div>
 </ul>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">pyproject.toml (mypy config)</span></div>
-  <div class="code-body" style="color:#d4d4d4;">[tool.mypy]
-python_version = "3.12"
-disallow_untyped_defs = true
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml (mypy config)</span></div>
+  <div class="code-body"><span class="com">[tool.mypy]</span>
+python_version = <span class="str">"3.12"</span>
+disallow_untyped_defs = <span class="kw">true</span>
 
-[[tool.mypy.overrides]]
-module = ["sklearn.*", "joblib"]
-ignore_missing_imports = true</div>
+<span class="com">[[tool.mypy.overrides]]</span>
+module = [<span class="str">"sklearn.*"</span>, <span class="str">"joblib"</span>]
+ignore_missing_imports = <span class="kw">true</span></div>
 </div>
 
 <p><code class="inline">disallow_untyped_defs = true</code> means mypy rejects any function without annotations &#8212; it forces you to complete the job.</p>
@@ -393,47 +393,47 @@ ignore_missing_imports = true</div>
 <p>Consolidate into a single <code>build_model()</code> that constructs the complete pipeline:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">src/features.py</span></div>
-  <div class="code-body" style="color:#d4d4d4;">def build_model(
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/features.py</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">build_model</span>(
     numeric_features: list[str],
     categorical_features: list[str],
     max_iter: int = 500,
     random_state: int = 42,
 ) -&gt; Pipeline:
-    """Return the full pipeline: scaling, one-hot encoding, then logistic regression.
+    <span class="str">"""Return the full pipeline: scaling, one-hot encoding, then logistic regression.
 
     Everything a feature row needs before classification &#8212; impute,
     scale, encode &#8212; lives inside this one pipeline.
-    """
+    """</span>
     numeric = Pipeline(
         steps=[
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler()),
+            (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"median"</span>)),
+            (<span class="str">"scaler"</span>, StandardScaler()),
         ]
     )
 
     categorical = Pipeline(
         steps=[
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("onehot", OneHotEncoder(handle_unknown="ignore")),
+            (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"most_frequent"</span>)),
+            (<span class="str">"onehot"</span>, OneHotEncoder(handle_unknown=<span class="str">"ignore"</span>)),
         ]
     )
 
     preprocessor = ColumnTransformer(
         transformers=[
-            ("numeric", numeric, numeric_features),
-            ("categorical", categorical, categorical_features),
+            (<span class="str">"numeric"</span>, numeric, numeric_features),
+            (<span class="str">"categorical"</span>, categorical, categorical_features),
         ]
     )
 
-    return Pipeline(
+    <span class="kw">return</span> Pipeline(
         steps=[
-            ("preprocessor", preprocessor),
+            (<span class="str">"preprocessor"</span>, preprocessor),
             (
-                "classifier",
+                <span class="str">"classifier"</span>,
                 LogisticRegression(
                     max_iter=max_iter,
-                    class_weight="balanced",
+                    class_weight=<span class="str">"balanced"</span>,
                     random_state=random_state,
                 ),
             ),
@@ -445,13 +445,13 @@ ignore_missing_imports = true</div>
 
 <div class="compare">
   <div class="col">
-    <div class="ch">Before (two calls)</div>
-<pre><code class="code-body">preprocessor = build_preprocessor(...)
-model = build_model(preprocessor)</code></pre>
+    <h4>Before (two calls)</h4>
+<pre><code class="code-body">preprocessor = <span class="fn">build_preprocessor</span>(...)
+model = <span class="fn">build_model</span>(preprocessor)</code></pre>
   </div>
   <div class="col">
-    <div class="ch">After (one call)</div>
-<pre><code class="code-body">model = build_model(
+    <h4>After (one call)</h4>
+<pre><code class="code-body">model = <span class="fn">build_model</span>(
     NUMERIC_FEATURES,
     CATEGORICAL_FEATURES,
     max_iter=MAX_ITER,
@@ -469,40 +469,40 @@ model = build_model(preprocessor)</code></pre>
 <p>Move every choice into <code>src/config.py</code> as a named, typed constant:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">src/config.py</span></div>
-  <div class="code-body" style="color:#d4d4d4;">"""Project configuration &#8212; paths, features, and training defaults."""
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/config.py</span></div>
+  <div class="code-body"><span class="str">"""Project configuration &#8212; paths, features, and training defaults."""</span>
 
-from pathlib import Path
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
 
-# --- Paths -----------------------------------------------------------
+<span class="com"># --- Paths -----------------------------------------------------------</span>
 
-REPO_ROOT: Path = Path(__file__).resolve().parents[5]
-DATA_DIR: Path = REPO_ROOT / "data"
-DATA_FILE: str = "flight_delays_2025_01.csv"
-MODEL_DIR: Path = Path(__file__).resolve().parent.parent / "models"
-MODEL_FILE: str = "model_2025_01.joblib"
+<span class="def">REPO_ROOT</span>: Path = Path(__file__).resolve().parents[5]
+<span class="def">DATA_DIR</span>: Path = REPO_ROOT / <span class="str">"data"</span>
+<span class="def">DATA_FILE</span>: str = <span class="str">"flight_delays_2025_01.csv"</span>
+<span class="def">MODEL_DIR</span>: Path = Path(__file__).resolve().parent.parent / <span class="str">"models"</span>
+<span class="def">MODEL_FILE</span>: str = <span class="str">"model_2025_01.joblib"</span>
 
-# --- Feature lists -----------------------------------------------------------
+<span class="com"># --- Feature lists -----------------------------------------------------------</span>
 
-NUMERIC_FEATURES: list[str] = [
-    "DepDelay",
-    "Distance",
-    "CRSElapsedTime",
-    "scheduled_departure_hour",
-    "DayOfWeek",
+<span class="def">NUMERIC_FEATURES</span>: list[str] = [
+    <span class="str">"DepDelay"</span>,
+    <span class="str">"Distance"</span>,
+    <span class="str">"CRSElapsedTime"</span>,
+    <span class="str">"scheduled_departure_hour"</span>,
+    <span class="str">"DayOfWeek"</span>,
 ]
 
-CATEGORICAL_FEATURES: list[str] = ["Reporting_Airline", "Origin", "Dest"]
+<span class="def">CATEGORICAL_FEATURES</span>: list[str] = [<span class="str">"Reporting_Airline"</span>, <span class="str">"Origin"</span>, <span class="str">"Dest"</span>]
 
-FEATURES: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+<span class="def">FEATURES</span>: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
-TARGET: str = "ArrDel15"
+<span class="def">TARGET</span>: str = <span class="str">"ArrDel15"</span>
 
-# --- Training defaults -------------------------------------------------------
+<span class="com"># --- Training defaults -------------------------------------------------------</span>
 
-TEST_SIZE: float = 0.2
-RANDOM_STATE: int = 42
-MAX_ITER: int = 500</div>
+<span class="def">TEST_SIZE</span>: float = 0.2
+<span class="def">RANDOM_STATE</span>: int = 42
+<span class="def">MAX_ITER</span>: int = 500</div>
 </div>
 
 <p><code>main.py</code> imports the constants it needs. One place to change the target &#8594; every file sees the new value. And because every constant has a type, mypy catches mistakes like assigning a string to a <code>Path</code> variable.</p>
@@ -514,21 +514,21 @@ MAX_ITER: int = 500</div>
 <p>Add a <code>save_model()</code> function to <code>train.py</code> and call it from <code>main.py</code>. The pattern applies in reverse for loading: a <code>load()</code> class method on the model object knows how to deserialize.</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">src/train.py</span></div>
-  <div class="code-body" style="color:#d4d4d4;">def train_model(
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/train.py</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">train_model</span>(
     model: Pipeline,
     X_train: pd.DataFrame,
     y_train: pd.Series,
 ) -&gt; Pipeline:
-    """Fit the pipeline on training data and return the fitted model."""
+    <span class="str">"""Fit the pipeline on training data and return the fitted model."""</span>
     model.fit(X_train, y_train)
-    return model
+    <span class="kw">return</span> model
 
 
-def save_model(model: Pipeline, model_path: Path) -&gt; Path:
-    """Serialize the fitted pipeline to disk and return the path written."""
+<span class="kw">def</span> <span class="fn">save_model</span>(model: Pipeline, model_path: Path) -&gt; Path:
+    <span class="str">"""Serialize the fitted pipeline to disk and return the path written."""</span>
     joblib.dump(model, model_path)
-    return model_path</div>
+    <span class="kw">return</span> model_path</div>
 </div>
 
 <p>The project now has clean formatting, typed contracts, a DRY pipeline builder, a centralised config, and separate train/save responsibilities. One thing remains: the prediction path in <code>predict.py</code> still exposes two loose functions. When a fitted pipeline must be loaded once and reused for every prediction, that is state &#8212; and state earns a class.</p>
@@ -551,21 +551,21 @@ def save_model(model: Pipeline, model_path: Path) -&gt; Path:
 <p>Open <code>src/predict.py</code>. The class has three parts:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">src/predict.py</span></div>
-  <div class="code-body" style="color:#d4d4d4;">class FlightDelayModel:
-    """A fitted flight-delay model with one job: predict delay probability."""
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/predict.py</span></div>
+  <div class="code-body"><span class="kw">class</span> <span class="fn">FlightDelayModel</span>:
+    <span class="str">"""A fitted flight-delay model with one job: predict delay probability."""</span>
 
-    def __init__(self, pipeline: Pipeline) -&gt; None:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, pipeline: Pipeline) -&gt; None:
         self._pipeline = pipeline
 
-    @classmethod
-    def load(cls, model_path: Path) -&gt; "FlightDelayModel":
-        """Load a fitted pipeline from disk and wrap it in a model object."""
-        return cls(joblib.load(model_path))
+    <span class="kw">@classmethod</span>
+    <span class="kw">def</span> <span class="fn">load</span>(cls, model_path: Path) -&gt; <span class="str">"FlightDelayModel"</span>:
+        <span class="str">"""Load a fitted pipeline from disk and wrap it in a model object."""</span>
+        <span class="kw">return</span> cls(joblib.load(model_path))
 
-    def predict_delay(self, features_df: pd.DataFrame) -&gt; np.ndarray:
-        """Return the probability that each row's flight is delayed."""
-        return self._pipeline.predict_proba(features_df)[:, 1]</div>
+    <span class="kw">def</span> <span class="fn">predict_delay</span>(self, features_df: pd.DataFrame) -&gt; np.ndarray:
+        <span class="str">"""Return the probability that each row's flight is delayed."""</span>
+        <span class="kw">return</span> self._pipeline.predict_proba(features_df)[:, 1]</div>
 </div>
 
 <p>Walk through each part:</p>
@@ -579,8 +579,8 @@ def save_model(model: Pipeline, model_path: Path) -&gt; Path:
 <p>The caller in <code>main.py</code> is now two lines:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">main.py (excerpt)</span></div>
-  <div class="code-body" style="color:#d4d4d4;">model = FlightDelayModel.load(model_path)
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">main.py (excerpt)</span></div>
+  <div class="code-body">model = FlightDelayModel.load(model_path)
 delay_probability = model.predict_delay(X_test.iloc[:1])</div>
 </div>
 
@@ -604,17 +604,17 @@ delay_probability = model.predict_delay(X_test.iloc[:1])</div>
 <p>Open the lesson's <code>CODE/</code> folder. Run the pipeline and both quality checks:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">cd modules/module-01/lesson-03/CODE
-uv sync
-uv run python main.py</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">cd</span> modules/module-01/lesson-03/CODE
+<span class="fn">uv</span> sync
+<span class="fn">uv</span> run python main.py</div>
 </div>
 
 <p>Expected output:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">output</span></div>
-  <div class="code-body" style="color:#d4d4d4;">Modeling rows: 522,269
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">Modeling rows: 522,269
 accuracy: 0.8952
 f1:       0.7415
 
@@ -628,10 +628,10 @@ Done.</div>
 <p>Same numbers. Same data. Same seed. The metrics did not change &#8212; that is the milestone. Now run the quality checks:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="lang">bash</span></div>
-  <div class="code-body" style="color:#d4d4d4;">uv run ruff format --check src main.py
-uv run ruff check src main.py
-uv run mypy src main.py</div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run ruff format --check src main.py
+<span class="fn">uv</span> run ruff check src main.py
+<span class="fn">uv</span> run mypy src main.py</div>
 </div>
 
 <p>All three must be green:</p>
@@ -651,7 +651,7 @@ uv run mypy src main.py</div>
 
 <div class="compare">
   <div class="col">
-    <div class="ch">Lesson 1.2 (before)</div>
+    <h4>Lesson 1.2 (before)</h4>
     <table class="compare-table">
       <tr><td><strong>Formatting</strong></td><td>Manual; no style check</td></tr>
       <tr><td><strong>Types</strong></td><td>No annotations; no static check</td></tr>
@@ -663,7 +663,7 @@ uv run mypy src main.py</div>
     </table>
   </div>
   <div class="col">
-    <div class="ch">Lesson 1.3 (after)</div>
+    <h4>Lesson 1.3 (after)</h4>
     <table class="compare-table">
       <tr><td><strong>Formatting</strong></td><td><code>ruff format</code> + <code>ruff check</code> enforce style</td></tr>
       <tr><td><strong>Types</strong></td><td>Every function annotated; <code>mypy</code> passes</td></tr>
