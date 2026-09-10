@@ -125,16 +125,22 @@
   <nav class="breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.3</span></nav>
 </div>
 <h1 class="title">Clean, Typed, Consistent</h1>
-<p class="subtitle">Your pipeline runs and produces the same metrics, but nobody can prove the code is formatted consistently, the functions declare what they take and return, and the prediction path has drifted from the training path. This lesson fixes all three &#8212; without changing a single number.</p>
+<p class="subtitle">Your pipeline runs, but the code has no style enforcement, no type declarations, and magic strings scattered across files. This lesson fixes all three &#8212; same pipeline, same numbers.</p>
 
 <div class="callout tip">
   <div class="ti">Before you start</div>
   <p>You need Lesson 1.2 complete with the data pool at the repo root. If you have a <code>src/</code> folder and <code>uv run python main.py</code> prints <code>accuracy: 0.8952</code>, you are ready.</p>
 </div>
 
-<div class="callout out-of-scope">
+<div class="callout warn">
   <div class="ti">Out of scope</div>
   <p>This lesson does not cover error handling, logging, tests, or changing the model pipeline. Those come in L1.4 (errors + logging) and L1.5 (tests). The OOP class you see here is the same Python class you learned in any introductory course &#8212; nothing about abstract base classes, inheritance, or decorators.</p>
+</div>
+
+<div class="callout insight">
+  <div class="ti">Goal</div>
+  <p>Install Ruff and mypy, add type annotations to every function, consolidate duplicate pipeline logic, centralise config, and introduce a <code>FlightDelayModel</code> class &#8212; then prove the pipeline still produces the same metrics.</p>
+  <p><strong>Time:</strong> ~45&#8211;60 minutes</p>
 </div>
 
 <h2 id="objectives">What you will do</h2>
@@ -152,15 +158,15 @@
      ================================================================ -->
 <h2 id="why">1. Why clean code matters</h2>
 
-<p>Your project from Lesson 1.2 works, but it has three cracks that will only get worse as the project grows:</p>
+<p>You have a working pipeline from Lesson 1.2. Run it, get the numbers, done. But open the code and you will notice three cracks that will only get worse as the project grows:</p>
 
-<p><strong>Crack 1: style drift.</strong> Different people (or the same person on different days) format code differently &#8212; tabs vs spaces, trailing commas, line length. Without a shared standard, every diff mixes formatting noise with real logic changes.</p>
+<p><strong>Crack 1: style drift.</strong> You format one way today, a teammate formats differently tomorrow. Every git diff mixes whitespace noise with real logic changes, and code review turns into a formatting argument.</p>
 
-<p><strong>Crack 2: invisible contracts.</strong> A function like <code class="inline">train_model(model, X_train, y_train)</code> does not tell you it returns a <code>Pipeline</code>. You have to open the file to know. Multiply that by every function, and nobody can reason about the code without reading everything.</p>
+<p><strong>Crack 2: invisible contracts.</strong> Look at <code class="inline">train_model(model, X_train, y_train)</code>. What is <code class="inline">model</code>? What does the function return? You have to open the file and read the body to find out. Multiply that by every function, and nobody can reason about the code without reading everything.</p>
 
-<p><strong>Crack 3: magic strings.</strong> The strings <code class="inline">"ArrDel15"</code>, <code class="inline">"model_2025_01.joblib"</code>, <code class="inline">"flight_delays_2025_01.csv"</code> are scattered across <code>main.py</code>. Rename the target and you must find and replace every occurrence. Change the model file name and you must remember to update two places.</p>
+<p><strong>Crack 3: magic strings.</strong> <code class="inline">"ArrDel15"</code>, <code class="inline">"model_2025_01.joblib"</code>, <code class="inline">"flight_delays_2025_01.csv"</code> appear directly in <code>main.py</code>. Rename the target and you must find and replace every occurrence. Forget one and you get a silent bug.</p>
 
-<p>Each of these cracks has a tool and a practice that fixes it. The lesson is structured as: <strong>problem &#8594; practice &#8594; tool &#8594; apply</strong>, the same order you have seen in previous lessons.</p>
+<p>Each crack has a fix. The pattern is the same one you have seen before: <strong>problem &#8594; practice &#8594; tool &#8594; apply</strong>. Start with the easiest win: consistent formatting.</p>
 
 <!-- ================================================================
      SECTION 2 — Ruff: formatting and linting
@@ -168,7 +174,7 @@
 <h2 id="ruff">2. Ruff: formatting and linting</h2>
 
 <h3>The problem</h3>
-<p>Your code compiles and runs, but it looks nothing like your teammate's code &#8212; or even your own code from last week. Indentation, spacing, line length, import order all differ. Code review becomes a formatting argument instead of a logic discussion.</p>
+<p>Your code runs, but it looks nothing like your teammate's code &#8212; or even your own code from last week. Indentation, spacing, line length, import order all differ. Every pull request mixes formatting noise with real changes.</p>
 
 <h3>The practice</h3>
 <p>Automate formatting so style is never a human decision. A <strong>formatter</strong> rewrites whitespace and punctuation to match a shared standard. A <strong>linter</strong> catches structural issues: unused imports, undefined names, common bugs.</p>
@@ -249,6 +255,8 @@ select = ["E", "F", "I"]</div>
   <p><code>ruff format</code> and <code>ruff check</code> are independent. You need both. Format first (so linter does not flag formatting), then lint.</p>
 </div>
 
+<p>Formatting is fixed. But open any function and you still have to read the body to know what it takes and returns. That is the next crack.</p>
+
 <!-- ================================================================
      SECTION 3 — Type hints and mypy
      ================================================================ -->
@@ -264,7 +272,7 @@ select = ["E", "F", "I"]</div>
     return model</div>
 </div>
 
-<p>What is <code class="inline">model</code>? A list? A model object? What does this function return? You must open <code>main.py</code> to see that <code class="inline">model</code> is a <code>Pipeline</code> and the return value is the same <code>Pipeline</code>, fitted. Every caller has to reverse-engineer the contract by reading the function body.</p>
+<p>What is <code class="inline">model</code>? A list? A <code>Pipeline</code>? A custom object? What does the function return? You cannot tell from the signature. You have to open the file and read the body. Every caller must reverse-engineer the contract.</p>
 
 <h3>The practice</h3>
 <p><strong>Type hints</strong> are annotations that declare the expected type of every argument and return value. They do not change runtime behaviour &#8212; Python ignores them. But they let two tools help you:</p>
@@ -372,6 +380,8 @@ ignore_missing_imports = true</div>
   <div class="ti">mypy does not run your code</div>
   <p>mypy is a static checker: it reads your <code>.py</code> files and your hints. It never imports or executes anything. That is why it is fast and safe &#8212; it cannot break your pipeline.</p>
 </div>
+
+<p>Formatting is consistent. Types are declared. Now look at structure: two functions that do one job, and magic strings in the orchestrator.</p>
 
 <!-- ================================================================
      SECTION 4 — Refactor: single responsibility + DRY
@@ -525,12 +535,14 @@ def save_model(model: Pipeline, model_path: Path) -&gt; Path:
     return model_path</div>
 </div>
 
+<p>The project now has clean formatting, typed contracts, a DRY pipeline builder, a centralised config, and separate train/save responsibilities. One thing remains: the prediction path in <code>predict.py</code> still exposes two loose functions. When a fitted pipeline must be loaded once and reused for every prediction, that is state &#8212; and state earns a class.</p>
+
 <!-- ================================================================
      SECTION 5 — OOP awareness: FlightDelayModel
      ================================================================ -->
 <h2 id="oop">5. OOP awareness: when state earns a class</h2>
 
-<p>You have used functions throughout this course. An object is a value that bundles state with the functions that operate on it. This is not a new idea &#8212; a pandas <code>DataFrame</code> is an object (it bundles rows with <code>.head()</code>, <code>.groupby()</code>), and a scikit-learn <code>Pipeline</code> is an object (it bundles steps with <code>.fit()</code>, <code>.predict()</code>).</p>
+<p>You have been using objects all along &#8212; a pandas <code>DataFrame</code> is an object (it bundles rows with <code>.head()</code>, <code>.groupby()</code>), and a scikit-learn <code>Pipeline</code> is an object (it bundles steps with <code>.fit()</code>, <code>.predict()</code>). A class is just a way to bundle state with the functions that operate on it. This is not new vocabulary for something you already do.</p>
 
 <h3>When does a function need a class?</h3>
 
@@ -580,11 +592,13 @@ delay_probability = model.predict_delay(X_test.iloc[:1])</div>
 
 <h3>Why not just two functions?</h3>
 
-<p>You could. The class is thin enough that it is a judgement call at this project size. But the pattern scales: when you add input validation, logging, or a model registry later, there is one place to add it &#8212; the class &#8212; not every call site. And when Module 4 builds an API endpoint, the endpoint receives a <code>FlightDelayModel</code>, not a loose function. This is why production MLOps code universally wraps models behind an object.</p>
+<p>Two functions work at this project size. But the class gives you one place to add input validation, logging, or a model registry later &#8212; not every call site. And when Module 4 builds an API endpoint, the endpoint receives a <code>FlightDelayModel</code>, not a loose function. That is why production MLOps code wraps models behind an object.</p>
 
 <h3>The over-OO anti-pattern</h3>
 
 <p>The opposite mistake is wrapping everything in classes for the sake of "object-oriented design": a <code>CsvLoader</code> class with a <code>load()</code> method that returns a <code>DataFrame</code>. A plain function <code>load_csv(path) -&gt; DataFrame</code> is simpler and does the same job. Not every tool needs a class. Apply the rule: <strong>state earns a class; stateless behaviour stays a function</strong>.</p>
+
+<p>Five changes. One lesson. Now prove nothing broke.</p>
 
 <!-- ================================================================
      SECTION 6 — Run it
@@ -685,6 +699,18 @@ uv run mypy src main.py</div>
   <li><strong>Typed config</strong> replaces magic strings. One place to change the target, the data file, or the model path.</li>
   <li>A <strong>class earns its keep</strong> when it bundles state that must survive between calls. Stateless behaviour stays a function.</li>
 </ul>
+
+<h2 id="reflect">Reflect</h2>
+<p>Before you move on, think about this: if you added a new feature &#8212; say, a weather column &#8212; how many files would you need to touch? With the typed config, the answer is one: <code>config.py</code>. Without it, you would hunt through <code>main.py</code>, <code>features.py</code>, and anywhere else the feature list was hardcoded. That is the payoff of centralised config.</p>
+
+<div class="callout try">
+  <div class="ti">Before you move on</div>
+  <p>&#9744; <code>uv run ruff format --check src main.py</code> exits with no changes<br>
+  &#9744; <code>uv run ruff check src main.py</code> reports all checks passed<br>
+  &#9744; <code>uv run mypy src main.py</code> reports success with no issues<br>
+  &#9744; <code>uv run python main.py</code> prints <code>accuracy: 0.8952</code> and <code>f1: 0.7415</code><br>
+  &#9744; You can explain why <code>FlightDelayModel</code> is a class and <code>load_csv</code> is a function</p>
+</div>
 
 <!-- ================================================================
      CHAIN HOOK
