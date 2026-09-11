@@ -140,10 +140,9 @@
   <h2>What you'll do in this lesson</h2>
   <ul>
     <li>Break the pipeline on purpose and learn to read what its traceback actually tells you.</li>
-    <li>Add validation checks that raise clear errors when the file, the columns, or the rows are wrong.</li>
-    <li>Understand exceptions, <code class="inline">raise</code>, and <code class="inline">try</code>/<code class="inline">except</code>/<code class="inline">else</code>/<code class="inline">finally</code> &#8212; and when to use each.</li>
-    <li>Replace every <code class="inline">print()</code> with the standard <code class="inline">logging</code> module and its five severity levels.</li>
-    <li>Add one shared logging setup so every run leaves timestamped, leveled messages.</li>
+    <li>Add checks for missing files, missing columns, invalid HHMM values, and empty modeling data.</li>
+    <li>Use <code class="inline">raise</code> and narrow <code class="inline">try</code>/<code class="inline">except</code> handling for expected input problems.</li>
+    <li>Replace <code class="inline">print()</code> with one shared standard-library logging setup, severity levels, timestamps, and logger names.</li>
     <li>Confirm the pipeline still logs accuracy <code class="inline">0.8952</code>/<code class="inline">f1 0.7415</code> and Ruff + mypy stay green.</li>
   </ul>
 </div>
@@ -204,7 +203,7 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 
 <p>Checks belong at the edge of the pipeline, right where the raw input arrives &#8212; not deep inside a training function where the original source of the problem is far away. That is the <strong>fail fast</strong> principle: stop the moment you know the input is wrong, with a message that says so.</p>
 
-<p>The new <code class="inline">src/flight_delays/validate.py</code> adds three such checks. Each one <code class="inline">raise</code>s a specific exception type with a message that says <em>what is wrong</em> and <em>what to do about it</em>:</p>
+<p>The new <code class="inline">src/flight_delays/validate.py</code> checks the file, columns, row count, and scheduled-time domain. Input problems use one project-specific <code class="inline">DataValidationError</code>, while a missing path remains <code class="inline">FileNotFoundError</code>:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/validate.py</span></div>
@@ -214,6 +213,9 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 
 <span class="kw">import</span> pandas <span class="kw">as</span> pd
 
+
+<span class="kw">class</span> <span class="fn">DataValidationError</span>(ValueError):
+    <span class="str">"""The input data violates a requirement the user can fix."""</span>
 
 <span class="kw">def</span> <span class="fn">ensure_file_exists</span>(path: Path) -&gt; None:
     <span class="str">"""Raise FileNotFoundError with a helpful hint if the CSV is missing."""</span>
@@ -226,27 +228,27 @@ FileNotFoundError: [Errno 2] No such file or directory: <span class="str">'...\\
 
 
 <span class="kw">def</span> <span class="fn">ensure_columns</span>(df: pd.DataFrame, required: list[str]) -&gt; None:
-    <span class="str">"""Raise ValueError if any required column is missing from the data."""</span>
+    <span class="str">"""Raise DataValidationError for missing columns."""</span>
     missing = [col <span class="kw">for</span> col <span class="kw">in</span> required <span class="kw">if</span> col <span class="kw">not in</span> df.columns]
     <span class="kw">if</span> missing:
-        <span class="kw">raise</span> ValueError(
+        <span class="kw">raise</span> DataValidationError(
             <span class="str">f"Data is missing required columns: {missing}. "</span>
             <span class="str">f"Found {len(df.columns)} columns instead."</span>
         )
 
 
 <span class="kw">def</span> <span class="fn">ensure_nonempty</span>(df: pd.DataFrame, target: str) -&gt; None:
-    <span class="str">"""Raise ValueError if there are no rows left to model on."""</span>
+    <span class="str">"""Raise DataValidationError if there are no modeling rows."""</span>
     <span class="kw">if</span> len(df) == 0:
-        <span class="kw">raise</span> ValueError(
+        <span class="kw">raise</span> DataValidationError(
             <span class="str">"No modeling rows after cleaning. Check that the CSV contains "</span>
             <span class="str">f"completed flights with a known {target} value."</span>
         )</div>
 </div>
 
-<p><code class="inline">REQUIRED_RAW_COLUMNS</code> lives in <code class="inline">config.py</code>. It lists only columns that must already exist in the downloaded CSV; it does not include <code class="inline">scheduled_departure_hour</code>, because cleaning derives that column. Checking this list before <code class="inline">clean_flights()</code> prevents an unexplained pandas <code class="inline">KeyError</code>.</p>
+<p><code class="inline">REQUIRED_RAW_COLUMNS</code> lists columns that must exist in the CSV. <code class="inline">ensure_scheduled_departure_times()</code> then requires whole HHMM values from <code class="inline">0000</code> through <code class="inline">2359</code>, with minutes below <code class="inline">60</code>. Values such as <code class="inline">1260</code>, <code class="inline">2400</code>, and <code class="inline">2500</code> fail clearly instead of being silently changed.</p>
 
-<p><code class="inline">raise FileNotFoundError("...")</code> creates an exception object and throws it. That is a statement of intent: <em>this is not a normal path through the program</em>. Notice the messages name the expected failure mode, not the raw OS error. The type matters too: a missing file is <code class="inline">FileNotFoundError</code>, a schema problem is <code class="inline">ValueError</code> &#8212; the two families the pipeline will actually handle.</p>
+<p><code class="inline">raise FileNotFoundError("...")</code> creates and throws an exception. The type matters: <code class="inline">run()</code> can handle known input problems without also swallowing an unrelated <code class="inline">ValueError</code> raised by model training.</p>
 
 <h3>The control flow: try / except / else / finally</h3>
 
@@ -404,18 +406,23 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
   <div class="code-body">logger = <span class="fn">logging.getLogger</span>(__name__)
 
-<span class="kw">def</span> <span class="fn">main</span>() -&gt; None:
+<span class="kw">def</span> <span class="fn">main</span>(
+    data_dir: Path | <span class="kw">None</span> = <span class="kw">None</span>,
+    model_dir: Path | <span class="kw">None</span> = <span class="kw">None</span>,
+) -&gt; dict[str, float]:
     logger.info(<span class="str">"Pipeline started"</span>)
 
     <span class="com"># --- Load + validate + clean -----------------------------------------</span>
-    csv_path = <span class="fn">Path</span>(os.environ.get(<span class="str">"FLIGHT_DATA_DIR"</span>, DATA_DIR)) / DATA_FILE
+    resolved_data_dir = data_dir <span class="kw">or</span> <span class="fn">Path</span>(os.environ.get(<span class="str">"FLIGHT_DATA_DIR"</span>, DATA_DIR))
+    csv_path = resolved_data_dir / DATA_FILE
     <span class="fn">ensure_file_exists</span>(csv_path)
     logger.info(<span class="str">"Loading data from %s"</span>, csv_path)
     raw_flights = <span class="fn">load_csv</span>(csv_path)
     <span class="fn">ensure_columns</span>(raw_flights, REQUIRED_RAW_COLUMNS)
+    <span class="fn">ensure_scheduled_departure_times</span>(raw_flights)
     flights = <span class="fn">clean_flights</span>(raw_flights, target=TARGET)
-    <span class="fn">ensure_columns</span>(flights, FEATURES + [TARGET])
     <span class="fn">ensure_nonempty</span>(flights, target=TARGET)
+    X = flights[MODEL_INPUT_COLUMNS]
     logger.info(<span class="str">"Modeling rows: %s"</span>, <span class="str">f"{len(flights):,}"</span>)
 
     <span class="com"># ... train + evaluate ...</span>
@@ -426,13 +433,14 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
     <span class="com"># ... save + predict ...</span>
     logger.info(<span class="str">"Saved pipeline to %s"</span>, model_path)
     logger.info(<span class="str">"Pipeline finished"</span>)
+    <span class="kw">return</span> metrics
 
 
 <span class="kw">def</span> <span class="fn">run</span>() -&gt; None:
     <span class="fn">setup_logging</span>()
     <span class="kw">try</span>:
         <span class="fn">main</span>()
-    <span class="kw">except</span> (FileNotFoundError, ValueError) <span class="kw">as</span> error:
+    <span class="kw">except</span> (FileNotFoundError, DataValidationError) <span class="kw">as</span> error:
         logger.error(<span class="str">"Pipeline failed: %s"</span>, error)
         <span class="kw">raise</span> SystemExit(1) <span class="kw">from</span> error</div>
 </div>
@@ -440,9 +448,9 @@ print(<span class="str">f"accuracy: {metrics['accuracy']:.4f}"</span>)          
 <p>Walk the pieces:</p>
 
 <ul class="callout-body">
-  <li><strong>The validation chain.</strong> The CSV path is decided first &#8212; <code class="inline">FLIGHT_DATA_DIR</code> if set, else the configured <code class="inline">DATA_DIR</code> &#8212; then <code class="inline">ensure_file_exists</code> checks it before pandas opens the path. Required raw columns are checked <em>before</em> cleaning can index them; the derived model schema and row count are checked immediately after cleaning.</li>
+  <li><strong>The validation chain.</strong> The file is checked before pandas opens it. Raw columns and HHMM values are checked before cleaning; the row count is checked after cleaning.</li>
   <li><strong>One message per stage.</strong> Loaded, trained, saved, done &#8212; each phase announces itself. Anyone skimming logs can now answer "where did it get to?" without reading code.</li>
-  <li><strong>The command boundary.</strong> The only two exception families the pipeline deliberately handles are the expected input failures. On either, <code class="inline">run()</code> logs one <code class="inline">ERROR</code> line and <em>exits with code 1</em>.</li>
+  <li><strong>The command boundary.</strong> <code class="inline">run()</code> catches only <code class="inline">FileNotFoundError</code> and <code class="inline">DataValidationError</code>. Unexpected bugs keep their full traceback.</li>
 </ul>
 
 <p><strong>Exit codes</strong> are how one program reports to another: <code class="inline">0</code> means success, anything else means failure. <code class="inline">raise SystemExit(1)</code> stops the process with code <code class="inline">1</code>; <code class="inline">from error</code> preserves the causal link for debugging. A scheduler or a CI job checks that code. Because only expected input failures are caught, an unexpected bug still crashes with its full traceback.</p>
@@ -511,7 +519,7 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run flight-delays
 <span class="fn">uv</span> run mypy src</div>
 </div>
 
-<p>All three green &#8212; mypy now reports <code class="inline">Success: no issues found in 12 source files</code>. That is the milestone: <strong>expected breakage becomes one clear error and exit code 1, every run leaves a timestamped, leveled log trail, and the numbers did not move.</strong></p>
+<p>All three green &#8212; mypy now reports <code class="inline">Success: no issues found in 12 source files</code>. That is the milestone: <strong>expected breakage becomes one clear error and exit code 1, console records gain timestamps and levels, and the numbers do not move.</strong> These console logs are not stored history; later lifecycle lessons record runs persistently.</p>
 
 <!-- ================================================================
      SECTION 7 — What changed?
@@ -526,16 +534,16 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run flight-delays
   </thead>
   <tbody>
     <tr><td>Missing CSV</td><td>Raw <code class="inline">FileNotFoundError</code> traceback</td><td>One <code class="inline">ERROR</code> line with a fix hint; exit code 1</td></tr>
-    <tr><td>Schema / data checks</td><td>None &#8212; silent failure or crash deep in training</td><td><code class="inline">ensure_columns</code> + <code class="inline">ensure_nonempty</code> fail fast with the missing names</td></tr>
+    <tr><td>Schema / data checks</td><td>None &#8212; silent failure or crash deep in training</td><td>Columns, non-empty data, and HHMM values fail fast with a useful message</td></tr>
     <tr><td>Output</td><td><code class="inline">print()</code> on success, nothing else</td><td><code class="inline">logging</code>: levels, timestamps, module names</td></tr>
     <tr><td>Logging config</td><td>None</td><td><code class="inline">src/flight_delays/log_setup.py</code> &#8212; one <code class="inline">setup_logging()</code> for every module</td></tr>
-    <tr><td>Failure handling</td><td>Unhandled exception to the top</td><td><code class="inline">try</code>/<code class="inline">except</code> catches expected families; traceback kept for bugs</td></tr>
+    <tr><td>Failure handling</td><td>Unhandled exception to the top</td><td>Only missing-file and <code class="inline">DataValidationError</code> failures are handled; bugs keep their traceback</td></tr>
     <tr><td>Quality checks</td><td>Ruff + mypy green over 10 files</td><td>Ruff + mypy green over 12 files; metrics unchanged</td></tr>
   </tbody>
 </table>
 </div>
 
-<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm the log shows accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src</code>, <code class="inline">uv run ruff check src</code>, and <code class="inline">uv run mypy src</code> &#8212; all three green. Finally, re-run the <code class="inline">FLIGHT_DATA_DIR</code> failure demo above and confirm one <code class="inline">ERROR</code> line and exit code <code class="inline">1</code>.</p>
+<p>Verify the milestone: run <code class="inline">uv run --locked flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>. Then run Ruff and mypy with <code class="inline">uv run --locked</code>. Finally, re-run the <code class="inline">FLIGHT_DATA_DIR</code> failure demo and confirm one <code class="inline">ERROR</code> line and exit code <code class="inline">1</code>.</p>
 
 <!-- ================================================================
      TRY IT
@@ -543,7 +551,7 @@ FLIGHT_DATA_DIR=/no/such/dir <span class="fn">uv</span> run flight-delays
 <div class="callout try">
   <div class="ti">Try it</div>
   <p>Open <code class="inline">CODE/src/flight_delays/config.py</code> and change <code class="inline">DATA_FILE: str = "flight_delays_2025_01.csv"</code> to <code class="inline">"flight_delays_9999_01.csv"</code>. Run <code class="inline">uv run flight-delays</code> and read the error message &#8212; it should name a file and a remedy, not just an OS path. Revert and re-run.</p>
-  <p>Now provoke the raw-schema check: in <code class="inline">CODE/src/flight_delays/config.py</code>, add <code class="inline">"Not_A_Real_Column"</code> to <code class="inline">REQUIRED_RAW_COLUMNS</code>. Run again &#8212; the <code class="inline">ERROR</code> line should name the exact missing column before cleaning begins. Revert, re-run, and see the timestamped <code class="inline">INFO</code> trail return.</p>
+  <p>Now copy the CSV and change one <code class="inline">CRSDepTime</code> value to <code class="inline">2400</code>. Point <code class="inline">FLIGHT_DATA_DIR</code> at the copy. The error should name the invalid time instead of silently turning it into hour 23.</p>
 </div>
 
 <!-- ================================================================

@@ -1,6 +1,7 @@
 """The flight-delay model object — owns the prediction contract."""
 
 from pathlib import Path
+from typing import cast
 
 import joblib
 import numpy as np
@@ -13,8 +14,9 @@ class FlightDelayModel:
 
     The class wraps a trained scikit-learn ``Pipeline`` — itself a stateful
     object holding the fitted preprocessing and the classifier. Keeping the
-    artifact behind one class puts the input contract (a DataFrame of feature
-    rows) and the output contract (a delay probability per row) in a single,
+    artifact behind one class puts the input contract (raw feature rows,
+    including ``CRSDepTime``) and the output contract (one delay probability
+    per row) in a single,
     reusable place that a caller never has to think about joblib or pipelines.
     """
 
@@ -26,6 +28,6 @@ class FlightDelayModel:
         """Load a fitted pipeline from disk and wrap it in a model object."""
         return cls(joblib.load(model_path))
 
-    def predict_delay(self, features_df: pd.DataFrame) -> np.ndarray:
-        """Return the probability that each row's flight is delayed (ArrDel15)."""
-        return self._pipeline.predict_proba(features_df)[:, 1]
+    def predict_delay(self, raw_features: pd.DataFrame) -> np.ndarray:
+        """Return the estimated ArrDel15=1 probability for each raw feature row."""
+        return cast(np.ndarray, self._pipeline.predict_proba(raw_features)[:, 1])

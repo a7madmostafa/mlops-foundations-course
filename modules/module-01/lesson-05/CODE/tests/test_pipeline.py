@@ -1,8 +1,8 @@
-"""Pipeline integration — the module chain composes as one, on synthetic data.
+"""Pipeline integration — one raw dataset flows through the complete chain.
 
-The full CLi path that usually needs the real CSV runs here on a tiny raw
-frame plus a seeded synthetic modeling set: clean, validate, split, build,
-train, evaluate, save, load, predict — every link of the chain, together.
+The seeded synthetic rows start with raw ``CRSDepTime`` and continue through
+clean, validate, split, derive features, train, evaluate, save, load, and
+predict. No pre-engineered dataset replaces them halfway through.
 """
 
 from pathlib import Path
@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 from flight_delays.clean import clean_flights
 from flight_delays.config import (
     CATEGORICAL_FEATURES,
-    FEATURES,
+    MODEL_INPUT_COLUMNS,
     NUMERIC_FEATURES,
     RANDOM_STATE,
     TARGET,
@@ -27,16 +27,15 @@ from flight_delays.validate import ensure_columns, ensure_nonempty
 
 
 def test_pipeline_clean_to_predict_on_synthetic_data(
-    raw_flights: pd.DataFrame,
-    flights_xy: tuple[pd.DataFrame, pd.Series],
+    raw_training_flights: pd.DataFrame,
     tmp_path: Path,
 ) -> None:
-    cleaned = clean_flights(raw_flights, target=TARGET)
-    ensure_columns(cleaned, FEATURES + [TARGET])
+    cleaned = clean_flights(raw_training_flights, target=TARGET)
+    ensure_columns(cleaned, MODEL_INPUT_COLUMNS + [TARGET])
     ensure_nonempty(cleaned, target=TARGET)
-    assert len(cleaned) > 0
 
-    X, y = flights_xy
+    X = cleaned[MODEL_INPUT_COLUMNS]
+    y = cleaned[TARGET]
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,

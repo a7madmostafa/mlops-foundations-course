@@ -24,7 +24,7 @@ def clean_flights(df, target):
     )
 
     flights["scheduled_departure_hour"] = (
-        flights["CRSDepTime"].floordiv(100).clip(0, 23).astype(int)
+        flights["CRSDepTime"].floordiv(100).astype(int)
     )
 
     return flights

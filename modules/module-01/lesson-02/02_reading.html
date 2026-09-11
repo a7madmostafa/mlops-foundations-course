@@ -323,15 +323,15 @@ build-backend = <span class="str">"uv_build"</span></div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> sync</div>
+  <div class="code-body"><span class="fn">uv</span> sync --locked</div>
 </div>
 
-<p>It installs every dependency listed in <code class="inline">pyproject.toml</code> at the exact versions frozen in <code class="inline">uv.lock</code>, and creates <code class="inline">.venv/</code> if it is missing. Anyone who runs <code class="inline">uv sync</code> on the same two files gets the same runtime.</p>
+<p>It installs the locked resolution appropriate for your operating system and Python version, and creates <code class="inline">.venv/</code> if needed. The <code class="inline">--locked</code> flag refuses to change an out-of-date lockfile. Platform-specific wheels can differ even when package versions match.</p>
 
 <div class="callout tip">
   <div class="ti">Which command do I use?</div>
   <p><strong>You are adding a new package or changing a version</strong> &#8594; <code class="inline">uv add</code> (installs and locks in one step).<br>
-  <strong>You just received a project with its files already in place</strong> &#8594; <code class="inline">uv sync</code> (recreate its environment).</p>
+  <strong>You just received a project with its files already in place</strong> &#8594; <code class="inline">uv sync --locked</code> (recreate its recorded environment without rewriting the lockfile).</p>
 </div>
 
 <h3>What files did <code class="inline">uv</code> create?</h3>
@@ -352,7 +352,7 @@ build-backend = <span class="str">"uv_build"</span></div>
 
 <div class="callout warn">
   <div class="ti">The <code class="inline">.venv/</code> folder is gitignored</div>
-  <p>You never commit the virtual environment or its packages. You commit <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code>. Anyone who clones the repo runs <code class="inline">uv sync</code> to rebuild the environment from those two files. This is how reproducibility works: the lockfile guarantees the same package versions on every machine.</p>
+  <p>You never commit the virtual environment or its packages. You commit <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code>. A teammate runs <code class="inline">uv sync --locked</code> to rebuild the environment with the recorded versions for their supported platform.</p>
 </div>
 
 <h3>Common <code class="inline">uv</code> commands</h3>
@@ -496,7 +496,7 @@ build-backend = <span class="str">"uv_build"</span></div>
     )
 
     flights[<span class="str">"scheduled_departure_hour"</span>] = (
-        flights[<span class="str">"CRSDepTime"</span>].<span class="fn">floordiv</span>(<span class="fn">100</span>).<span class="fn">clip</span>(<span class="fn">0</span>, <span class="fn">23</span>).<span class="fn">astype</span>(<span class="fn">int</span>)
+        flights[<span class="str">"CRSDepTime"</span>].<span class="fn">floordiv</span>(<span class="fn">100</span>).<span class="fn">astype</span>(<span class="fn">int</span>)
     )
 
     <span class="def">return</span> flights</div>
@@ -775,11 +775,11 @@ Done.</div>
   <div class="ti">Before the next lesson &#8212; what still hurts?</div>
   <p>Your project runs, but if a teammate handed it to you, you would notice three cracks:</p>
   <ul>
-    <li><code class="inline">main()</code> still does everything &#8212; it loads, cleans, splits, trains, evaluates, and saves. Any change means reading the whole function.</li>
+    <li><code class="inline">main()</code> coordinates many steps and still contains decision-level strings and defaults. A reader must scan the orchestrator to discover the project contract.</li>
     <li>Nothing checks the code's style or catches simple mistakes before run time &#8212; two people will hand back two differently formatted <code class="inline">src/</code> folders, and a typo in a column name only explodes when a cell calls it.</li>
-    <li>Nothing guarantees <code class="inline">predict.py</code> stays in sync with <code class="inline">features.py</code> &#8212; one drift and the saved model quietly uses the wrong preprocessing.</li>
+    <li>The fitted pipeline owns imputation, scaling, and encoding, but <code class="inline">scheduled_departure_hour</code> is still derived before the model. A new prediction caller could forget or change that rule.</li>
   </ul>
-  <p>L1.3 fixes all three: the modules get refactored into single-purpose functions, automated checks keep the code clean and consistent, and you will be able to prove the prediction path never drifts from training.</p>
+  <p>L1.3 addresses all three: names and responsibilities become clearer, automated checks enforce code contracts, and scheduled-time derivation moves into the saved pipeline used by both training and prediction.</p>
 </div>
 
 <div class="day-nav">

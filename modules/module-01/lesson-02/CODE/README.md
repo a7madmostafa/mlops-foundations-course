@@ -32,11 +32,12 @@ Make sure the shared data is present (see `data/README.md` at the repository
 root). Then run these commands from this folder:
 
 ```bash
-uv sync
-uv run flight-delays
+uv sync --locked
+uv run --locked flight-delays
 ```
 
-`uv sync` installs the project itself as well as its dependencies. The
+`uv sync --locked` installs the project itself as well as its dependencies
+without rewriting the committed lockfile. The
 `flight-delays` command is declared in `pyproject.toml`. This equivalent form
 also works:
 
@@ -61,7 +62,7 @@ saved artifact loads back and predicts.
 If your data lives elsewhere, set the environment variable for this command:
 
 ```bash
-FLIGHT_DATA_DIR=/path/to/data uv run flight-delays
+FLIGHT_DATA_DIR=/path/to/data uv run --locked flight-delays
 ```
 
 ## What changed from Lesson 1.1

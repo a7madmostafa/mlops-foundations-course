@@ -1,10 +1,23 @@
-"""Pipeline construction — the one place preprocessing is defined."""
+"""Feature derivation and model-pipeline construction."""
 
+import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
+
+from flight_delays.validate import ensure_scheduled_departure_times
+
+
+def add_scheduled_departure_hour(df: pd.DataFrame) -> pd.DataFrame:
+    """Return a copy with a validated hour derived from raw HHMM time."""
+    ensure_scheduled_departure_times(df, column="CRSDepTime")
+    features = df.copy()
+    features["scheduled_departure_hour"] = (
+        features["CRSDepTime"].floordiv(100).astype(int)
+    )
+    return features
 
 
 def build_model(
@@ -13,12 +26,11 @@ def build_model(
     max_iter: int = 500,
     random_state: int = 42,
 ) -> Pipeline:
-    """Return the full pipeline: scaling, one-hot encoding, then logistic regression.
+    """Return feature derivation, preprocessing, and classification as one pipeline.
 
-    Everything a feature row needs before classification — impute, scale,
-    encode — lives inside this one pipeline. Because the fitted pipeline is
-    saved and later loaded for prediction, training and prediction share
-    identical preprocessing by construction.
+    A raw feature row enters with ``CRSDepTime``. The saved pipeline validates
+    it, derives ``scheduled_departure_hour``, imputes, scales, encodes, and
+    classifies it. Training, evaluation, and prediction run the same steps.
     """
     numeric = Pipeline(
         steps=[
@@ -43,6 +55,10 @@ def build_model(
 
     return Pipeline(
         steps=[
+            (
+                "derive_departure_hour",
+                FunctionTransformer(add_scheduled_departure_hour, validate=False),
+            ),
             ("preprocessor", preprocessor),
             (
                 "classifier",

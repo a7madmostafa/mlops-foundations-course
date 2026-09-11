@@ -26,6 +26,16 @@ CATEGORICAL_FEATURES: list[str] = ["Reporting_Airline", "Origin", "Dest"]
 
 FEATURES: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
+# Columns callers provide before the fitted pipeline derives the hour feature.
+MODEL_INPUT_COLUMNS: list[str] = [
+    "DepDelay",
+    "Distance",
+    "CRSElapsedTime",
+    "CRSDepTime",
+    "DayOfWeek",
+    *CATEGORICAL_FEATURES,
+]
+
 TARGET: str = "ArrDel15"
 
 # --- Training defaults -------------------------------------------------------

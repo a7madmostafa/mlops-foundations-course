@@ -26,8 +26,13 @@ jupyter notebook flight_delays.ipynb
 ```
 
 Restart the kernel, then **Run All**. Run it from the `CODE/` folder so
-the relative data path resolves. The notebook has no dependencies beyond
-the usual scientific stack (pandas, scikit-learn, matplotlib, joblib).
+the relative data path resolves. If needed, install its complete stack with
+
+```bash
+python -m pip install jupyter pandas numpy scikit-learn matplotlib seaborn joblib
+```
+
+Lesson 1.2 replaces this informal setup with a recorded, locked environment.
 
 The baseline is: **accuracy 0.8952, F1 0.7415** on 522,269 clean rows. The
 prediction is made shortly after departure, so actual departure delay is an

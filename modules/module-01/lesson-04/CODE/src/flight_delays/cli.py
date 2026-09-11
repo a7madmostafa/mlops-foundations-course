@@ -15,10 +15,10 @@ from flight_delays.config import (
     CATEGORICAL_FEATURES,
     DATA_DIR,
     DATA_FILE,
-    FEATURES,
     MAX_ITER,
     MODEL_DIR,
     MODEL_FILE,
+    MODEL_INPUT_COLUMNS,
     NUMERIC_FEATURES,
     RANDOM_STATE,
     REQUIRED_RAW_COLUMNS,
@@ -31,27 +31,40 @@ from flight_delays.load import load_csv
 from flight_delays.log_setup import setup_logging
 from flight_delays.predict import FlightDelayModel
 from flight_delays.train import save_model, train_model
-from flight_delays.validate import ensure_columns, ensure_file_exists, ensure_nonempty
+from flight_delays.validate import (
+    DataValidationError,
+    ensure_columns,
+    ensure_file_exists,
+    ensure_nonempty,
+    ensure_scheduled_departure_times,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def main() -> None:
+def main(
+    data_dir: Path | None = None,
+    model_dir: Path | None = None,
+) -> dict[str, float]:
+    """Run the pipeline and return its evaluation metrics."""
     logger.info("Pipeline started")
 
     # --- Load + validate + clean ---------------------------------------------
-    csv_path = Path(os.environ.get("FLIGHT_DATA_DIR", DATA_DIR)) / DATA_FILE
+    resolved_data_dir = data_dir or Path(os.environ.get("FLIGHT_DATA_DIR", DATA_DIR))
+    resolved_model_dir = model_dir or MODEL_DIR
+    csv_path = resolved_data_dir / DATA_FILE
     ensure_file_exists(csv_path)
     logger.info("Loading data from %s", csv_path)
     raw_flights = load_csv(csv_path)
     ensure_columns(raw_flights, REQUIRED_RAW_COLUMNS)
+    ensure_scheduled_departure_times(raw_flights, column="CRSDepTime")
     flights = clean_flights(raw_flights, target=TARGET)
-    ensure_columns(flights, FEATURES + [TARGET])
+    ensure_columns(flights, MODEL_INPUT_COLUMNS + [TARGET])
     ensure_nonempty(flights, target=TARGET)
     logger.info("Modeling rows: %s", f"{len(flights):,}")
 
     # --- Split ----------------------------------------------------------------
-    X = flights[FEATURES]
+    X = flights[MODEL_INPUT_COLUMNS]
     y = flights[TARGET].astype(int)
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -77,8 +90,8 @@ def main() -> None:
     logger.info("f1:       %.4f", metrics["f1"])
 
     # --- Save + predict -------------------------------------------------------
-    MODEL_DIR.mkdir(parents=True, exist_ok=True)
-    model_path = save_model(fitted, MODEL_DIR / MODEL_FILE)
+    resolved_model_dir.mkdir(parents=True, exist_ok=True)
+    model_path = save_model(fitted, resolved_model_dir / MODEL_FILE)
     logger.info("Saved pipeline to %s", model_path)
 
     delay_probability = FlightDelayModel.load(model_path).predict_delay(X_test.iloc[:1])
@@ -89,14 +102,18 @@ def main() -> None:
     )
 
     logger.info("Pipeline finished")
+    return metrics
 
 
-def run() -> None:
+def run(
+    data_dir: Path | None = None,
+    model_dir: Path | None = None,
+) -> None:
     """Configure the command-line app, then run the pipeline."""
     setup_logging()
     try:
-        main()
-    except (FileNotFoundError, ValueError) as error:
+        main(data_dir=data_dir, model_dir=model_dir)
+    except (FileNotFoundError, DataValidationError) as error:
         logger.error("Pipeline failed: %s", error)
         raise SystemExit(1) from error
 

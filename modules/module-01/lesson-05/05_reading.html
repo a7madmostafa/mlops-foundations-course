@@ -125,7 +125,7 @@
   <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 1 &#183; The Software Foundation</a><span class="crumb-sep">/</span><span>Lesson 1.5</span></nav>
 </div>
 <h1 class="title">Automated Testing</h1>
-<p class="subtitle">Every change to the pipeline is a gamble until something runs and proves the behavior <em>stayed right</em>. This lesson adds a pytest suite that checks cleaning, validation, the prediction contract, and the whole chain in under a second.</p>
+<p class="subtitle">Every change to the pipeline is a gamble until something proves the behavior <em>stayed right</em>. This lesson adds a fast pytest suite that checks cleaning, validation, the command boundary, the prediction contract, and the complete chain.</p>
 
 <div class="day-links">
   <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-01/lesson-05/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
@@ -142,7 +142,7 @@
     <li>Add <code class="inline">pytest</code> and its coverage plugin to the project's dev dependencies.</li>
     <li>Write a suite of unit tests for cleaning, data validation, and pipeline construction &#8212; each one an executable claim about one function.</li>
     <li>Share test data through <em>fixtures</em>, and check many inputs with <em>parametrized</em> cases instead of copy-pasted assertions.</li>
-    <li>Pin the model's <em>prediction contract</em> &#8212; one probability per row, always between 0 and 1 &#8212; and prove the full chain works in one integration test.</li>
+    <li>Pin raw-input, output-shape, probability-range, and class-1 meaning contracts; then prove the full chain and command boundary work.</li>
     <li>Read a coverage report that tells you exactly what is &#8212; and is not &#8212; exercised, and deal honestly with its limits.</li>
   </ul>
 </div>
@@ -153,7 +153,7 @@
 <h2 class="section"><span class="num">1</span>Every change is a gamble</h2>
 <p class="section-intro">The symptom this lesson fixes: nothing proves the pipeline still works after you touch it.</p>
 
-<p>You just finished Lesson 1.3's refactor &#8212; you split <code class="inline">main.py</code>, renamed functions, made the code readable &#8212; and you promised <em>the behavior did not change</em>. But how did you know? The only check available was: re-run, eyeball the numbers, hope. Lesson 1.4 added validation and logging &#8212; better failure messages, but still nothing that says <em>the behavior is right</em>, only that the run <em>didn't crash</em>.</p>
+<p>Lesson 1.3 moved feature derivation into the saved pipeline and clarified the code contracts, while Lesson 1.4 added validation and logging. Both promised the successful model behavior stayed the same. But without automated tests, your only proof was still: re-run, eyeball the numbers, hope.</p>
 
 <p>Now make it concrete. Suppose you "improve" <code class="inline">clean_flights()</code> in Lesson 1.4's <code class="inline">src/flight_delays/clean.py</code> &#8212; for example you decide to also drop extreme departure delays. You run <code class="inline">uv run flight-delays</code> and the log prints <code class="inline">accuracy: 0.8941</code> instead of <code class="inline">0.8952</code>. Questions you cannot answer from a log line:</p>
 
@@ -234,7 +234,7 @@ addopts = <span class="str">"--cov=flight_delays --cov-report=term-missing"</spa
 <span class="fn">uv</span> run pytest</div>
 </div>
 
-<p>pytest prints one dot per passed test and counts the total. At this point, right after writing the single test above, a run would look like this (this lesson's <code class="inline">CODE/</code> ships the whole final suite &#8212; your real run there prints 43):</p>
+<p>pytest prints one dot per passed test and counts the total. At this point, right after writing the single test above, a run would look like this (the lesson's completed <code class="inline">CODE/</code> suite reports 64 tests):</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output (the first test only)</span></div>
@@ -292,7 +292,7 @@ tests/test_clean.py .                                      [100%]
 
 <p>The first test built its DataFrame inline &#8212; fine for one test, copy-paste misery for twenty. Cleaning tests, validation tests, and the integration test all need a raw frame; tests that train a model need feature data; tests of the prediction contract need a fitted model. Duplicating all of that makes the suite unreadable <em>and</em> easy to break in one copy and not another.</p>
 
-<p>pytest's answer is the <strong>fixture</strong>: a named function that constructs an object once and injects it into every test that asks for it. Tests receive fixtures by simply declaring them as parameters of the same name. The <code class="inline">raw_flights</code> fixture, for instance, is injected wherever a function has a <code class="inline">raw_flights: pd.DataFrame</code> parameter &#8212; pytest sees the parameter, builds the object, and passes it in. Shared fixtures live in <code class="inline">tests/conftest.py</code>, a special filename pytest loads before running anything, so every test file in that folder can ask for them by name without any import:</p>
+<p>pytest's answer is the <strong>fixture</strong>: a named function that prepares an object and injects it into every test that asks for it. The default scope creates a fresh value for each test. A fixture marked <code class="inline">scope="session"</code> is created once for the entire suite. Shared fixtures live in <code class="inline">tests/conftest.py</code>, which pytest discovers automatically:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tests/conftest.py (excerpt)</span></div>
@@ -307,7 +307,7 @@ tests/test_clean.py .                                      [100%]
         {
             <span class="str">"Cancelled"</span>: [0, 0, 1, 0, 0, 0],
             <span class="str">"Diverted"</span>: [0, 0, 0, 0, 0, 0],
-            <span class="str">"CRSDepTime"</span>: [900, 2130, 600, 0, 2400, 1505],
+            <span class="str">"CRSDepTime"</span>: [900, 2130, 600, 0, 2300, 1505],
             <span class="str">"DepDelay"</span>: [-3, 12, 5, 0, -7, 30],
             <span class="str">"Distance"</span>: [180, 900, 340, 120, 2500, 55],
             <span class="str">"CRSElapsedTime"</span>: [40, 150, 75, 30, 320, 15],
@@ -325,10 +325,10 @@ tests/test_clean.py .                                      [100%]
 <ul class="callout-body">
   <li><strong>The suite must run without the dataset.</strong> The flight-delays CSVs are downloaded separately (they are git-ignored). On a fresh clone, a test that reads the real CSV fails before it checks anything. The suite should pass with <code class="inline">tests/</code> alone.</li>
   <li><strong>Speed and determinism.</strong> The real file is 100&nbsp;MB and training takes seconds. Six rows clean in microseconds; the synthetic modeling set is seeded, so every run is identical. A suite you run often has to be cheap.</li>
-  <li><strong>Precision.</strong> Hand-built data tests exactly the edge you mean: the cancelled row, the out-of-range hour, the duplicate. The real data does not hand you a row with a <code class="inline">CRSDepTime</code> of <code class="inline">2400</code> on demand.</li>
+  <li><strong>Precision.</strong> Hand-built data tests exactly the edge you mean: a cancelled row, a missing column, or an invalid time such as <code class="inline">2400</code>.</li>
 </ul>
 
-<p>The <code class="inline">fitted_model</code> fixture in <code class="inline">conftest.py</code> is a one-time setup: it builds the pipeline and fits it on a seeded synthetic set of 300 rows, once per suite run, then every model test reuses it. Training once and asserting against that object for many checks is faster than retraining per test &#8212; and still cheap enough to be honest: 43 tests run in under a second.</p>
+<p>The small <code class="inline">raw_flights</code> fixture keeps its default function scope so mutations cannot leak between tests. The 300-row <code class="inline">raw_training_flights</code> and <code class="inline">fitted_model</code> fixtures use session scope because building and fitting them is more expensive and their tests treat them as read-only.</p>
 
 <!-- ================================================================
      SECTION 5 — Parametrization
@@ -336,43 +336,39 @@ tests/test_clean.py .                                      [100%]
 <h2 class="section"><span class="num">5</span>Parametrization: one test, many inputs</h2>
 <p class="section-intro">Turn every "and also this case" into data, not more test code.</p>
 
-<p>The hour derivation in <code class="inline">clean_flights()</code> is a single line with a real edge: <code class="inline">CRSDepTime</code> uses a 24-hour clock, but raw data can hold <code class="inline">2400</code> or worse. We added <code class="inline">.clip(0, 23)</code> precisely because such values occur. Do you want five copy-pasted tests, one per boundary? No &#8212; you want the same test run with different inputs. That is <strong>parametrization</strong>:</p>
+<p>The saved model derives an hour from a valid HHMM value, while validation rejects impossible times. Do you want a copy-pasted test for every boundary? No &#8212; run the same test with a table of inputs. That is <strong>parametrization</strong>:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tests/test_clean.py (excerpt)</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tests/test_features.py (excerpt)</span></div>
   <div class="code-body">@pytest.mark.parametrize(
     <span class="str">"raw_time,expected_hour"</span>,
     [
         (0, 0),
+        (5, 0),
+        (859, 8),
         (900, 9),
         (2359, 23),
-        (2400, 23),
-        (2500, 23),
     ],
 )
-<span class="kw">def</span> <span class="fn">test_scheduled_departure_hour_is_clipped_to_a_24h_clock</span>(
-    raw_flights: pd.DataFrame,
+<span class="kw">def</span> <span class="fn">test_add_scheduled_departure_hour_from_valid_hhmm</span>(
     raw_time: int,
     expected_hour: int,
 ) -&gt; None:
-    df = raw_flights.copy()
-    df.loc[0, <span class="str">"CRSDepTime"</span>] = raw_time
-    flights = <span class="fn">clean_flights</span>(df, target=TARGET)
-    <span class="kw">assert</span> flights.loc[0, <span class="str">"scheduled_departure_hour"</span>] == expected_hour</div>
+    raw = pd.DataFrame({<span class="str">"CRSDepTime"</span>: [raw_time]})
+    features = <span class="fn">add_scheduled_departure_hour</span>(raw)
+    <span class="kw">assert</span> features.loc[0, <span class="str">"scheduled_departure_hour"</span>] == expected_hour</div>
 </div>
 
 <p><code class="inline">@pytest.mark.parametrize</code> declares the argument names and a list of value tuples; pytest runs the test once per tuple and reports each case separately:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output (excerpt)</span></div>
-  <div class="code-body">tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[0-0] PASSED
-tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[900-9] PASSED
-tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[2359-23] PASSED
-tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[2400-23] PASSED
-tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[2500-23] PASSED</div>
+  <div class="code-body">tests/test_features.py::test_add_scheduled_departure_hour_from_valid_hhmm[0-0] PASSED
+tests/test_features.py::test_add_scheduled_departure_hour_from_valid_hhmm[859-8] PASSED
+tests/test_features.py::test_add_scheduled_departure_hour_from_valid_hhmm[2359-23] PASSED</div>
 </div>
 
-<p>One decision to internalize: parametrize along the <em>axis that varies</em>. Here the axis is the raw time value; the expected hour follows from it. The edge cases become a visible table of data &#8212; the kind of list you would want a colleague to read in review. If future data science says "real times top out at 2359, drop the <code class="inline">2400</code> case", you delete one line.</p>
+<p>Parametrize along the <em>axis that varies</em>. Here that is the valid raw time and expected hour. A separate parametrized validation test states that <code class="inline">1260</code>, <code class="inline">2400</code>, <code class="inline">2500</code>, negative, fractional, and nonnumeric values are rejected.</p>
 
 <!-- ================================================================
      SECTION 6 — Testing ML code
@@ -380,7 +376,7 @@ tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[250
 <h2 class="section"><span class="num">6</span>Testing ML code: schema checks and the prediction contract</h2>
 <p class="section-intro">ML code is hardest to test by "score goes up" &#8212; so pin the contracts, not the numbers.</p>
 
-<p>Your instinct as an ML scientist might be: the test for this project is "accuracy stays above 0.89". Resist it, and here is why. The metrics change <em>every time the model retrains</em> on new data, with a new random split, even with no code change at all. A test asserting <code class="inline">accuracy == 0.8952</code> would fail trivially for reasons that are not bugs. Do not pin numbers; <strong>pin the contracts</strong> that the pipeline's code is responsible for:</p>
+<p>Your instinct might be to assert <code class="inline">accuracy == 0.8952</code>. Exact equality is usually brittle when data, dependencies, or training settings change. Fixed reference datasets and threshold-based regression tests can be useful later, but this beginner suite first pins the stable code contracts:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tests/test_model.py (excerpt)</span></div>
@@ -415,18 +411,30 @@ tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[250
     X, _ = flights_xy
     probabilities = <span class="fn">FlightDelayModel</span>(fitted_model).predict_delay(X.iloc[:<span class="num">10</span>])
     <span class="kw">assert</span> probabilities.min() &gt;= <span class="num">0.0</span>
-    <span class="kw">assert</span> probabilities.max() &lt;= <span class="num">1.0</span></div>
+    <span class="kw">assert</span> probabilities.max() &lt;= <span class="num">1.0</span>
+
+
+<span class="kw">def</span> <span class="fn">test_predict_delay_returns_the_positive_class_probability</span>(
+    fitted_model, flights_xy
+) -&gt; None:
+    X, _ = flights_xy
+    rows = X.iloc[:<span class="num">5</span>]
+    delayed_column = int(np.flatnonzero(fitted_model.classes_ == <span class="num">1</span>)[<span class="num">0</span>])
+    expected = fitted_model.predict_proba(rows)[:, delayed_column]
+    actual = <span class="fn">FlightDelayModel</span>(fitted_model).predict_delay(rows)
+    np.testing.assert_allclose(actual, expected)</div>
 </div>
 
 <p>Three ML-specific contracts are being pinned here, and each one targets a real failure mode:</p>
 
 <ul class="callout-body">
   <li><strong>The round trip.</strong> Save then load must give identical predictions. A <code class="inline">joblib</code> version bump or a change to <code class="inline">save_model()</code> that writes the wrong artifact would break this on the spot.</li>
-  <li><strong>The shape contract.</strong> Predictions are <em>per row</em>: three rows in, three probabilities out. If someone rewires the model to return the negative-class column, or flattens it, this fails.</li>
+  <li><strong>The shape contract.</strong> Predictions are <em>per row</em>: three rows in, three probabilities out.</li>
   <li><strong>The range contract.</strong> <code class="inline">predict_delay</code> promises <em>probabilities</em>, meaning values in [0, 1]. A pipeline change that starts returning raw logits (which can be any real number) breaks this immediately &#8212; and a caller downstream who thresholds at 0.5 would be silently wrong.</li>
+  <li><strong>The meaning contract.</strong> Shape and range alone cannot distinguish delayed-class probabilities from on-time-class probabilities. The semantic test locates class <code class="inline">1</code> and compares the wrapper with that exact column.</li>
 </ul>
 
-<p>The schema tests in <code class="inline">tests/test_config.py</code> are the same idea one level up: <code class="inline">FEATURES</code> must be exactly numeric + categorical; the raw schema must contain every feature source; derived columns must not sneak into the raw requirement. A column list renamed in one file and forgotten in another is a classic silent breakage &#8212; these tests make it loud.</p>
+<p>The schema tests in <code class="inline">tests/test_config.py</code> are the same idea one level up: <code class="inline">MODEL_INPUT_COLUMNS</code> contains raw <code class="inline">CRSDepTime</code>, while engineered <code class="inline">scheduled_departure_hour</code> stays in <code class="inline">FEATURES</code>. A list changed in one place and forgotten in another becomes a loud failure.</p>
 
 <!-- ================================================================
      SECTION 7 — Integration
@@ -439,15 +447,15 @@ tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[250
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tests/test_pipeline.py (excerpt)</span></div>
   <div class="code-body"><span class="kw">def</span> <span class="fn">test_pipeline_clean_to_predict_on_synthetic_data</span>(
-    raw_flights: pd.DataFrame,
-    flights_xy: tuple[pd.DataFrame, pd.Series],
+    raw_training_flights: pd.DataFrame,
     tmp_path: Path,
 ) -&gt; None:
-    cleaned = <span class="fn">clean_flights</span>(raw_flights, target=TARGET)
-    <span class="fn">ensure_columns</span>(cleaned, FEATURES + [TARGET])
+    cleaned = <span class="fn">clean_flights</span>(raw_training_flights, target=TARGET)
+    <span class="fn">ensure_columns</span>(cleaned, MODEL_INPUT_COLUMNS + [TARGET])
     <span class="fn">ensure_nonempty</span>(cleaned, target=TARGET)
 
-    X, y = flights_xy
+    X = cleaned[MODEL_INPUT_COLUMNS]
+    y = cleaned[TARGET]
     X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(
         X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
@@ -465,7 +473,7 @@ tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[250
     <span class="kw">assert</span> probabilities.max() &lt;= <span class="num">1.0</span></div>
 </div>
 
-<p>Run it with <code class="inline">uv run pytest -v tests/test_pipeline.py</code> &#8212; it exercises every module and every seam the suite unit-tests separately. It deliberately <em>does not</em> call <code class="inline">cli.main()</code>: that would mean reading the downloaded CSV and writing the model into the project's <code class="inline">models/</code> directory. The command that touches the environment stays a manual, logged run; the code behind it is what the suite verifies.</p>
+<p>Run it with <code class="inline">uv run --locked pytest -v tests/test_pipeline.py</code>. One raw synthetic dataset stays in the chain through loaded-model prediction. A separate <code class="inline">test_cli.py</code> calls <code class="inline">main()</code> with temporary data and model paths, so the command boundary is tested without touching the real course files.</p>
 
 <!-- ================================================================
      SECTION 8 — Coverage
@@ -481,28 +489,28 @@ tests/test_clean.py::test_scheduled_departure_hour_is_clipped_to_a_24h_clock[250
 -----------------------------------------------
 src/flight_delays/__init__.py     0      0     100%
 src/flight_delays/__main__.py     2      2       0%   3-5
-src/flight_delays/clean.py        5      0     100%
-src/flight_delays/cli.py        50     50       0%   7-105
-src/flight_delays/config.py     14      0     100%
+src/flight_delays/clean.py        4      0     100%
+src/flight_delays/cli.py        54      1      98%   122
+src/flight_delays/config.py     15      0     100%
 src/flight_delays/evaluate.py    6      0     100%
-src/flight_delays/features.py   10      0     100%
+src/flight_delays/features.py   17      0     100%
 src/flight_delays/load.py        4      0     100%
-src/flight_delays/log_setup.py   6      6       0%   3-16
-src/flight_delays/predict.py    13      0     100%
+src/flight_delays/log_setup.py   6      0     100%
+src/flight_delays/predict.py    22      0     100%
 src/flight_delays/train.py      10      0     100%
-src/flight_delays/validate.py   12      0     100%
+src/flight_delays/validate.py   19      0     100%
 -----------------------------------------------
-TOTAL                          132     58      56%</div>
+TOTAL                          159      3      98%</div>
 </div>
 
-<p>Read this table the way it is written. Every module that owns pipeline logic &#8212; cleaning, validation, features, train, evaluate, predict, load, config &#8212; is <code class="inline">100%</code>. The <code class="inline">0%</code> rows are the three modules that <em>touch the world</em>: <code class="inline">cli.py</code> (reads <code class="inline">FLIGHT_DATA_DIR</code>, writes <code class="inline">models/</code>), <code class="inline">log_setup.py</code> (configures logging once at process start), and <code class="inline">__main__.py</code> (the launcher). Those lines only run inside a real command invocation, which the suite deliberately avoids.</p>
+<p>Most logic is covered, including CLI orchestration and logging setup. The only deliberately uncovered module is the two-line <code class="inline">__main__.py</code> launcher; calling <code class="inline">python -m flight_delays</code> would only repeat the already-tested <code class="inline">run()</code> call.</p>
 
-<p>So the single number <code class="inline">56%</code> is technically true and potentially misleading &#8212; which is exactly the point of this section. <strong>Coverage measures which lines ran, not whether behavior is verified.</strong> Three facts to keep straight:</p>
+<p>The <code class="inline">98%</code> headline is useful but incomplete. <strong>Coverage measures which lines ran, not whether behavior is verified.</strong> Three facts matter:</p>
 
 <ul class="callout-body">
   <li>100% coverage does not mean "no bugs". A line can run and still compute something wrong; coverage is blind to correctness.</li>
-  <li>Low coverage on the seams is a <em>choice</em>, not a defect &#8212; here it marks the code that needs an environment (env vars, files, process start) that unit tests should not fabricate.</li>
-  <li>No test asserts the exact accuracy value <code class="inline">0.8952</code>. The suite pins <em>behavior contracts</em>; the model's score is data-dependent and changes on retraining, so it is not a testable constant.</li>
+  <li>Temporary paths let command tests exercise files and artifacts without mocking or polluting the repository.</li>
+  <li>This suite avoids exact score equality. A fixed reference dataset can support a useful threshold or regression check later, but <code class="inline">0.8952</code> is not a universal constant.</li>
 </ul>
 
 <p>Coverage is a radar, not a gate: it shows you which blind spots you <em>know</em> about. Use it to spot code that nobody exercises at all by accident, and stay suspicious of the code that supposedly runs fine.</p>
@@ -517,24 +525,24 @@ TOTAL                          132     58      56%</div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> sync
-<span class="fn">uv</span> run pytest</div>
+  <div class="code-body"><span class="fn">uv</span> sync --locked
+<span class="fn">uv</span> run --locked pytest</div>
 </div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output (tail)</span></div>
-  <div class="code-body">tests/test_pipeline.py .                                              [ 73%]
-tests/test_train.py ..                                                    [ 78%]
-tests/test_validate.py .........                                          [100%]
+  <div class="code-body">tests/test_pipeline.py .                                              [ 64%]
+tests/test_train.py ..                                                    [ 67%]
+tests/test_validate.py .....................                              [100%]
 
-=============== <span class="fn">43 passed</span> in 0.63s ===============</div>
+=============== <span class="fn">64 passed</span> ===============</div>
 </div>
 
-<p>43 tests, under a second, with the coverage table printed below. Now prove the milestone is a <em>diff against Lesson 1.4</em>, not a rewrite: the pipeline itself is byte-for-byte the same functions you already knew. Run it exactly as before:</p>
+<p>64 tests run in about a second, with the coverage table printed below. Now run the real pipeline exactly as before:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run flight-delays</div>
+  <div class="code-body"><span class="fn">uv</span> run --locked flight-delays</div>
 </div>
 
 <div class="code-block">
@@ -549,12 +557,12 @@ tests/test_validate.py .........                                          [100%]
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run ruff format --check src tests
-<span class="fn">uv</span> run ruff check src tests
-<span class="fn">uv</span> run mypy src</div>
+  <div class="code-body"><span class="fn">uv</span> run --locked ruff format --check src tests
+<span class="fn">uv</span> run --locked ruff check src tests
+<span class="fn">uv</span> run --locked mypy src</div>
 </div>
 
-<p>All three green. Ruff now covers <code class="inline">tests/</code> as well &#8212; test files are code, and they deserve the same formatting and linting discipline. That is the milestone: <strong>the pipeline is now changed with confidence &#8212; a red test names the broken behavior in under a second, and a coverage report shows which lines no test ever ran.</strong></p>
+<p>All three green. Ruff now covers <code class="inline">tests/</code> too. That is the milestone: <strong>a red test names the broken behavior quickly, and coverage shows which lines the suite did not run.</strong></p>
 
 <!-- ================================================================
      WHAT CHANGED
@@ -568,28 +576,28 @@ tests/test_validate.py .........                                          [100%]
     <tr><th>Aspect</th><th>Before (Lesson 1.4)</th><th>After (Lesson 1.5)</th></tr>
   </thead>
   <tbody>
-    <tr><td>Verifying behavior</td><td>Re-run and eyeball the numbers, hope</td><td>43 pytest tests green in under a second</td></tr>
+    <tr><td>Verifying behavior</td><td>Re-run and eyeball the numbers, hope</td><td>64 repeatable pytest tests</td></tr>
     <tr><td>Test data</td><td>None</td><td><code class="inline">tests/conftest.py</code>: raw frame, seeded synthetic modeling set, fitted model</td></tr>
     <tr><td>Expected failure</td><td>Raise + log line only</td><td><code class="inline">pytest.raises</code> asserts the exception type and message</td></tr>
-    <tr><td>Edge cases</td><td>None checked</td><td><code class="inline">@pytest.mark.parametrize</code>: hour boundaries, missing-column sets, row counts</td></tr>
-    <tr><td>Prediction contract</td><td>Believed, untested</td><td>Shape, range, and save&#8211;load round trip pinned</td></tr>
-    <tr><td>Coverage</td><td>None</td><td>Per-module table on every run; logic at 100%, env-touching seams at 0% by design</td></tr>
+    <tr><td>Edge cases</td><td>None checked</td><td><code class="inline">@pytest.mark.parametrize</code>: valid and invalid times, missing columns, row counts</td></tr>
+    <tr><td>Prediction contract</td><td>Believed, untested</td><td>Shape, range, class-1 meaning, raw input, and save&#8211;load round trip</td></tr>
+    <tr><td>Coverage</td><td>None</td><td>98% overall; CLI and logging paths included</td></tr>
     <tr><td>Quality checks</td><td>Ruff + mypy over <code class="inline">src</code></td><td>Ruff also checks <code class="inline">tests/</code>; mypy still green over 12 files</td></tr>
   </tbody>
 </table>
 </div>
 
-<p>Verify the milestone with three commands from the <code class="inline">CODE/</code> folder: <code class="inline">uv run pytest</code> reports <code class="inline">43 passed</code> plus the coverage table; <code class="inline">uv run flight-delays</code> logs accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>; and <code class="inline">uv run ruff format --check src tests</code>, <code class="inline">uv run ruff check src tests</code>, <code class="inline">uv run mypy src</code> are all green.</p>
+<p>Verify from <code class="inline">CODE/</code>: <code class="inline">uv run --locked pytest</code> reports <code class="inline">64 passed</code> and 98% coverage; <code class="inline">uv run --locked flight-delays</code> retains accuracy <code class="inline">0.8952</code> and F1 <code class="inline">0.7415</code>; Ruff and mypy are green.</p>
 
-<p>The milestone is proven by diffing <code class="inline">lesson-04/CODE</code> against <code class="inline">lesson-05/CODE</code>: the <code class="inline">src/</code> tree is nearly identical &#8212; the delta is the <em>tests</em> directory plus a few dependency lines.</p>
+<p>Diff <code class="inline">lesson-04/CODE</code> against <code class="inline">lesson-05/CODE</code>: production source stays aligned, while the meaningful additions are <code class="inline">tests/</code> and test dependencies.</p>
 
 <!-- ================================================================
      TRY IT
      ================================================================ -->
 <div class="callout try">
   <div class="ti">Try it</div>
-  <p>Make a test fail on purpose, then watch the suite catch the exact behavior change. Open <code class="inline">CODE/tests/test_clean.py</code>, find <code class="inline">test_scheduled_departure_hour_is_clipped_to_a_24h_clock</code>, and run it with <code class="inline">uv run pytest -v tests/test_clean.py -k clipped</code>. Now edit <code class="inline">CODE/src/flight_delays/clean.py</code> and remove the <code class="inline">.clip(0, 23)</code> from the hour line, leaving <code class="inline">CRSDepTime.floordiv(100).astype(int)</code>. Re-run the same pytest command &#8212; the <code class="inline">[2400-23]</code> and <code class="inline">[2500-23]</code> cases turn red and name the file. Revert the edit and the suite is green again.</p>
-  <p>Now grow the suite: add a parametrized case to that same test asserting that <code class="inline">859</code> becomes hour <code class="inline">8</code>. Run it &#8212; you just added a row to an existing test without writing a new function.</p>
+  <p>Make a test fail on purpose: in <code class="inline">test_features.py</code>, change the expected hour for <code class="inline">859</code> from <code class="inline">8</code> to <code class="inline">9</code>. Run <code class="inline">uv run --locked pytest -v tests/test_features.py -k scheduled</code>, read the named failing case, then restore <code class="inline">8</code>.</p>
+  <p>Now grow the validation table: add <code class="inline">2360</code> to the invalid-time cases and confirm it is rejected because minute 60 is impossible.</p>
 </div>
 
 <!-- ================================================================
@@ -600,7 +608,7 @@ tests/test_validate.py .........                                          [100%]
   <ul>
     <li>A <strong>unit test</strong> is an executable claim about one function: arrange inputs, call it, assert on the result. Name it <code class="inline">test_*</code> in a <code class="inline">test_*.py</code> file and pytest runs it for free.</li>
     <li><strong>Expected failure is an assertion too</strong>: <code class="inline">pytest.raises</code> pins the exception type and message, so a guard rail can never silently disappear.</li>
-    <li><strong>Fixtures</strong> (<code class="inline">conftest.py</code>) and <strong>parametrization</strong> keep the suite DRY: test data is built once, and every edge case is a row in a table, not a copy-pasted function.</li>
+    <li><strong>Fixtures</strong> centralize reusable setup; scope controls lifetime. <strong>Parametrization</strong> makes each edge case a row in a table instead of a copied test.</li>
     <li>ML tests pin <strong>contracts, not scores</strong>: probability per row, values in [0, 1], save&#8211;load identical, schema lists consistent. Metrics change on retraining; contracts should not.</li>
     <li><strong>Coverage</strong> tells you which lines ran, not whether they are correct. It is a radar &#8212; read it, treat 100% logic coverage and deliberately uncovered seams as the healthy shape.</li>
   </ul>
@@ -615,7 +623,7 @@ tests/test_validate.py .........                                          [100%]
   <ul>
     <li>Nothing records the data, code, and parameters behind a trained artifact &#8212; "which run was the best?" has no answer &#8594; Module 2 starts by recording experiments and their inputs.</li>
     <li>The tests are still a command you must type; nothing prevents them from being skipped or forgotten &#8594; later, automation runs format, lint, type, and this suite on every change before anything ships.</li>
-    <li>Tests check the code, but nothing checks whether the <em>data</em> drifting from the training distribution &#8212; a different failure family that no line of Python can assert away.</li>
+    <li>Tests check the code, but nothing checks whether incoming <em>data is drifting</em> from the training distribution &#8212; a different failure family that these unit tests cannot detect.</li>
   </ul>
 </div>
 

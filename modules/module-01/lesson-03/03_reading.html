@@ -139,9 +139,8 @@
 <div class="objectives">
   <h2>What you'll do in this lesson</h2>
   <ul>
-    <li>Install and run the Ruff formatter and linter on every <code class="inline">.py</code> file.</li>
-    <li>Add type annotations to every function and verify them with mypy.</li>
-    <li>Consolidate two pipeline-building functions into one DRY function.</li>
+    <li>Format and lint every Python file with Ruff, then verify function types with mypy.</li>
+    <li>Move scheduled-time feature derivation inside the saved model pipeline.</li>
     <li>Centralise all magic strings and defaults into a typed <code>config.py</code>.</li>
     <li>Introduce a <code>FlightDelayModel</code> class that owns the prediction contract.</li>
     <li>Confirm the pipeline still produces <code class="inline">accuracy: 0.8952</code> and <code class="inline">f1: 0.7415</code>.</li>
@@ -223,7 +222,7 @@
 
 <p>Same logic. Consistent style. No human debate needed.</p>
 
-<p>The formatter config lives in <code class="inline">pyproject.toml</code>. The default 88-character line length is the PEP 8 community convention &#8212; just leave it:</p>
+<p>The formatter config lives in <code class="inline">pyproject.toml</code>. Ruff defaults to an 88-character line length. That is a tool default, not a PEP 8 requirement, and it is a sensible starting point:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml</span></div>
@@ -287,7 +286,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
   <div class="code-body"><span class="fn">uv</span> add --dev mypy pandas-stubs</div>
 </div>
 
-<p><code class="inline">pandas-stubs</code> provides type information for pandas &#8212; without it, mypy treats every DataFrame column as <code class="inline">Any</code> and misses real errors.</p>
+<p><code class="inline">pandas-stubs</code> gives mypy useful information about the pandas API. It improves checks on operations and return values, but it does not prove the names or value types of every DataFrame column.</p>
 
 <h3>Annotating the functions</h3>
 
@@ -329,7 +328,7 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
   <li><code class="inline">train_model(...) -&gt; Pipeline</code></li>
   <li><code class="inline">save_model(model: Pipeline, model_path: Path) -&gt; Path</code></li>
   <li><code class="inline">evaluate_model(...) -&gt; dict[str, float]</code></li>
-  <li><code class="inline">FlightDelayModel.predict_delay(self, features_df: pd.DataFrame) -&gt; np.ndarray</code></li>
+  <li><code class="inline">FlightDelayModel.predict_delay(self, raw_features: pd.DataFrame) -&gt; np.ndarray</code></li>
 </ul>
 
 <p><code class="inline">config.py</code> is all module-level constants &#8212; annotate them too:</p>
@@ -366,49 +365,77 @@ select = [<span class="str">"E"</span>, <span class="str">"F"</span>, <span clas
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">pyproject.toml (mypy config)</span></div>
   <div class="code-body"><span class="com">[tool.mypy]</span>
 python_version = <span class="str">"3.12"</span>
+
 disallow_untyped_defs = <span class="kw">true</span>
+check_untyped_defs = <span class="kw">true</span>
+
+warn_return_any = <span class="kw">true</span>
+warn_unused_ignores = <span class="kw">true</span>
+warn_redundant_casts = <span class="kw">true</span>
+warn_unused_configs = <span class="kw">true</span>
+
+no_implicit_optional = <span class="kw">true</span>
 
 <span class="com">[[tool.mypy.overrides]]</span>
 module = [<span class="str">"sklearn.*"</span>, <span class="str">"joblib"</span>]
 ignore_missing_imports = <span class="kw">true</span></div>
 </div>
 
-<p><code class="inline">disallow_untyped_defs = true</code> means mypy rejects any function without annotations &#8212; it forces you to complete the job.</p>
+<p>The settings turn mypy from a basic checker into a strict one. Each group means:</p>
+
+<ul class="callout-body">
+  <li><strong>Complete annotations</strong> &#8212; <code class="inline">disallow_untyped_defs</code> rejects any function without annotations; <code class="inline">check_untyped_defs</code> would check the bodies of unannotated functions (with the first flag on, none remain).</li>
+  <li><strong>No silent <code class="inline">Any</code></strong> &#8212; <code class="inline">warn_return_any</code> fails when a function declared to return a specific type (say, <code class="inline">np.ndarray</code>) returns a value mypy only knows as <code class="inline">Any</code> &#8212; exactly what happened with <code class="inline">predict_proba</code> below.</li>
+  <li><strong>An honest config</strong> &#8212; <code class="inline">warn_unused_ignores</code>, <code class="inline">warn_redundant_casts</code>, and <code class="inline">warn_unused_configs</code> flag any <code class="inline"># type: ignore</code>, cast, or config section that no longer does anything.</li>
+  <li><strong>Explicit <code class="inline">Optional</code></strong> &#8212; <code class="inline">no_implicit_optional</code> forces <code class="inline">arg: Optional[type] = None</code> to be written out instead of a bare <code class="inline">arg = None</code>.</li>
+</ul>
+
+<p><code class="inline">disallow_untyped_defs = true</code> means mypy rejects any function without annotations &#8212; it forces you to complete the job. The <code class="inline">[[tool.mypy.overrides]]</code> block keeps scikit-learn working: sklearn ships no type stubs, so mypy treats it as <code class="inline">Any</code> instead of erroring on every import.</p>
 
 <div class="callout tip">
   <div class="ti">mypy does not run your code</div>
   <p>mypy is a static checker: it reads your <code class="inline">.py</code> files and your hints. It never imports or executes anything. That is why it is fast and safe &#8212; it cannot break your pipeline.</p>
 </div>
 
-<p>Formatting is consistent. Types are declared. Now look at structure: two functions that do one job, and magic strings in the orchestrator.</p>
+<p>Formatting is consistent. Types are declared. The checks are in place and work &#8212; but right now they still live in your head. Bundle the whole workflow into one file so nobody has to memorize anything.</p>
+
+<!-- ================================================================
+     TRANSITION — run tools directly through uv
+     ================================================================ -->
+<p>Run the project tools directly through <code class="inline">uv</code>. These commands work the same in PowerShell, Command Prompt, macOS, and Linux; workflow automation arrives later in the course.</p>
 
 <!-- ================================================================
      SECTION 4 — Refactor: single responsibility + DRY
      ================================================================ -->
 <h2 class="section"><span class="num">4</span>Single responsibility and DRY</h2>
-<p class="section-intro">Two functions that build one thing, and magic strings in the orchestrator.</p>
+<p class="section-intro">One feature rule must behave the same during training and prediction.</p>
 
-<p>With formatting and types in place, turn to structure. The Lesson 1.2 code has two structural problems: two functions that build one thing, and magic strings in the orchestrator.</p>
+<p>Lesson 1.2 creates <code class="inline">scheduled_departure_hour</code> in <code class="inline">clean_flights()</code>, before data enters the fitted pipeline. A future prediction caller would have to remember and repeat that rule. If the copies diverge, training and prediction see different features.</p>
 
-<h3>DRY: two functions &#8594; one</h3>
+<h3>DRY: one feature rule, one implementation</h3>
 
-<p>In Lesson 1.2, <code class="inline">build_preprocessor()</code> and <code class="inline">build_model()</code> are separate functions. But the preprocessor is never used alone &#8212; every call to <code class="inline">build_model()</code> immediately wraps it in a <code class="inline">Pipeline</code> with the classifier. Two functions for one thing means two places to maintain when the preprocessing changes. This is a textbook violation of <strong>DRY</strong> &#8212; Don't Repeat Yourself.</p>
+<p><strong>DRY</strong> means Don't Repeat Yourself: a business rule should have one authoritative implementation. It does not mean every pair of small functions must be merged. Here, the risky rule is the conversion from raw <code class="inline">CRSDepTime</code> values such as <code class="inline">859</code> to hour <code class="inline">8</code>.</p>
 
-<p>Consolidate into a single <code class="inline">build_model()</code> that constructs the complete pipeline:</p>
+<p>Create <code class="inline">add_scheduled_departure_hour()</code> and make it the first step of <code class="inline">build_model()</code>. The saved model can now accept raw <code class="inline">CRSDepTime</code> during both training and prediction:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/features.py</span></div>
-  <div class="code-body"><span class="kw">def</span> <span class="fn">build_model</span>(
+  <div class="code-body"><span class="kw">def</span> <span class="fn">add_scheduled_departure_hour</span>(df: pd.DataFrame) -&gt; pd.DataFrame:
+    <span class="str">"""Return a copy with an hour derived from raw HHMM time."""</span>
+    features = df.copy()
+    features[<span class="str">"scheduled_departure_hour"</span>] = (
+        features[<span class="str">"CRSDepTime"</span>].floordiv(<span class="num">100</span>).astype(int)
+    )
+    <span class="kw">return</span> features
+
+
+<span class="kw">def</span> <span class="fn">build_model</span>(
     numeric_features: list[str],
     categorical_features: list[str],
     max_iter: int = 500,
     random_state: int = 42,
 ) -&gt; Pipeline:
-    <span class="str">"""Return the full pipeline: scaling, one-hot encoding, then logistic regression.
-
-    Everything a feature row needs before classification &#8212; impute,
-    scale, encode &#8212; lives inside this one pipeline.
-    """</span>
+    <span class="str">"""Return feature derivation, preprocessing, and classification."""</span>
     numeric = Pipeline(
         steps=[
             (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"median"</span>)),
@@ -432,6 +459,10 @@ ignore_missing_imports = <span class="kw">true</span></div>
 
     <span class="kw">return</span> Pipeline(
         steps=[
+            (
+                <span class="str">"derive_departure_hour"</span>,
+                FunctionTransformer(add_scheduled_departure_hour, validate=False),
+            ),
             (<span class="str">"preprocessor"</span>, preprocessor),
             (
                 <span class="str">"classifier"</span>,
@@ -445,26 +476,24 @@ ignore_missing_imports = <span class="kw">true</span></div>
     )</div>
 </div>
 
-<p>The caller in <code class="inline">cli.py</code> shrinks from two calls to one:</p>
+<p>The important change is the input contract:</p>
 
 <div class="compare">
   <div class="col">
-    <h3>Before (two calls)</h3>
-<pre><code class="code-body">preprocessor = <span class="fn">build_preprocessor</span>(...)
-model = <span class="fn">build_model</span>(preprocessor)</code></pre>
+    <h3>Before</h3>
+<pre><code class="code-body">cleaned[<span class="str">"scheduled_departure_hour"</span>] = ...
+X = cleaned[FEATURES]
+model.fit(X, y)</code></pre>
   </div>
   <div class="col">
-    <h3>After (one call)</h3>
-<pre><code class="code-body">model = <span class="fn">build_model</span>(
-    NUMERIC_FEATURES,
-    CATEGORICAL_FEATURES,
-    max_iter=MAX_ITER,
-    random_state=RANDOM_STATE,
-)</code></pre>
+    <h3>After</h3>
+<pre><code class="code-body">X = cleaned[MODEL_INPUT_COLUMNS]
+model = <span class="fn">build_model</span>(...)
+model.fit(X, y)  <span class="com"># derives the hour inside</span></code></pre>
   </div>
 </div>
 
-<p><code class="inline">build_preprocessor()</code> is deleted from <code class="inline">features.py</code> and its import removed from <code class="inline">cli.py</code>. One function, one place, one responsibility.</p>
+<p><code class="inline">clean_flights()</code> now handles cohort filtering only. Feature derivation lives with the fitted model, and <code class="inline">MODEL_INPUT_COLUMNS</code> documents the raw columns callers must provide. The helper and builder remain separate because they have different responsibilities; DRY is achieved by making every caller use the same saved pipeline.</p>
 
 <h3>Magic strings &#8594; typed config</h3>
 
@@ -499,6 +528,10 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 <span class="def">CATEGORICAL_FEATURES</span>: list[str] = [<span class="str">"Reporting_Airline"</span>, <span class="str">"Origin"</span>, <span class="str">"Dest"</span>]
 
 <span class="def">FEATURES</span>: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+<span class="def">MODEL_INPUT_COLUMNS</span>: list[str] = [
+    <span class="str">"DepDelay"</span>, <span class="str">"Distance"</span>, <span class="str">"CRSElapsedTime"</span>,
+    <span class="str">"CRSDepTime"</span>, <span class="str">"DayOfWeek"</span>,
+] + CATEGORICAL_FEATURES
 
 <span class="def">TARGET</span>: str = <span class="str">"ArrDel15"</span>
 
@@ -535,7 +568,7 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
     <span class="kw">return</span> model_path</div>
 </div>
 
-<p>The project now has clean formatting, typed contracts, a DRY pipeline builder, a centralised config, and separate train/save responsibilities. One thing remains: the prediction path in <code class="inline">predict.py</code> still exposes two loose functions. When a fitted pipeline must be loaded once and reused for every prediction, that is state &#8212; and state earns a class.</p>
+<p>The project now has clean formatting, typed contracts, one saved preprocessing path, centralised config, and separate train/save responsibilities. One thing remains: the prediction path in <code class="inline">predict.py</code> still exposes two loose functions. When a fitted pipeline must be loaded once and reused for every prediction, that is state &#8212; and state earns a class.</p>
 
 <!-- ================================================================
      SECTION 5 — OOP awareness: FlightDelayModel
@@ -568,9 +601,11 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
         <span class="str">"""Load a fitted pipeline from disk and wrap it in a model object."""</span>
         <span class="kw">return</span> cls(joblib.load(model_path))
 
-    <span class="kw">def</span> <span class="fn">predict_delay</span>(self, features_df: pd.DataFrame) -&gt; np.ndarray:
+    <span class="kw">def</span> <span class="fn">predict_delay</span>(self, raw_features: pd.DataFrame) -&gt; np.ndarray:
         <span class="str">"""Return the probability that each row's flight is delayed."""</span>
-        <span class="kw">return</span> self._pipeline.predict_proba(features_df)[:, 1]</div>
+        <span class="kw">return</span> <span class="fn">cast</span>(
+            np.ndarray, self._pipeline.predict_proba(raw_features)[:, <span class="num">1</span>]
+        )</div>
 </div>
 
 <p>Walk through each part:</p>
@@ -578,7 +613,7 @@ model = <span class="fn">build_model</span>(preprocessor)</code></pre>
 <ul class="callout-body">
   <li><code class="inline">__init__(self, pipeline)</code> &#8212; the constructor. Takes a fitted <code class="inline">Pipeline</code> and stores it. The underscore prefix on <code class="inline">self._pipeline</code> signals: this is internal state; callers should not touch it directly.</li>
   <li><code class="inline">load(cls, model_path)</code> &#8212; a <code>@classmethod</code>: it belongs to the class, not to a particular instance. It deserializes the pipeline and returns a new <code class="inline">FlightDelayModel</code> wrapping it.</li>
-  <li><code class="inline">predict_delay(self, features_df)</code> &#8212; the single public method. Takes a DataFrame of features, returns an array of delay probabilities. This is the contract: one input, one output, no side effects.</li>
+  <li><code class="inline">predict_delay(self, raw_features)</code> &#8212; the single public method. Takes the raw columns in <code class="inline">MODEL_INPUT_COLUMNS</code> and returns delay probabilities. The saved pipeline derives the hour and applies the learned preprocessing. Because sklearn ships no type stubs, <code class="inline">cast(np.ndarray, ...)</code> records the return type for mypy.</li>
 </ul>
 
 <p>The caller in <code class="inline">cli.py</code> is now two lines:</p>
@@ -607,13 +642,13 @@ delay_probability = model.predict_delay(X_test.iloc[:1])</div>
 <h2 class="section"><span class="num">6</span>Run it &#8212; the milestone</h2>
 <p class="section-intro">Same pipeline, same numbers, plus two new quality checks.</p>
 
-<p>Open the lesson's <code class="inline">CODE/</code> folder. Run the pipeline and both quality checks:</p>
+<p>Open the lesson's <code class="inline">CODE/</code> folder. <code class="inline">--locked</code> tells uv to use the committed lockfile without changing it:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
   <div class="code-body"><span class="fn">cd</span> modules/module-01/lesson-03/CODE
-<span class="fn">uv</span> sync
-<span class="fn">uv</span> run flight-delays</div>
+<span class="fn">uv</span> sync --locked
+<span class="fn">uv</span> run --locked flight-delays</div>
 </div>
 
 <p>Expected output:</p>
@@ -635,9 +670,9 @@ Done.</div>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">uv</span> run ruff format --check src
-<span class="fn">uv</span> run ruff check src
-<span class="fn">uv</span> run mypy src</div>
+  <div class="code-body"><span class="fn">uv</span> run --locked ruff format --check src
+<span class="fn">uv</span> run --locked ruff check src
+<span class="fn">uv</span> run --locked mypy src</div>
 </div>
 
 <p>All three must be green:</p>
@@ -664,7 +699,7 @@ Done.</div>
   <tbody>
     <tr><td>Formatting</td><td>Manual; no style check</td><td><code class="inline">ruff format</code> + <code class="inline">ruff check</code> enforce style</td></tr>
     <tr><td>Types</td><td>No annotations; no static check</td><td>Every function annotated; <code class="inline">mypy</code> passes</td></tr>
-    <tr><td>Pipeline</td><td><code class="inline">build_preprocessor()</code> + <code class="inline">build_model()</code> (two calls)</td><td><code class="inline">build_model()</code> &#8212; one function owns all preprocessing</td></tr>
+    <tr><td>Model input</td><td>Training code derives the hour before the fitted pipeline</td><td>The saved pipeline accepts raw <code class="inline">CRSDepTime</code> and derives the hour itself</td></tr>
     <tr><td>Prediction</td><td>Two loose functions in <code class="inline">predict.py</code></td><td><code class="inline">FlightDelayModel</code> class wraps the fitted pipeline</td></tr>
     <tr><td>Config</td><td>Strings and numbers inline in <code class="inline">cli.py</code></td><td>Typed constants in <code class="inline">config.py</code></td></tr>
     <tr><td>Save/load</td><td>Inline <code class="inline">joblib.dump</code> in <code class="inline">cli.py</code></td><td><code class="inline">save_model()</code> + <code class="inline">FlightDelayModel.load()</code></td></tr>
@@ -673,14 +708,14 @@ Done.</div>
 </table>
 </div>
 
-<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>. Then run <code class="inline">uv run ruff format --check src</code>, <code class="inline">uv run ruff check src</code>, and <code class="inline">uv run mypy src</code> &#8212; all three must be green.</p>
+<p>Verify the milestone: run <code class="inline">uv run --locked flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>. Then run the three quality commands above; all must be green.</p>
 
 <!-- ================================================================
      TRY IT
      ================================================================ -->
 <div class="callout try">
   <div class="ti">Try it</div>
-  <p>Open <code class="inline">src/flight_delays/config.py</code> and change <code class="inline">TARGET: str = "ArrDel15"</code> to <code class="inline">TARGET: str = "DepDel15"</code> (a column that does exist in the raw data, so it will not crash, but will produce different metrics). Run <code class="inline">uv run flight-delays</code> and observe that the accuracy changes &#8212; the entire pipeline adapted to the new target by changing one constant. Now change it back.</p>
+  <p>Open <code class="inline">src/flight_delays/config.py</code> and temporarily change <code class="inline">MAX_ITER: int = 500</code> to <code class="inline">MAX_ITER: int = "500"</code>. Run <code class="inline">uv run --locked mypy src</code> and read the type error. Restore the integer and confirm the check passes.</p>
 </div>
 
 <!-- ================================================================
@@ -691,9 +726,10 @@ Done.</div>
   <ul>
     <li>A <strong>formatter</strong> (Ruff) makes style a tool decision, not a human decision. Run <code class="inline">ruff format</code> then <code class="inline">ruff check</code>; fix what it reports.</li>
     <li><strong>Type hints</strong> are documentation that mypy can verify. Every function gets an annotation; <code class="inline">mypy</code> catches mismatches before runtime.</li>
-    <li><strong>DRY</strong> means one function owns one responsibility. If two functions always appear together, merge them.</li>
+    <li><strong>DRY</strong> means a rule has one authoritative implementation. It is different from single responsibility, which keeps each component focused on one reason to change.</li>
     <li><strong>Typed config</strong> replaces magic strings. One place to change the target, the data file, or the model path.</li>
     <li>A <strong>class earns its keep</strong> when it bundles state that must survive between calls. Stateless behaviour stays a function.</li>
+    <li>Putting feature derivation inside the saved pipeline keeps training and prediction on the same transformation path.</li>
   </ul>
 </div>
 
@@ -703,11 +739,11 @@ Done.</div>
 <div class="callout warn">
   <div class="ti">Before the next lesson &#8212; what still hurts?</div>
   <p>Open <code class="inline">src/flight_delays/config.py</code> and rename <code class="inline">DATA_FILE</code> to a file that does not exist. Run <code class="inline">uv run flight-delays</code>. You get a raw Python traceback with no explanation of how to recover. The command prints <code class="inline">accuracy: 0.8952</code> on success but gives you nothing except a crash on failure.</p>
-  <p>That is the symptom Lesson 1.4 fixes. It adds <strong>error handling</strong> (the pipeline catches bad inputs and reports them clearly) and <strong>logging</strong> (prints become structured log messages that tell you <em>when</em>, <em>where</em>, and <em>why</em>).</p>
+  <p>That is the symptom Lesson 1.4 fixes. It adds <strong>error handling</strong> (expected bad inputs produce clear remedies) and standard <strong>logging</strong> (messages include time, severity, and source).</p>
   <ul>
     <li>The CSV path is wrong &#8594; L1.4 adds a clean error message instead of a traceback.</li>
     <li><code class="inline">print()</code> is the only output mechanism &#8594; L1.4 introduces <code class="inline">logging</code> with severity levels.</li>
-    <li>There is no way to tell when the pipeline last ran successfully &#8594; L1.4 adds a timestamped log entry at each stage.</li>
+    <li>Current console output has no timestamps or severity &#8594; L1.4 adds both. Persistent run history comes later.</li>
   </ul>
 </div>
 

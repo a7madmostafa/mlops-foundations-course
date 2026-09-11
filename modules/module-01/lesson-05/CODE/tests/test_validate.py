@@ -6,7 +6,13 @@ import pandas as pd
 import pytest
 
 from flight_delays.config import TARGET
-from flight_delays.validate import ensure_columns, ensure_file_exists, ensure_nonempty
+from flight_delays.validate import (
+    DataValidationError,
+    ensure_columns,
+    ensure_file_exists,
+    ensure_nonempty,
+    ensure_scheduled_departure_times,
+)
 
 
 def test_ensure_file_exists_passes_for_a_real_file(tmp_path: Path) -> None:
@@ -44,7 +50,7 @@ def test_ensure_columns_raises_naming_exactly_the_missing_columns(
     missing: list[str],
 ) -> None:
     df = raw_flights.drop(columns=missing)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(DataValidationError) as excinfo:
         ensure_columns(df, raw_columns)
     message = str(excinfo.value)
     assert "missing required columns" in message
@@ -68,5 +74,18 @@ def test_ensure_nonempty_passes_when_rows_exist(
 
 
 def test_ensure_nonempty_raises_for_an_empty_frame() -> None:
-    with pytest.raises(ValueError, match="No modeling rows"):
+    with pytest.raises(DataValidationError, match="No modeling rows"):
         ensure_nonempty(pd.DataFrame(), target=TARGET)
+
+
+@pytest.mark.parametrize("raw_time", [-1, 900.5, 1260, 2360, 2400, 2500, "not-a-time"])
+def test_scheduled_departure_time_rejects_invalid_hhmm(raw_time: object) -> None:
+    df = pd.DataFrame({"CRSDepTime": [raw_time]})
+    with pytest.raises(DataValidationError, match="invalid HHMM"):
+        ensure_scheduled_departure_times(df, column="CRSDepTime")
+
+
+@pytest.mark.parametrize("raw_time", [0, 5, 859, 900, 2359])
+def test_scheduled_departure_time_accepts_valid_hhmm(raw_time: int) -> None:
+    df = pd.DataFrame({"CRSDepTime": [raw_time]})
+    ensure_scheduled_departure_times(df, column="CRSDepTime")

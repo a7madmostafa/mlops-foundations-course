@@ -26,15 +26,21 @@ CATEGORICAL_FEATURES: list[str] = ["Reporting_Airline", "Origin", "Dest"]
 
 FEATURES: list[str] = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 
+MODEL_INPUT_COLUMNS: list[str] = [
+    "DepDelay",
+    "Distance",
+    "CRSElapsedTime",
+    "CRSDepTime",
+    "DayOfWeek",
+    *CATEGORICAL_FEATURES,
+]
+
 TARGET: str = "ArrDel15"
 
 REQUIRED_RAW_COLUMNS: list[str] = [
     "Cancelled",
     "Diverted",
-    "CRSDepTime",
-    *NUMERIC_FEATURES[:-2],
-    "DayOfWeek",
-    *CATEGORICAL_FEATURES,
+    *MODEL_INPUT_COLUMNS,
     TARGET,
 ]
 

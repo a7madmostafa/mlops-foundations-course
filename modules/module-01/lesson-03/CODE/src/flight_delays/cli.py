@@ -14,10 +14,10 @@ from flight_delays.config import (
     CATEGORICAL_FEATURES,
     DATA_DIR,
     DATA_FILE,
-    FEATURES,
     MAX_ITER,
     MODEL_DIR,
     MODEL_FILE,
+    MODEL_INPUT_COLUMNS,
     NUMERIC_FEATURES,
     RANDOM_STATE,
     TARGET,
@@ -38,7 +38,7 @@ def main() -> None:
     print(f"Modeling rows: {len(flights):,}")
 
     # --- Split ----------------------------------------------------------------
-    X = flights[FEATURES]
+    X = flights[MODEL_INPUT_COLUMNS]
     y = flights[TARGET].astype(int)
 
     X_train, X_test, y_train, y_test = train_test_split(
