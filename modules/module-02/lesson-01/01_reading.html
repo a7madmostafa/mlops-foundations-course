@@ -125,16 +125,512 @@
   <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 2 &#183; ML Lifecycle &amp; Reproducibility</a><span class="crumb-sep">/</span><span>Lesson 2.1</span></nav>
 </div>
 <h1 class="title">Tracking Fundamentals</h1>
-<p class="subtitle">Coming soon &#8212; this lesson is under development.</p>
+<p class="subtitle">Your models get better, you run training again and again &#8212; and every run forgets itself. This lesson gives the flight-delay project a memory: each training run records its parameters, its metrics, its saved artifact, and the data and code that produced it &#8212; in one machine-readable line you can compare.</p>
+
+<div class="day-links">
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-02/lesson-01/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
+</div>
 
 <div class="callout tip">
-  <div class="ti">Coming soon</div>
-  <p>This lesson is being written. Check back soon.</p>
+  <div class="ti">Before you start</div>
+  <p>You need Lesson 1.5 complete: in that lesson's <code class="inline">CODE/</code> folder, <code class="inline">uv run flight-delays</code> logs <code class="inline">accuracy: 0.8952</code> and <code class="inline">f1: 0.7415</code>, and the 64-test suite is green. The shared flight-delays CSV still lives in the <code class="inline">data/</code> folder at the repository root.</p>
+</div>
+
+<div class="objectives">
+  <h2>What you'll do in this lesson</h2>
+  <ul>
+    <li>Give the command line tuning knobs &#8212; <code class="inline">--max-iter</code> and <code class="inline">--random-state</code> &#8212; so runs can actually differ and be worth comparing.</li>
+    <li>Add a small run recorder that writes one machine-readable JSON line per completed run: parameters, metrics, artifact path, data fingerprint, and code + environment fingerprint.</li>
+    <li>Keep each run's trained artifact recoverable under its own run id instead of being overwritten.</li>
+    <li>Add a <code class="inline">compare</code> command that answers "which run was the best?" from the recorded history.</li>
+    <li>Keep the full test suite and the quality gates green with the new tracking module covered.</li>
+  </ul>
+</div>
+
+<!-- ================================================================
+     SECTION 1 — The why
+     ================================================================ -->
+<h2 class="section"><span class="num">1</span>A run that disappears</h2>
+<p class="section-intro">The symptom this lesson fixes: after training, the only trace of a run is a log line that scrolls away.</p>
+
+<p>Lesson 1.5 left you with a polished single step: <code class="inline">uv run flight-delays</code> loads the CSV, trains, evaluates, saves <code class="inline">models/model_2025_01.joblib</code>, and prints two numbers. Now imagine doing what an ML practitioner actually does next &#8212; <strong>tuning</strong>. You run training three times with different seeds and iteration limits, watching accuracy and F1 climb. Try to answer these questions on Tuesday morning:</p>
+
+<ul class="callout-body">
+  <li>Which of yesterday's runs produced the model file that is now <em>on disk</em>?</li>
+  <li>What parameters and score did that winning run have? What were the losing runs?</li>
+  <li>Which CSV and which version of the code was each run trained on?</li>
+</ul>
+
+<p>You cannot answer any of them. The log printed the metrics once and they are gone; the file <code class="inline">model_2025_01.joblib</code> has a fixed name, so every run overwrote the previous one; and nothing paired a metric with the data snapshot or code revision it came from. This is the classic machine-learning failure called <strong>lost experiments</strong>. Before this course taught any of it, losing an experiment was the working definition of not being able to reproduce a model.</p>
+
+<p>The engineering answer is <strong>experiment tracking</strong>: give every training run a durable, comparable record so that the question "which run was the best?" stops being a memory and becomes a query. This lesson builds the smallest honest version of that record by hand &#8212; the concept first, the purpose-built tool in Lesson 2.2.</p>
+
+<!-- ================================================================
+     SECTION 2 — The run record
+     ================================================================ -->
+<h2 class="section"><span class="num">2</span>The run record: what "remembering a run" means</h2>
+<p class="section-intro">Five pieces of data turn a training attempt into a recoverable experiment.</p>
+
+<p>Call one pipeline execution a <strong>run</strong>. A run is recoverable and comparable only if its record answers five questions. Everything else in this lesson is a mechanism for answering them:</p>
+
+<figure class="scrollfig">
+<div class="figure-scroll">
+<svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" role="img" aria-labelledby="run-record-title run-record-desc">
+  <title id="run-record-title">What a recorded run must contain</title>
+  <desc id="run-record-desc">A run record combines parameters, metrics, the saved artifact, and provenance made of the data identity and the code and environment identity.</desc>
+  <rect x="0" y="0" width="760" height="320" fill="#ffffff"/>
+  <rect x="0" y="0" width="760" height="320" fill="url(#erd-grid)"/>
+  <rect x="20" y="44" width="150" height="60" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="20" y="44" width="150" height="24" fill="#dceaf7" stroke="#1f6fb2" stroke-width="1.4"/>
+  <text x="95" y="62" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">a run</text>
+  <text x="95" y="88" text-anchor="middle" font-size="11.5" fill="#333">one training execution</text>
+  <rect x="230" y="44" width="170" height="60" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="230" y="44" width="170" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="315" y="62" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">parameters</text>
+  <text x="315" y="88" text-anchor="middle" font-size="11.5" fill="#333">the choices made to run</text>
+  <rect x="430" y="44" width="160" height="60" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="430" y="44" width="160" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="510" y="62" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">metrics</text>
+  <text x="510" y="88" text-anchor="middle" font-size="11.5" fill="#333">the result measured</text>
+  <rect x="620" y="44" width="120" height="60" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="620" y="44" width="120" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="680" y="62" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">artifact</text>
+  <text x="680" y="88" text-anchor="middle" font-size="11.5" fill="#333">the trained model file</text>
+  <line x1="170" y1="74" x2="230" y2="74" stroke="#1f6fb2" stroke-width="1.4"/>
+  <line x1="400" y1="74" x2="430" y2="74" stroke="#1f6fb2" stroke-width="1.4"/>
+  <line x1="590" y1="74" x2="620" y2="74" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="170" y="180" width="320" height="100" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="170" y="180" width="320" height="24" fill="#dceaf7" stroke="#1f6fb2" stroke-width="1.4"/>
+  <text x="330" y="198" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">provenance</text>
+  <text x="330" y="218" text-anchor="middle" font-size="11.5" fill="#666">what fed the run</text>
+  <rect x="525" y="180" width="215" height="100" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="525" y="180" width="215" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="632" y="198" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">reproduction chain</text>
+  <text x="632" y="222" text-anchor="middle" font-size="11" fill="#333">code + environment + data</text>
+  <text x="632" y="258" text-anchor="middle" font-size="11.5" fill="#333">same inputs &#8594; same model</text>
+  <line x1="300" y1="140" x2="300" y2="180" stroke="#1f6fb2" stroke-width="1.4"/>
+  <line x1="590" y1="104" x2="560" y2="180" stroke="#1f6fb2" stroke-width="1.4"/>
+  <text x="95" y="130" text-anchor="middle" font-size="11" fill="#666">what was chosen</text>
+  <text x="315" y="130" text-anchor="middle" font-size="11" fill="#666">max_iter, random_state&#8230;</text>
+  <text x="510" y="130" text-anchor="middle" font-size="11" fill="#666">accuracy, f1</text>
+  <text x="680" y="130" text-anchor="middle" font-size="11" fill="#666">joblib pipeline</text>
+  <rect x="195" y="242" width="120" height="26" fill="#f2f5fa" stroke="#cdd7e4"/>
+  <text x="255" y="260" text-anchor="middle" font-size="11" fill="#333">data fingerprint</text>
+  <rect x="345" y="242" width="120" height="26" fill="#f2f5fa" stroke="#cdd7e4"/>
+  <text x="405" y="260" text-anchor="middle" font-size="11" fill="#333">code + env fingerprint</text>
+  <text x="360" y="306" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">record all five and the run survives the Tuesday morning test</text>
+</svg>
+</div>
+<figcaption>A run record is parameters + metrics + artifact + provenance. Provenance ties the run to the exact data and code that produced it &#8212; the reproduction chain (code + environment + data).</figcaption>
+</figure>
+
+<ul class="callout-body">
+  <li><strong>Parameters</strong> &#8212; the settings you chose before training: <code class="inline">max_iter</code>, <code class="inline">random_state</code>, test size. Two runs differ because their parameters differ.</li>
+  <li><strong>Metrics</strong> &#8212; the numbers you measured after: accuracy and F1 on the test split.</li>
+  <li><strong>Artifact</strong> &#8212; the trained model file a run produced, kept under the run's own identity so it is not overwritten.</li>
+  <li><strong>Data identity</strong> &#8212; a fingerprint of the exact CSV bytes used, because the same code and parameters on a different dataset are a different experiment.</li>
+  <li><strong>Code + environment identity</strong> &#8212; the code revision plus the Python and library versions, so you can rebuild the same conditions later.</li>
+</ul>
+
+<p>Skills you already own from Module 1 make this possible without a new tool: a fixed column of numbers goes into a structured file (L1.2's configuration and command contracts), the run's identity lives in a small object (L1.3), and a machine-readable line replaces the print (L1.4's logging mindset, applied to a file). The tool question comes later; first the record itself.</p>
+
+<!-- ================================================================
+     SECTION 3 — Tuning knobs
+     ================================================================ -->
+<h2 class="section"><span class="num">3</span>Tuning knobs: how runs differ</h2>
+<p class="section-intro">The command line grows two flags and a subcommand, so the pipeline can be asked to vary.</p>
+
+<p>Nothing is worth tracking while every run is identical. The model's solver length and seed sit as constants in <code class="inline">config.py</code>; to tune them you edit a line, rerun, edit again &#8212; exactly the fragility Module 1 removed. Before one run can differ from the next, the command itself must accept variation.</p>
+
+<p>A command line is more than the command. Words typed after it are <strong>arguments</strong>: in <code class="inline">uv run flight-delays run --random-state 7</code> the shell hands the tool extra tokens to do with as it pleases. The flight-delay CLI currently ignores all of them &#8212; it is one fixed recipe. This lesson gives it the two kinds of arguments every professional CLI uses, and both are standard practice:</p>
+
+<ul class="callout-body">
+  <li><strong>A flag</strong> &#8212; a named option that takes a value: <code class="inline">--random-state 7</code>. Flag present &#8594; that value wins; flag absent &#8594; the default applies.</li>
+  <li><strong>A subcommand</strong> &#8212; the first word that selects a behavior: <code class="inline">run</code> and <code class="inline">compare</code>. One program, several behaviors.</li>
+</ul>
+
+<p>You do not write a parser by hand to read arguments. <code class="inline">argparse</code> is Python's standard library for exactly this: you declare the contract &#8212; option names, value types, defaults, help text &#8212; and it hands the parsed values back to you. Each option is one <code class="inline">add_argument</code> declaration:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
+  <div class="code-body">run_parser = subparsers.add_parser(
+    <span class="str">"run"</span>, help=<span class="str">"train the pipeline and record the run (default command)"</span>
+)
+run_parser.add_argument(
+    <span class="str">"--max-iter"</span>,
+    type=<span class="fn">int</span>,
+    default=MAX_ITER,
+    help=<span class="str">"solver iterations (default: %(default)s)"</span>,
+)
+run_parser.add_argument(
+    <span class="str">"--random-state"</span>,
+    type=<span class="fn">int</span>,
+    default=RANDOM_STATE,
+    help=<span class="str">"random seed for the train/test split and model (default: %(default)s)"</span>,
+)
+
+compare_parser = subparsers.add_parser(
+    <span class="str">"compare"</span>, help=<span class="str">"list recorded runs, best metric first"</span>
+)
+compare_parser.add_argument(
+    <span class="str">"--sort-by"</span>,
+    choices=[<span class="str">"f1"</span>, <span class="str">"accuracy"</span>],
+    default=<span class="str">"f1"</span>,
+    help=<span class="str">"metric used to order the runs (default: %(default)s)"</span>,
+)</div>
+</div>
+
+<p>Read one declaration and you can read them all. <code class="inline">"--max-iter"</code> is the name a user types. <code class="inline">type=int</code> is a conversion contract: terminals pass strings, so the shell delivers <code class="inline">"1000"</code>, not the number 1000, and argparse converts it before your code ever runs &#8212; which also means <code class="inline">--max-iter oops</code> fails with a clean error at startup instead of crashing mid-train. <code class="inline">default=MAX_ITER</code> is the value used when the flag is absent. <code class="inline">help</code> is the descriptive line shown to a curious user, and <code class="inline">%(default)s</code> renders the current default into it. The user's choice finally lands at <code class="inline">args.max_iter</code> &#8212; argparse turns the option name into an attribute, dashes becoming underscores. <code class="inline">--sort-by</code> adds one more tool: <code class="inline">choices=[...]</code> restricts the value to a fixed list, so a typo like <code class="inline">--sort-by accuracy1</code> is rejected rather than silently ignored.</p>
+
+<p>Because argparse holds the whole contract, it can print it. Ask the tool about itself:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run flight-delays --help</div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">usage: flight-delays [-h] {run,compare} ...
+
+Train, record, and compare flight-delay model runs.
+
+positional arguments:
+  {run,compare}
+    run          train the pipeline and record the run (default command)
+    compare      list recorded runs, best metric first
+
+options:
+  -h, --help     show this help message and exit</div>
+</div>
+
+<p>Notice that options bind to their subcommand: <code class="inline">--sort-by</code> exists only on <code class="inline">compare</code>, so typing it after <code class="inline">run</code> is an error before any training starts. That is the payoff of a declared contract &#8212; the tool knows its own shape and rejects nonsense early. With no subcommand at all, the CLI falls through to <code class="inline">run</code>, so a bare <code class="inline">uv run flight-delays</code> still trains exactly as Lesson 1.5 taught. Passing a flag changes one run into another:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run flight-delays <span class="str">run</span> --random-state 7
+<span class="fn">uv</span> run flight-delays <span class="str">run</span> --max-iter 1000</div>
+</div>
+
+<p>With flags and subcommands, experiments are expressible in one line &#8212; and at last distinguishable. Identical commands mean nothing to a record; differences are the whole point, and the recorder in Section 4 exists to write them down.</p>
+
+<!-- ================================================================
+     SECTION 4 — The recorder
+     ================================================================ -->
+<h2 class="section"><span class="num">4</span>The recorder: one JSON line per run</h2>
+<p class="section-intro">A tiny object that appends each completed run to a machine-readable file.</p>
+
+<p>A log entry is for humans and scrolls away. A run record is for tools, so it must be parseable: one object per line, in JSON, appended to a file called <code class="inline">runs/runs.jsonl</code>.</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/tracking.py (excerpt)</span></div>
+  <div class="code-body"><span class="kw">class</span> <span class="fn">RunRecorder</span>:
+    <span class="str">"""Append one JSON line per recorded run and read the runs back."""</span>
+
+    <span class="kw">def</span> <span class="fn">record</span>(self, params, metrics, artifact, data, code, started_at):
+        run_id = started_at.strftime(<span class="str">"%Y%m%d_%H%M%S_%f"</span>)
+        self.runs_dir.mkdir(parents=True, exist_ok=True)
+        run_artifact = self.runs_dir / <span class="fn">f</span><span class="str">"runs_{run_id}.joblib"</span>
+        <span class="fn">shutil.copyfile</span>(artifact, run_artifact)
+
+        run = {
+            <span class="str">"run_id"</span>: run_id,
+            <span class="str">"started_at"</span>: started_at.isoformat(),
+            <span class="str">"params"</span>: params,
+            <span class="str">"metrics"</span>: metrics,
+            <span class="str">"artifact"</span>: <span class="fn">str</span>(run_artifact),
+            <span class="str">"data"</span>: data,
+            <span class="str">"code"</span>: code,
+        }
+        line = <span class="fn">json.dumps</span>(run, sort_keys=True, separators=(<span class="str">","</span>, <span class="str">":"</span>))
+        <span class="kw">with</span> self.runs_file.open(<span class="str">"a"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> handle:
+            handle.write(line + <span class="str">"\n"</span>)
+        <span class="kw">return</span> run</div>
+</div>
+
+<p>Three details make this a record, not a log:</p>
+
+<ul class="callout-body">
+  <li><strong>A run id.</strong> The timestamp with microseconds becomes the run's identity (<code class="inline">20260911_120340_694107</code>). Everything else in the record can point back to that id.</li>
+  <li><strong>An artifact that survives.</strong> <code class="inline">shutil.copyfile</code> copies the freshly trained pipeline into <code class="inline">runs/runs_&lt;run_id&gt;.joblib</code> under the run's own name, so run N+1 never overwrites run N. The production file <code class="inline">models/model_2025_01.joblib</code> still updates as before &#8212; both exist, with different jobs.</li>
+  <li><strong>One object per line.</strong> JSON Lines (JSONL) appends without locking or rewriting; any tool &#8212; a text editor, a script, <code class="inline">compare</code> &#8212; can read the file line by line. The file is machine-readable exactly because it is one object, not a paragraph.</li>
+</ul>
+
+<p>In <code class="inline">cli.py</code>, <code class="inline">main()</code> calls the recorder just after <code class="inline">save_model()</code>. Metrics are converted to plain <code class="inline">float</code> first &#8212; scikit-learn returns NumPy <code class="inline">float64</code> values, which JSON cannot serialize &#8212; and are stored at full precision, even though the log prints them rounded:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
+  <div class="code-body">raw_metrics = <span class="fn">evaluate_model</span>(fitted, X_test, y_test)
+metrics = {name: <span class="fn">float</span>(value) <span class="kw">for</span> name, value <span class="kw">in</span> raw_metrics.items()}
+
+resolved_model_dir.mkdir(parents=True, exist_ok=True)
+model_path = <span class="fn">save_model</span>(fitted, resolved_model_dir / MODEL_FILE)
+run = RunRecorder(resolved_runs_dir).record(
+    params=<span class="fn">snapshot_params</span>(
+        max_iter=max_iter, random_state=random_state, test_size=TEST_SIZE
+    ),
+    metrics=metrics,
+    artifact=model_path,
+    data=<span class="fn">data_fingerprint</span>(csv_path),
+    code=<span class="fn">code_fingerprint</span>(),
+    started_at=started_at,
+)</div>
+</div>
+
+<p>Open <code class="inline">runs/runs.jsonl</code> after one training run and you will find a single line like this one (formatted here for reading; on disk it is one line, and artifact paths are absolute on your machine):</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">runs/runs.jsonl (recorded run, shown wrapped)</span></div>
+  <div class="code-body">{<span class="str">"run_id"</span>: <span class="str">"20260911_120340_694107"</span>,
+ <span class="str">"started_at"</span>: <span class="str">"2026-09-11T12:03:40.694107+00:00"</span>,
+ <span class="str">"params"</span>: {<span class="str">"max_iter"</span>: <span class="num">500</span>, <span class="str">"random_state"</span>: <span class="num">42</span>, <span class="str">"test_size"</span>: <span class="num">0.2</span>},
+ <span class="str">"metrics"</span>: {<span class="str">"accuracy"</span>: <span class="num">0.8951500181898252</span>, <span class="str">"f1"</span>: <span class="num">0.7414786139174772</span>},
+ <span class="str">"artifact"</span>: <span class="str">"runs/runs_20260911_120340_694107.joblib"</span>,
+ <span class="str">"data"</span>: {<span class="str">"file"</span>: <span class="str">"flight_delays_2025_01.csv"</span>, <span class="str">"sha256"</span>: <span class="str">"ed6d5b115c59aa9c"</span>},
+ <span class="str">"code"</span>: {<span class="str">"git_commit"</span>: <span class="str">"8ffdf11"</span>, <span class="str">"git_dirty"</span>: <span class="str">true</span>,
+           <span class="str">"python_version"</span>: <span class="str">"3.12.11"</span>,
+           <span class="str">"dependencies"</span>: {<span class="str">"joblib"</span>: <span class="str">"1.6.0"</span>, <span class="str">"numpy"</span>: <span class="str">"2.5.3"</span>,
+                             <span class="str">"pandas"</span>: <span class="str">"3.0.5"</span>, <span class="str">"scikit-learn"</span>: <span class="str">"1.9.0"</span>}}}</div>
+</div>
+
+<p>Every one of the five questions from Section 2 is now answered by this single object. And because the metrics are stored at full precision, later comparisons never lose the fourth decimal to a rounded log line.</p>
+
+<!-- ================================================================
+     SECTION 5 — Provenance
+     ================================================================ -->
+<h2 class="section"><span class="num">5</span>Provenance: fingerprints, not names</h2>
+<p class="section-intro">Content hashes for the data, and a code + environment stamp for everything else.</p>
+
+<p>Names lie; bytes do not. Two CSV files can both be called <code class="inline">flight_delays_2025_01.csv</code> while holding different rows, so a run record that says "the file I used" proves nothing. Identity must come from the content itself &#8212; and that is exactly what a <strong>hash function</strong> provides.</p>
+
+<p>A hash function takes data of any size and returns a short, fixed-size string called a <strong>digest</strong>. SHA-256 ("Secure Hash Algorithm", 256&#160;bits) returns 64 hexadecimal characters. Three properties make it perfect for identity:</p>
+
+<ul class="callout-body">
+  <li><strong>Deterministic</strong> &#8212; the same bytes always give the same digest. You compare a few characters instead of streaming 100&#160;MB twice.</li>
+  <li><strong>Sensitive</strong> &#8212; change one character and nearly every digest character changes (the "avalanche effect"). Equal digests are strong evidence the contents are byte-for-byte identical.</li>
+  <li><strong>One-way</strong> &#8212; the digest cannot be turned back into the data. It is a fingerprint: it identifies a person but never lets you reconstruct them.</li>
+</ul>
+
+<p>Watch the second property in a live REPL &#8212; adding one character flips most of the preview:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body">&gt;&gt;&gt; <span class="fn">hashlib.sha256</span>(b<span class="str">"jfk-lax"</span>).hexdigest()[:<span class="num">16</span>]
+'72348a6378c4da7e'
+&gt;&gt;&gt; <span class="fn">hashlib.sha256</span>(b<span class="str">"jfk-lax!"</span>).hexdigest()[:<span class="num">16</span>]
+'3a509acd20b6a6b3'</div>
+</div>
+
+<p>The flight-delay identity is this same hash computed over the whole CSV, truncated to the first 16 characters:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/tracking.py (excerpt)</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">data_fingerprint</span>(path: Path) -&gt; dict[str, str]:
+    <span class="str">"""Return the file name and a short SHA-256 of its bytes."""</span>
+    digest = <span class="fn">hashlib.sha256</span>()
+    <span class="kw">with</span> path.open(<span class="str">"rb"</span>) <span class="kw">as</span> handle:
+        <span class="kw">for</span> chunk <span class="kw">in</span> <span class="fn">iter</span>(<span class="kw">lambda</span>: handle.read(<span class="num">1</span> &lt;&lt; <span class="num">16</span>), <span class="str">b""</span>):
+            digest.update(chunk)
+    <span class="kw">return</span> {<span class="str">"file"</span>: path.name, <span class="str">"sha256"</span>: digest.hexdigest()[:<span class="num">16</span>]}</div>
+</div>
+
+<p>The file is hashed in small chunks rather than all at once: Python reads a 64&#160;KiB window &#8212; <code class="inline">1</code> shifted left by <code class="inline">16</code> bits is <code class="inline">65536</code> bytes &#8212; feeds it into the digest, and repeats until the file ends, so a 100&#160;MB CSV never has to fit in memory. A few hundred milliseconds of hashing buys an honest answer to "which dataset trained this model?" When you record the digest on Tuesday, you can re-hash any CSV later and know instantly whether it is the same dataset &#8212; no relying on memory, no trusting a file name.</p>
+
+<p>Code and environment get the same treatment. The run stamps the short git commit it started from, whether the working tree was dirty (uncommitted changes can alter the result!), the Python version, and the installed versions of the four core libraries:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/tracking.py (excerpt)</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">git_fingerprint</span>() -&gt; dict[str, str | bool]:
+    <span class="str">"""Return the short commit and dirty flag, or a clear "&lt;none&gt;" fallback."""</span>
+    <span class="kw">try</span>:
+        commit = subprocess.run(
+            [<span class="str">"git"</span>, <span class="str">"rev-parse"</span>, <span class="str">"--short"</span>, <span class="str">"HEAD"</span>],
+            check=True, capture_output=True, text=True, timeout=<span class="num">5</span>,
+        ).stdout.strip()
+        dirty = <span class="fn">bool</span>(
+            subprocess.run(
+                [<span class="str">"git"</span>, <span class="str">"status"</span>, <span class="str">"--porcelain"</span>],
+                check=True, capture_output=True, text=True, timeout=<span class="num">5</span>,
+            ).stdout.strip()
+        )
+        <span class="kw">return</span> {<span class="str">"git_commit"</span>: commit, <span class="str">"git_dirty"</span>: dirty}
+    <span class="kw">except</span> (subprocess.SubprocessError, OSError):
+        <span class="kw">return</span> {<span class="str">"git_commit"</span>: <span class="str">"&lt;none&gt;"</span>, <span class="str">"git_dirty"</span>: False}</div>
+</div>
+
+<p>Together these stamps are the <strong>reproduction chain</strong>: code + environment + data. The lesson's machine-readable record can now answer the deeper question too &#8212; "can I rebuild Tuesday's winning model at all?" The commit says which code; the dependency versions say which libraries; the digest says which data. If any of the three changes, the record signals that the run was a different experiment.</p>
+
+<!-- ================================================================
+     SECTION 6 — Compare
+     ================================================================ -->
+<h2 class="section"><span class="num">6</span>Compare: naming the best run</h2>
+<p class="section-intro">Reading the history back, sorted by the metric that matters.</p>
+
+<p>A recorder without a reader would take you to a terminal and a JSON file to eyeball. The <code class="inline">compare</code> subcommand is the reader: it loads every recorded run, orders them by one metric, and prints a table with the best on top:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/tracking.py (excerpt)</span></div>
+  <div class="code-body"><span class="kw">def</span> <span class="fn">compare_runs</span>(runs_dir: Path, sort_by: str = <span class="str">"f1"</span>) -&gt; list[dict[str, object]]:
+    <span class="str">"""Return recorded runs sorted by one metric, best first."""</span>
+    runs = RunRecorder(runs_dir).runs()
+
+    <span class="kw">def</span> <span class="fn">metric_value</span>(run: dict[str, object]) -&gt; float:
+        metrics = cast(dict[str, float], run[<span class="str">"metrics"</span>])
+        <span class="kw">return</span> <span class="fn">float</span>(metrics[sort_by])
+
+    <span class="kw">return</span> <span class="fn">sorted</span>(runs, key=metric_value, reverse=True)</div>
+</div>
+
+<p>The full history lives in the single <code class="inline">run_id</code>-keyed, time-ordered file, so ordering is a sort, not a trick. On your machine after two runs, <code class="inline">uv run flight-delays compare</code> prints something like this (your run ids are timestamps and will differ):</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">run_id                 max_iter  random_state   accuracy       f1
+20260911_120353_162694      500             7     0.8966   0.7441
+20260911_120340_694107      500            42     0.8952   0.7415</div>
+</div>
+
+<p>The random-state-7 run won on both metrics, and its winner's artifact is <code class="inline">runs/runs_20260911_120353_162694.joblib</code> &#8212; still on disk, still loadable, because every run keeps its own copy. "Which run was the best?" now has a command that answers it.</p>
+
+<!-- ================================================================
+     SECTION 7 — The milestone
+     ================================================================ -->
+<h2 class="section"><span class="num">7</span>Run it &#8212; the milestone</h2>
+<p class="section-intro">Every training run writes a recoverable record, and compare reads it back.</p>
+
+<p>Open this lesson's <code class="inline">CODE/</code> folder and start with the suite from Lesson 1.5, now grown with tracking tests:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> sync --locked
+<span class="fn">uv</span> run --locked pytest</div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output (tail)</span></div>
+  <div class="code-body">src/flight_delays/tracking.py <span class="num">68</span>      <span class="num">4</span>    <span class="num">94</span>%   <span class="num">58-59</span>, <span class="num">68-69</span>
+src/flight_delays/train.py          <span class="num">10</span>      <span class="num">0</span>  <span class="num">100</span>%
+src/flight_delays/validate.py       <span class="num">19</span>      <span class="num">0</span>  <span class="num">100</span>%
+--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--<span class="fn">--</span>--
+TOTAL                            <span class="num">261</span>     <span class="num">12</span>   <span class="num">95</span>%
+
+<span class="fn">77 passed</span> in <span class="num">1.96</span>s</div>
+</div>
+
+<p>77 tests, including the new <code class="inline">test_tracking.py</code> for fingerprints, recording, and ordering. Then run the pipeline twice &#8212; the default, and one genuinely different run:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run --locked flight-delays run
+<span class="fn">uv</span> run --locked flight-delays run --random-state 7</div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output (condensed)</span></div>
+  <div class="code-body">accuracy: <span class="num">0.8952</span>
+f1:       <span class="num">0.7415</span>
+Recorded run 20260911_120340_694107 (artifact: runs/runs_20260911_120340_694107.joblib)
+
+accuracy: <span class="num">0.8966</span>
+f1:       <span class="num">0.7441</span>
+Recorded run 20260911_120353_162694 (artifact: runs/runs_20260911_120353_162694.joblib)</div>
+</div>
+
+<p>Same data, same code, different seed &#8212; and both runs now exist side by side. The default run still holds the Lesson 1.5 numbers (0.8952 / 0.7415), the second is a small improvement (0.8966 / 0.7441), and <code class="inline">compare</code> proves the winner is a fact, not a feeling:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run --locked flight-delays compare</div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
+  <div class="code-body">run_id                 max_iter  random_state   accuracy       f1
+20260911_120353_162694      500             7     0.8966   0.7441
+20260911_120340_694107      500            42     0.8952   0.7415</div>
+</div>
+
+<p>Finish with the Module 1 quality gates &#8212; they must stay green with the new module and tests:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run --locked ruff format --check src tests
+<span class="fn">uv</span> run --locked ruff check src tests
+<span class="fn">uv</span> run --locked mypy src</div>
+</div>
+
+<p>All green. That is the milestone: <strong>every completed run is now recorded at full precision, each with its own artifact and its data + code fingerprints, and <code class="inline">compare</code> reads the history back in ranked order.</strong> "Which run was the best?" no longer depends on anyone's memory.</p>
+
+<!-- ================================================================
+     WHAT CHANGED
+     ================================================================ -->
+<h2 class="section"><span class="num">8</span>What changed in our project?</h2>
+<p class="section-intro">Before vs after &#8212; the milestone is verifiable.</p>
+
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>Aspect</th><th>Before (Lesson 1.5)</th><th>After (Lesson 2.1)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Remembering a run</td><td>Metrics printed once, then gone</td><td>One JSON record per run in <code class="inline">runs/runs.jsonl</code></td></tr>
+    <tr><td>Parameters</td><td>Constants in code</td><td>Command-line flags (<code class="inline">--max-iter</code>, <code class="inline">--random-state</code>), recorded per run</td></tr>
+    <tr><td>Saved model</td><td>One file, overwritten each run</td><td>Per-run copy under <code class="inline">runs/runs_&lt;run_id&gt;.joblib</code></td></tr>
+    <tr><td>Data identity</td><td>Trusted file name</td><td>SHA-256 content fingerprint in the record</td></tr>
+    <tr><td>Code + environment identity</td><td>Not recorded</td><td>Git commit, dirty flag, Python and dependency versions</td></tr>
+    <tr><td>Comparing runs</td><td>No command existed</td><td><code class="inline">uv run flight-delays compare</code>, sorted by F1 or accuracy</td></tr>
+    <tr><td>Tests + quality</td><td>64 tests, 98% coverage</td><td>77 tests, 95% coverage; ruff and mypy green over 13 source files</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Verify from <code class="inline">CODE/</code>: <code class="inline">uv run --locked pytest</code> reports <code class="inline">77 passed</code>; two training runs produce <code class="inline">runs/runs.jsonl</code> with two lines and two artifact files; <code class="inline">uv run --locked flight-delays compare</code> prints a ranked table. The default run still reproduces the Lesson 1.5 metrics (<code class="inline">accuracy 0.8952</code>, <code class="inline">f1 0.7415</code>).</p>
+
+<p>Diff <code class="inline">lesson-05/CODE</code> against <code class="inline">lesson-01/CODE</code> of this module: the modeling source (load, clean, features, train, evaluate, predict, validate) is untouched; the meaningful additions are <code class="inline">tracking.py</code>, the CLI flags and <code class="inline">compare</code>, plus <code class="inline">runs/</code> as a git-ignored output.</p>
+
+<!-- ================================================================
+     TRY IT
+     ================================================================ -->
+<div class="callout try">
+  <div class="ti">Try it</div>
+  <p>Because tuning knobs now exist, hunt for the best logistic-regression run: try <code class="inline">--max-iter 1000</code> and a couple more seeds, then run <code class="inline">compare</code> and read which run won. Look at <code class="inline">runs/runs.jsonl</code> in an editor and confirm every new line keeps the same shape &#8212; same keys, same nesting. Then prove recoverability: pick the top run&#8217;s <code class="inline">run_id</code>, load its artifact in one line, and check that predicting the first test row gives the same probability the run logged:</p>
+  <div class="code-block">
+    <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+    <div class="code-body"><span class="fn">uv</span> run python -c <span class="str">"from flight_delays.predict import FlightDelayModel; from flight_delays.config import MODEL_INPUT_COLUMNS; import pandas as pd; from pathlib import Path; m = FlightDelayModel.load(Path('runs/runs_&lt;run_id&gt;.joblib')); print(m.predict_delay(pd.read_csv(r'..\..\..\..\data\flight_delays_2025_01.csv').head(1)[list(MODEL_INPUT_COLUMNS)])[0])"</span></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     TAKEAWAYS
+     ================================================================ -->
+<div class="callout recap">
+  <div class="ti">Takeaways</div>
+  <ul>
+    <li>A <strong>run record</strong> is the answer to "which run was the best?": parameters (what you chose), metrics (what you measured), artifact (what you saved), and provenance (data + code + environment).</li>
+    <li><strong>Params and knobs come first</strong> &#8212; a pipeline with only constants produces identical runs and nothing to track.</li>
+    <li><strong>Content hashes, not names, identify data.</strong> A SHA-256 fingerprint catches silently changed CSVs that a file name would hide.</li>
+    <li><strong>Records are for tools</strong>: one JSON object per line is machine-readable, appendable, and sortable &#8212; the file <code class="inline">runs/runs.jsonl</code> is your whole history.</li>
+    <li>Each run keeps its own artifact copy, so "recover the winning model" is a file path, not an archaeology project.</li>
+  </ul>
+</div>
+
+<!-- ================================================================
+     CHAIN HOOK
+     ================================================================ -->
+<div class="callout warn">
+  <div class="ti">Before the next lesson &#8212; what still hurts?</div>
+  <p>The hand-rolled tracker works, and it is exactly as small as a hand-rolled tracker must be. Its limits will start to bite the day runs multiply:</p>
+  <ul>
+    <li>The JSONL schema is yours alone: metric names, key ordering, and grouping must be kept consistent by hand, and no overview page or chart exists &#8212; comparing ten runs means re-reading a terminal table.</li>
+    <li>Recording is a call we added inside <code class="inline">main()</code>; nothing yet attaches a run to an experiment, a notebook, or a tag like "feature_experiment".</li>
+    <li>Artifacts pile up in a folder with no notion of a <em>registry</em> &#8212; which run is currently the serving model, and how it got promoted, is again a human memory.</li>
+  </ul>
+  <p>Lesson 2.2 brings in a dedicated tool that professionalizes exactly this tracker &#8212; runs, metrics, params, artifacts, and a comparison UI.</p>
 </div>
 
 <div class="day-nav">
   <a class="day-nav-link prev" href="../index.html">
-    <span class="dn-label">&larr; Back to</span>
+    <span class="dn-label">&larr; Previous</span>
     <span class="dn-title">Module 2 &#183; ML Lifecycle &amp; Reproducibility</span>
   </a>
   <a class="day-nav-link next" href="../lesson-02/02_reading.html">

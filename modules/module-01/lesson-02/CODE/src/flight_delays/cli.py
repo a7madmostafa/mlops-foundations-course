@@ -68,7 +68,7 @@ def main():
     # --- Predict -------------------------------------------------------------
     loaded_model = load_model(model_path)
     delay_probability = predict_delay(loaded_model, X_test.iloc[:1])
-    print(f"\nPredicted delay probability for the first test flight: {delay_probability[0]:.4f}")
+    print(f"\nProbability of delay for first test flight: {delay_probability[0]:.4f}")
 
     print("\nDone.")
 

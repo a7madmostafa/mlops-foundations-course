@@ -125,11 +125,353 @@
   <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../../../index.html">Course Home</a><span class="crumb-sep">/</span><a href="../index.html" aria-label="Back to Module">Module 2 &#183; ML Lifecycle &amp; Reproducibility</a><span class="crumb-sep">/</span><span>Lesson 2.2</span></nav>
 </div>
 <h1 class="title">MLflow Tracking</h1>
-<p class="subtitle">Coming soon &#8212; this lesson is under development.</p>
+<p class="subtitle">Lesson 2.1 built the smallest honest run recorder by hand. Now professionalize it with the tool MLOps teams actually run &#8212; a stable run schema, a searchable store, and a browser UI.</p>
+
+<div class="day-links">
+  <a href="https://github.com/a7madmostafa/mlops-foundations-course/tree/main/modules/module-02/lesson-02/CODE"><svg class="dl-icon" aria-hidden="true" focusable="false"><use href="#icon-external"/></svg>CODE/</a>
+</div>
 
 <div class="callout tip">
-  <div class="ti">Coming soon</div>
-  <p>This lesson is being written. Check back soon.</p>
+  <div class="ti">Before you start</div>
+  <p>You need Lesson 2.1 complete: in that lesson's <code class="inline">CODE/</code> folder, <code class="inline">uv run flight-delays compare</code> prints the JSONL history in ranked order, and the 77-test suite is green. The shared flight-delays CSV still lives in the <code class="inline">data/</code> folder at the repository root.</p>
+</div>
+
+<div class="objectives">
+  <h2>What you'll do in this lesson</h2>
+  <ul>
+    <li>Add MLflow as a dependency and point the project at a local <strong>SQLite tracking store</strong> so every flight-delay run lands in a real database instead of our hand-written <code class="inline">runs.jsonl</code>.</li>
+    <li>Record each run through MLflow: parameters and metrics in its dedicated tables, our data + code fingerprints as <strong>tags</strong>, and the trained artifact copied under the run.</li>
+    <li>Replace the hand-rolled JSONL reader with MLflow's <code class="inline">search_runs</code> query API behind <code class="inline">compare</code>.</li>
+    <li>Start <code class="inline">mlflow server</code> and browse the same runs with charts, tags, and artifact downloads in the browser.</li>
+    <li>Keep the fingerprint helpers from Lesson 2.1 byte-for-byte unchanged and the quality gates green.</li>
+  </ul>
+</div>
+
+<!-- ================================================================
+     SECTION 1 — The why
+     ================================================================ -->
+<h2 class="section"><span class="num">1</span>The hand-rolled tracker reaches its limit</h2>
+<p class="section-intro">The symptom this lesson fixes: the recorder works, and the day runs multiply, it quietly becomes the bottleneck.</p>
+
+<p>Lesson 2.1 gave <code class="inline">run</code> and <code class="inline">compare</code> real meaning: every training attempt is a JSON record with parameters, metrics, an artifact copy, and two fingerprints. That is an honest, working tracker &#8212; and it is exactly as limited as a hand-rolled tracker must be. Now tune for real: five seeds, two iteration limits, maybe a different test split &#8212; that is ten runs. Sit in front of the project on Tuesday and you will feel each edge:</p>
+
+<ul class="callout-body">
+  <li><strong>The schema is ours alone.</strong> <code class="inline">runs/runs.jsonl</code> is a format we invented. Every tool that reads it &#8212; <code class="inline">compare</code>, the next lesson's utilities, your future code &#8212; must agree on its key names, ordering, and nesting, forever, by convention.</li>
+  <li><strong>No overview.</strong> Comparing ten runs means re-reading a terminal table. There is no page that shows accuracy versus F1 across runs, no chart, no place to group runs by "feature experiment" or "split test".</li>
+  <li><strong>No query language.</strong> "Give me the best run where <code class="inline">max_iter === 500</code> and the data fingerprint changed" is answered by reading every line, not by asking the store.</li>
+  <li><strong>Artifacts float free.</strong> Model files pile up in a folder, each tied to a run only by a name we remembered to make consistent.</li>
+</ul>
+
+<p>The industry answer is a <strong>purpose-built tracking tool</strong>, not a hand-rolled file. The most widely used one is <strong>MLflow</strong>: an open-source project that grew out of Databricks' internal experiment store and became the de-facto standard for this problem. This lesson is the tool turning (the concept we already own) into something a team could share.</p>
+
+<!-- ================================================================
+     SECTION 2 — The tool
+     ================================================================ -->
+<h2 class="section"><span class="num">2</span>What MLflow Tracking is</h2>
+<p class="section-intro">Three pieces: a database for run metadata, a folder for artifact files, and two companions readers &#8212; a Python API and a web UI.</p>
+
+<p>MLflow is a suite of tools; the piece we need now is <strong>Tracking</strong>. Tracking's job is exactly Lesson 2.1's job &#8212; remember runs and let you compare them &#8212; done once, done well, and done the same way across every ML project. Its anatomy:</p>
+
+<figure class="scrollfig">
+<div class="figure-scroll">
+<svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif" role="img" aria-labelledby="tracking-anatomy-title tracking-anatomy-desc">
+  <title id="tracking-anatomy-title">The anatomy of MLflow Tracking</title>
+  <desc id="tracking-anatomy-desc">A training run writes into a tracking store database holding experiments and runs with params, metrics, and tags, while artifact files go to an artifact store; a Python client and a web UI both read the same store.</desc>
+  <rect x="0" y="0" width="760" height="300" fill="#ffffff"/>
+  <rect x="0" y="0" width="760" height="300" fill="url(#erd-grid)"/>
+  <rect x="20" y="34" width="180" height="58" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="20" y="34" width="180" height="24" fill="#dceaf7" stroke="#1f6fb2" stroke-width="1.4"/>
+  <text x="110" y="51" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">flight-delays run</text>
+  <text x="110" y="74" text-anchor="middle" font-size="11.5" fill="#333">train + measure once</text>
+  <line x1="200" y1="63" x2="240" y2="63" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="240" y="16" width="300" height="126" fill="#ffffff" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="240" y="16" width="300" height="24" fill="#dceaf7" stroke="#1f6fb2" stroke-width="1.4"/>
+  <text x="390" y="33" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">tracking store &#8212; mlflow.db</text>
+  <text x="390" y="58" text-anchor="middle" font-size="11.5" fill="#333">experiment: flight-delays</text>
+  <text x="390" y="78" text-anchor="middle" font-size="11" fill="#333">run 324af2d6&#8230; &#183; params &#183; metrics &#183; tags</text>
+  <text x="390" y="94" text-anchor="middle" font-size="11" fill="#333">run 16439774&#8230; &#183; params &#183; metrics &#183; tags</text>
+  <line x1="540" y1="70" x2="600" y2="70" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="600" y="24" width="140" height="96" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="600" y="24" width="140" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="670" y="41" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">artifact store</text>
+  <text x="670" y="64" text-anchor="middle" font-size="11" fill="#333">mlruns/</text>
+  <text x="670" y="90" text-anchor="middle" font-size="10.5" fill="#333">model/&#8195;model_2025_01</text>
+  <text x="670" y="106" text-anchor="middle" font-size="10.5" fill="#333">.joblib</text>
+  <line x1="420" y1="142" x2="420" y2="176" stroke="#1f6fb2" stroke-width="1.4"/>
+  <line x1="370" y1="168" x2="420" y2="176" stroke="#1f6fb2" stroke-width="1.4"/>
+  <line x1="420" y1="176" x2="470" y2="168" stroke="#1f6fb2" stroke-width="1.4"/>
+  <rect x="20" y="210" width="320" height="64" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="20" y="210" width="320" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="180" y="227" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">Python client</text>
+  <text x="180" y="250" text-anchor="middle" font-size="11" fill="#333">start_run, log_params, log_metrics,</text>
+  <text x="180" y="266" text-anchor="middle" font-size="11" fill="#333">set_tags, search_runs, log_artifact</text>
+  <rect x="420" y="210" width="320" height="64" fill="#ffffff" stroke="#333" stroke-width="1.4"/>
+  <rect x="420" y="210" width="320" height="24" fill="#dfe3e8" stroke="#333" stroke-width="1.4"/>
+  <text x="580" y="227" text-anchor="middle" fill="#1f6fb2" font-weight="bold" font-size="12">Web UI</text>
+  <text x="580" y="250" text-anchor="middle" font-size="11" fill="#333">mlflow server &#8594; browser:</text>
+  <text x="580" y="266" text-anchor="middle" font-size="11" fill="#333">run pages, charts, artifact browser</text>
+  <text x="380" y="292" text-anchor="middle" font-size="12" fill="#1f6fb2" font-weight="bold">one store, three ways in: the CLI writes, the Python API queries, the web browses</text>
+</svg>
+</div>
+<figcaption>MLflow Tracking is one store plus two readers. Runs from the CLI land in the store and under <code class="inline">mlruns/</code>; the <code class="inline">search_runs</code> query and the <code class="inline">mlflow server</code> web UI both read the same data.</figcaption>
+</figure>
+
+<p>Three terms do most of the work:</p>
+
+<ul class="callout-body">
+  <li><strong>Tracking store (backend store)</strong> &#8212; the database holding run metadata: params, metrics, tags, status, start and end time. We keep it in one local file, <code class="inline">mlflow.db</code>, using <strong>SQLite</strong> &#8212; a tiny database engine that stores everything in a single file with no server to run. MLflow's data model is built around databases, and SQLite is the supported choice for solo local work.</li>
+  <li><strong>Artifact store</strong> &#8212; where files go. The trained model is a file, not a table row, so MLflow copies it under <code class="inline">mlruns/&lt;experiment&gt;/&lt;run&gt;/artifacts/</code> on disk.</li>
+  <li><strong>Experiment and run</strong> &#8212; the grouping we were missing. An <strong>experiment</strong> is a named collection of runs (ours is <code class="inline">flight-delays</code>); a <strong>run</strong> is one execution inside it with its own 32-hex run id that MLflow assigns.</li>
+</ul>
+
+<p>The <strong>tracking URI</strong> is the one configuration that ties it all together: it tells the client where the store lives. Our whole setup is "point everything at <code class="inline">mlflow.db</code>, and every run, query, and UI view reads the same history."</p>
+
+<!-- ================================================================
+     SECTION 3 — Set it up
+     ================================================================ -->
+<h2 class="section"><span class="num">3</span>Set it up: one dependency, one store</h2>
+<p class="section-intro">Add MLflow with uv, then teach the project where its history should live.</p>
+
+<p>MLflow is an ordinary Python package. From the lesson's <code class="inline">CODE/</code> folder, the one-line uv command installs it, resolves its dependency tree, and records the requirement in <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> add mlflow</div>
+</div>
+
+<p>That adds <code class="inline">"mlflow&gt;=3.16.0"</code> to the project dependencies. Next, the configuration. <code class="inline">config.py</code> now owns two new constants:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">config.py</span></div>
+  <div class="code-body"><span class="cm"># --- Experiment tracking ---------------------------------------------------</span>
+<span class="cm"># MLflow keeps run metadata in a local SQLite database. The server command</span>
+<span class="cm"># below reads the same file, so the UI shows exactly what `run` records:</span>
+<span class="cm">#     uv run --locked mlflow server --backend-store-uri sqlite:///mlflow.db</span>
+<span class="cm"># Trained artifacts land under mlruns/ next to the database.</span>
+<span class="kw">MLFLOW_TRACKING_URI</span>: <span class="kw">str</span> = (
+    <span class="str">"sqlite:///"</span> + (<span class="kw">Path</span>(__file__).resolve().parents[<span class="num">2</span>] / <span class="str">"mlflow.db"</span>).as_posix()
+)
+<span class="kw">MLFLOW_EXPERIMENT_NAME</span>: <span class="kw">str</span> = <span class="str">"flight-delays"</span>
+  </div>
+</div>
+
+<p>The <strong>tracking URI</strong> is a URI, not a path: the <code class="inline">sqlite:///</code> prefix tells MLflow "use a SQLite database", and the rest locates the file. It is computed as an absolute path from <code class="inline">config.py</code>, so it works no matter which folder you launch from. The <strong>experiment name</strong> is simply the label under which the runs group themselves. Because <code class="inline">mlflow.db</code> and <code class="inline">mlruns/</code> are generated data, both join <code class="inline">.gitignore</code> &#8212; the history stays on your machine and never reaches the repository.</p>
+
+<!-- ================================================================
+     SECTION 4 — Record a run
+     ================================================================ -->
+<h2 class="section"><span class="num">4</span>Record a run: one training run becomes one MLflow run</h2>
+<p class="section-intro">The five pieces from Lesson 2.1 map one-to-one onto MLflow's schema &#8212; they just land in a database instead of a JSONL line.</p>
+
+<p>Everything Lesson 2.1 taught still holds; the tool changes only <em>where</em> the pieces go:</p>
+
+<ul class="callout-body">
+  <li>parameters &#8594; <code class="inline">mlflow.log_params</code></li>
+  <li>metrics &#8594; <code class="inline">mlflow.log_metrics</code></li>
+  <li>the trained artifact &#8594; <code class="inline">mlflow.log_artifact(&#8230;, artifact_path="model")</code></li>
+  <li>the data and code fingerprints &#8594; <code class="inline">mlflow.set_tags</code></li>
+</ul>
+
+<p>Fingerprints are facts <em>we</em> computed (the sha256, the git stamp, the dependency versions), so they ride along as tags &#8212; key&#8211;value metadata that anything else can later filter on. Here is the recorder from <code class="inline">tracking.py</code> in full:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tracking.py</span></div>
+  <div class="code-body"><span class="kw">def</span> record_run(
+    params: <span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">int</span> | <span class="kw">float</span>],
+    metrics: <span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">float</span>],
+    artifact: <span class="kw">Path</span>,
+    data: <span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">str</span>],
+    code: <span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">object</span>],
+    tracking_uri: <span class="kw">str</span> | <span class="kw">Path</span> = MLFLOW_TRACKING_URI,
+    experiment_name: <span class="kw">str</span> = MLFLOW_EXPERIMENT_NAME,
+) -&gt; <span class="kw">str</span>:
+    <span class="cm">"""Log one training run with MLflow and return its run id."""</span>
+    mlflow.set_tracking_uri(<span class="kw">str</span>(tracking_uri))
+    mlflow.set_experiment(experiment_name)
+
+    dependencies = <span class="kw">cast</span>(<span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">str</span>], code.get(<span class="str">"dependencies"</span>, {}))
+    tags = {
+        <span class="str">"data_file"</span>: data[<span class="str">"file"</span>],
+        <span class="str">"data_sha256"</span>: data[<span class="str">"sha256"</span>],
+        <span class="str">"git_commit"</span>: <span class="kw">str</span>(code[<span class="str">"git_commit"</span>]),
+        <span class="str">"git_dirty"</span>: <span class="kw">str</span>(<span class="kw">bool</span>(code[<span class="str">"git_dirty"</span>])),
+        <span class="str">"python_version"</span>: <span class="kw">str</span>(code[<span class="str">"python_version"</span>]),
+        **{f<span class="str">"dependency.{name}"</span>: value <span class="kw">for</span> name, value <span class="kw">in</span> dependencies.items()},
+    }
+
+    <span class="kw">with</span> mlflow.start_run() <span class="kw">as</span> active_run:
+        mlflow.log_params(params)
+        mlflow.log_metrics(metrics)
+        mlflow.set_tags(tags)
+        mlflow.log_artifact(<span class="kw">str</span>(artifact), artifact_path=<span class="str">"model"</span>)
+        <span class="kw">return</span> <span class="kw">cast</span>(<span class="kw">str</span>, active_run.info.run_id)
+  </div>
+</div>
+
+<p>Read it as a pipeline of three steps. First, <code class="inline">set_tracking_uri</code> + <code class="inline">set_experiment</code> point at the store and open its <code class="inline">flight-delays</code> experiment. Second, the <code class="inline">with mlflow.start_run()</code> context manager opens a run for the duration of the block &#8212; MLflow assigns the run its 32-hex id, and any of the <code class="inline">log_*</code> calls inside the block attach to it. Third, the three <code class="inline">log_*</code> calls and <code class="inline">set_tags</code> put each of our five pieces where MLflow keeps it, and <code class="inline">log_artifact(&#8230;, artifact_path="model")</code> makes the per-run copy under <code class="inline">artifacts/model/</code> &#8212; the joblib is no longer overwritten.</p>
+
+<p>Run it, from <code class="inline">CODE/</code>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run flight-delays run
+INFO      flight_delays.cli          Pipeline started (max_iter=500, random_state=42)
+INFO      flight_delays.cli          Modeling rows: 522,269
+INFO      flight_delays.cli          Training finished
+INFO      flight_delays.cli          accuracy: 0.8952
+INFO      flight_delays.cli          f1:       0.7415
+INFO      flight_delays.cli          Saved pipeline to models/<span class="fn">model_2025_01</span>.joblib
+INFO      mlflow.store.db.utils      Creating initial MLflow database tables...
+INFO      mlflow.tracking.fluent     Experiment with name 'flight-delays' does not exist. Creating a new experiment.
+INFO      flight_delays.cli          Recorded run 324af2d64480473a848b05418a2b30a1 in experiment flight-delays (tracking uri: sqlite:///<span class="fn">CODE</span>/mlflow.db)
+INFO      flight_delays.cli          Pipeline finished
+  </div>
+</div>
+
+<p>Two things to notice. The two <strong>mlflow</strong> lines appear only on the very first run &#8212; they create the database tables and the experiment; the second run's transcript is back to just our logger lines around a single "Recorded run &#8230;". And the run id: <code class="inline">324af2d64480473a848b05418a2b30a1</code> is whatever MLflow generated for that run on that machine &#8212; <em>your</em> ids will differ even with identical parameters, because ids must be unique, not reproducible. The metrics reproduce; the ids never do.</p>
+
+<!-- ================================================================
+     SECTION 5 — Read runs back
+     ================================================================ -->
+<h2 class="section"><span class="num">5</span>Read runs back: compare is now a search query</h2>
+<p class="section-intro">The hand-written JSONL reader is gone; <code class="inline">compare</code> asks the store directly.</p>
+
+<p>The mirror of recording is reading. Lesson 2.1 wrote its own reader over <code class="inline">runs.jsonl</code>; this lesson deletes that reader and asks MLflow instead, because the store knows its own schema. <code class="inline">tracking.py</code> now looks like this:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">tracking.py</span></div>
+  <div class="code-body"><span class="kw">def</span> compare_runs(
+    tracking_uri: <span class="kw">str</span> | <span class="kw">Path</span> = MLFLOW_TRACKING_URI,
+    experiment_name: <span class="kw">str</span> = MLFLOW_EXPERIMENT_NAME,
+    sort_by: <span class="kw">str</span> = <span class="str">"f1"</span>,
+) -&gt; <span class="kw">list</span>[<span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">object</span>]]:
+    <span class="cm">"""Return recorded runs ordered by one metric, best first."""</span>
+    mlflow.set_tracking_uri(<span class="kw">str</span>(tracking_uri))
+    <span class="kw">if</span> mlflow.get_experiment_by_name(experiment_name) <span class="kw">is None</span>:
+        <span class="kw">return</span> []
+
+    runs = mlflow.search_runs(
+        experiment_names=[experiment_name],
+        order_by=[f<span class="str">"metrics.{sort_by} DESC"</span>],
+        output_format=<span class="str">"list"</span>,
+    )
+    rows: <span class="kw">list</span>[<span class="kw">dict</span>[<span class="kw">str</span>, <span class="kw">object</span>]] = []
+    <span class="kw">for</span> run <span class="kw">in</span> runs:
+        data = run.data
+        rows.append({
+            <span class="str">"run_id"</span>: run.info.run_id,
+            <span class="str">"params"</span>: <span class="kw">dict</span>(data.params),
+            <span class="str">"metrics"</span>: {name: <span class="kw">float</span>(value) <span class="kw">for</span> name, value <span class="kw">in</span> data.metrics.items()},
+            <span class="str">"tags"</span>: <span class="kw">dict</span>(data.tags),
+        })
+    <span class="kw">return</span> rows
+  </div>
+</div>
+
+<p>The two new ideas are small and powerful. <code class="inline">mlflow.search_runs</code> is MLflow's <strong>query API</strong>: you name the experiment (and a sort expression like <code class="inline">metrics.f1 DESC</code>), and it hands back real <em>run objects</em> exposing <code class="inline">.info</code>, <code class="inline">.data.params</code>, <code class="inline">.data.metrics</code>, and <code class="inline">.data.tags</code>. With <code class="inline">output_format="list"</code> you get a Python list, ready to format. The early exit is just courtesy: if the experiment was never created, return an empty list instead of querying nothing.</p>
+
+<p>The <code class="inline">print_compare_table</code> formatter in <code class="inline">cli.py</code> is unchanged in spirit &#8212; the same ranked table as Lesson 2.1, now fed from a database query:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run flight-delays compare
+run_id                                 max_iter  random_state   accuracy       f1
+1643977400e743df9a8ef37e15bd6cd4            500             7     0.8966   0.7441
+324af2d64480473a848b05418a2b30a1            500            42     0.8952   0.7415
+  </div>
+</div>
+
+<p>The winner is the same as in Lesson 2.1 &#8212; the run with <code class="inline">random_state=7</code> wins on F1 again. Because the pipeline is deterministic, the <em>metrics</em> reproduce exactly; only the run ids are new. The five-piece record is intact, just stored somewhere a query can reach it.</p>
+
+<!-- ================================================================
+     SECTION 6 — The UI
+     ================================================================ -->
+<h2 class="section"><span class="num">6</span>The UI: browse the history like you mean it</h2>
+<p class="section-intro">The overview Lesson 2.1 lacked arrives as a web page.</p>
+
+<p>A terminal table answered "which run was the best?"; it still struggles with "show me all runs as a page I can click, with plots". MLflow ships a browser UI that reads the same store. Start it in its own terminal window, from <code class="inline">CODE/</code>:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run --locked mlflow server --backend-store-uri sqlite:///mlflow.db
+[MLflow] Security middleware enabled with default settings (localhost-only). To allow connections from
+other hosts, use --host 0.0.0.0 and configure --allowed-hosts and --cors-allowed-origins.
+INFO:     Uvicorn running on http://127.0.0.1:5000 (Press CTRL+C to quit)
+  </div>
+</div>
+
+<p><code class="inline">--backend-store-uri sqlite:///mlflow.db</code> tells the server which store to read &#8212; it is exactly the file your runs write, so the UI shows precisely what <code class="inline">run</code> records. Two practical notes:</p>
+
+<ul class="callout-body">
+  <li><strong>Run it from <code class="inline">CODE/</code>.</strong> The URI here is a <em>relative</em> path. Our CLI resolves <code class="inline">mlflow.db</code> to the lesson's absolute path from <code class="inline">config.py</code>; the server resolves it against the folder you launched from. Launch from <code class="inline">CODE/</code> and both point at the same file.</li>
+  <li><strong>The terminal is now the server's.</strong> It stays busy (that is the signal to keep it running) until <kbd>Ctrl+C</kbd>. Use a separate terminal window for training commands while it runs.</li>
+</ul>
+
+<p>Open <code class="inline">http://localhost:5000</code> and click the <strong>flight-delays</strong> experiment: both runs appear, best F1 first. Click one and the run page shows exactly our five pieces &#8212; a <em>Params</em> table, a <em>Metrics</em> table, a <em>Tags</em> list including <code class="inline">data_sha256</code> and <code class="inline">git_commit</code>, and under <em>Artifacts</em> the <code class="inline">model/model_2025_01.joblib</code> we no longer dare overwrite. The comparison view adds the metric-versus-metric plots. The lines the server printed before "Uvicorn running" are startup notices &#8212; most usefully, it only listens on your machine by default &#8212; not errors.</p>
+
+<p>That server, by the way, is the entire "tracking server" idea: a small web application that serves your tracking store over HTTP. For solo work it serves <em>your</em> <code class="inline">mlflow.db</code>; a team would run one shared store and everyone's runs would land in the same experiment. Same commands, one shared database.</p>
+
+<!-- ================================================================
+     SECTION 7 — What changed
+     ================================================================ -->
+<h2 class="section"><span class="num">7</span>What changed in our project?</h2>
+<p class="section-intro">Before vs after &#8212; the milestone is verifiable.</p>
+
+<div class="table-scroll">
+<table class="api">
+  <thead>
+    <tr><th>Aspect</th><th>Before (Lesson 2.1)</th><th>After (Lesson 2.2)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Where run metadata lives</td><td><code class="inline">runs/runs.jsonl</code> &#8212; a schema we invented</td><td><code class="inline">mlflow.db</code> &#8212; a SQLite database with MLflow's schema</td></tr>
+    <tr><td>Run identity</td><td>an id we built from the timestamp</td><td>a 32-hex run id MLflow assigns</td></tr>
+    <tr><td>Reading history back</td><td>our own JSONL reader, sorting a file</td><td><code class="inline">search_runs</code> + <code class="inline">order_by</code> querying the store</td></tr>
+    <tr><td>Trained artifact</td><td><code class="inline">runs/runs_&lt;run_id&gt;.joblib</code> files we placed</td><td>copied under <code class="inline">mlruns/&lt;experiment&gt;/&lt;run&gt;/artifacts/model/</code> by <code class="inline">log_artifact</code></td></tr>
+    <tr><td>Overview</td><td>terminal table only</td><td>browser UI with run pages, tags, and metric plots</td></tr>
+    <tr><td>Grouping + metadata</td><td>one flat JSONL file</td><td>experiments, plus tags (<code class="inline">data_sha256</code>, <code class="inline">git_commit</code>, <code class="inline">dependency.*</code>)</td></tr>
+    <tr><td>Tests + quality</td><td>77 tests, 95% coverage</td><td>78 tests, 95% coverage; ruff and mypy green; fingerprint helpers untouched</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Verify from <code class="inline">CODE/</code>: <code class="inline">uv run --locked pytest</code> reports <code class="inline">78 passed</code>; a fresh run plus <code class="inline">uv run --locked flight-delays compare</code> reproduces the table above (the <code class="inline">random_state=7</code> run wins again, <code class="inline">0.8966 / 0.7441</code>); and <code class="inline">uv run --locked mlflow server --backend-store-uri sqlite:///mlflow.db</code> shows the same two runs in the browser.</p>
+
+<p>Diff <code class="inline">lesson-01/CODE</code> against <code class="inline">lesson-02/CODE</code> of this module: <code class="inline">data_fingerprint</code>, <code class="inline">git_fingerprint</code>, <code class="inline">dependency_versions</code>, and <code class="inline">code_fingerprint</code> are byte-identical &#8212; the concept survived the tool. What changed is the storage and reading layer: <code class="inline">record_run</code> and <code class="inline">compare_runs</code> speak MLflow, <code class="inline">runs.jsonl</code> and its reader are gone, and <code class="inline">mlflow.db</code> + <code class="inline">mlruns/</code> are git-ignored outputs.</p>
+
+<!-- ================================================================
+     TRY IT
+     ================================================================ -->
+<div class="callout try">
+  <div class="ti">Try it</div>
+  <p>Push the history further, then read it three ways. Run <code class="inline">uv run --locked flight-delays run --max-iter 1000</code>; in the UI, the new run appears in the experiment with its own id, and its Tags still include <code class="inline">data_sha256</code> and <code class="inline">git_commit</code> &#8212; provenance is now automatic per run. Then re-rank without retraining: <code class="inline">uv run --locked flight-delays compare --sort-by accuracy</code> and watch the ordering flip. Finally, open <code class="inline">mlflow.db</code> in a tool that reads SQLite (or just <code class="inline">ls mlruns</code>) to confirm the mirrored <code class="inline">artifacts/model/</code> copy exists for every run you recorded.</p>
+</div>
+
+<!-- ================================================================
+     TAKEAWAYS
+     ================================================================ -->
+<div class="callout recap">
+  <div class="ti">Takeaways</div>
+  <ul>
+    <li><strong>MLflow Tracking is four things at once:</strong> a database (the tracking store), a folder (the artifact store), a Python API (<code class="inline">log_*</code>, <code class="inline">search_runs</code>), and a web UI (<code class="inline">mlflow server</code>). One <strong>tracking URI</strong> points all of them at the same history.</li>
+    <li><strong>Lesson 2.1's five pieces map onto MLflow's schema:</strong> params, metrics, artifact, and the fingerprints we compute become tags. The concept outlives the tool.</li>
+    <li><strong><code class="inline">search_runs</code> replaced our hand-rolled reader.</strong> A query API is the durable part &#8212; the store owns its schema, so nothing of ours needs to stay in sync.</li>
+    <li><strong>A database must be treated like one:</strong> <code class="inline">mlflow.db</code> holds your whole history. It is git-ignored on purpose, and it is the file you would back up (or copy to L2.3's next steps).</li>
+    <li><strong>MLflow lets solo work be additive:</strong> metrics that reproduced in L2.1 now reproduce in the database, and the model file is never silently overwritten again.</li>
+  </ul>
+</div>
+
+<!-- ================================================================
+     CHAIN HOOK
+     ================================================================ -->
+<div class="callout warn">
+  <div class="ti">Before the next lesson &#8212; what still hurts?</div>
+  <p>The runs now live in a searchable database, ranked and browsable. Three cracks are visible if you squint:</p>
+  <ul>
+    <li><strong>Nothing says which run is <em>the</em> model.</strong> <code class="inline">compare</code> ranks runs, but the store has no idea that "the winning F1 run" is special, that it has a name, or that it is the one to serve. Promotion is still a human decision, and the artifact is still just a file path. <strong>Lesson 2.3</strong> gives a chosen run a registered, named, versioned identity.</li>
+    <li><strong>The 100&nbsp;MB CSV is fingerprinted, not versioned.</strong> "same sha256" means the file happened to be sitting in <code class="inline">data/</code>; nothing records its history or pins a specific copy to a run. The shape of that fix is data versioning, later in the journey.</li>
+    <li><strong>Writer and reader assume one machine.</strong> We started the server locally because the database is local &#8212; the moment the history must be shared, the store has to live somewhere reachable, which is a deployment problem this module's later lessons make routine.</li>
+  </ul>
+  <p>Lesson 2.3 takes the winning run and stops treating it as a row in a table.</p>
 </div>
 
 <div class="day-nav">

@@ -1,0 +1,15 @@
+{
+  "module": 2,
+  "id": "MML02",
+  "title": "ML Lifecycle & Reproducibility",
+  "phase": "Phase 2 of 8",
+  "description": "Never lose a run again: hand-rolled tracking, MLflow tracking and registry, data versioning, and DVC pipelines.",
+  "lessons": [
+    { "id": "L2.1", "title": "Tracking Fundamentals", "slug": "lesson-01" },
+    { "id": "L2.2", "title": "MLflow Tracking", "slug": "lesson-02" },
+    { "id": "L2.3", "title": "MLflow Registry", "slug": "lesson-03" },
+    { "id": "L2.4", "title": "Data Versioning", "slug": "lesson-04" },
+    { "id": "L2.5", "title": "DVC", "slug": "lesson-05" },
+    { "id": "L2.6", "title": "DVC Pipelines", "slug": "lesson-06" }
+  ]
+}

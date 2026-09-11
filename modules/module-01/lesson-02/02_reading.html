@@ -221,11 +221,13 @@
 
 <h3>Initialize the project</h3>
 
-<p><code class="inline">uv init</code> scaffolds a brand-new project in an <em>empty</em> folder. Our <code class="inline">CODE/</code> folder already ships a finished project, so you cannot run it there &#8212; <code class="inline">uv</code> will refuse with <code class="inline">Project is already initialized</code>. Instead, create a scratch folder outside the course, and run it there to see exactly what a fresh project contains:</p>
+<p>Time to stop reading and start building. You are going to create your <em>own</em> project folder and write every file yourself. The <code class="inline">CODE/</code> folder this lesson ships is the <em>finished</em> example &#8212; a reference to check your work against, not the starting point.</p>
+
+<p>Create a new folder for your project and run <code class="inline">uv init</code> there. From now on, every command in this lesson runs from inside this folder:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
-  <div class="code-body"><span class="fn">mkdir</span> scratch-uv &amp;&amp; <span class="fn">cd</span> scratch-uv
+  <div class="code-body"><span class="fn">mkdir</span> flight-delays &amp;&amp; <span class="fn">cd</span> flight-delays
 <span class="fn">uv</span> init</div>
 </div>
 
@@ -234,44 +236,51 @@
 <ul>
   <li><strong><code class="inline">pyproject.toml</code></strong> &#8212; the project description file, pre-filled with <em>placeholder</em> values (more on this below).</li>
   <li><strong><code class="inline">.python-version</code></strong> &#8212; tells <code class="inline">uv</code> which Python version this project uses.</li>
-  <li><strong><code class="inline">README.md</code></strong> &#8212; a starter readme.</li>
+  <li><strong><code class="inline">README.md</code></strong> &#8212; an empty starter readme (you will fill it in a later lesson).</li>
   <li><strong><code class="inline">.gitignore</code> and a <code class="inline">.git/</code> folder</strong> &#8212; it even runs <code class="inline">git init</code> for you and adds a reasonable ignore list.</li>
-  <li><strong><code class="inline">src/scratch_uv/__init__.py</code></strong> &#8212; a starter package (note the name: the folder name with hyphens swapped for underscores) containing a demo <code class="inline">main()</code> that prints <code class="inline">Hello from scratch-uv!</code>.</li>
+  <li><strong><code class="inline">src/flight_delays/__init__.py</code></strong> &#8212; a starter package (note the name: the folder name with hyphens swapped for underscores) containing a demo <code class="inline">main()</code> that prints <code class="inline">Hello from flight-delays!</code>.</li>
 </ul>
 
 <p>Open the generated <code class="inline">pyproject.toml</code> and you will see several things we need to deal with:</p>
 
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">scratch-uv/pyproject.toml</span></div>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">flight-delays/pyproject.toml</span></div>
   <div class="code-body">[project]
-name = <span class="str">"scratch-uv"</span>                  <span class="com"># defaults to the FOLDER name</span>
+name = <span class="str">"flight-delays"</span>                <span class="com"># defaults to the FOLDER name</span>
 version = <span class="str">"0.1.0"</span>
 description = <span class="str">"Add your description here"</span>  <span class="com"># placeholder text</span>
 requires-python = <span class="str">">=3.12"</span>
-dependencies = []                    <span class="com"># empty until you run uv add</span>
+dependencies = []                  <span class="com"># empty until you run uv add</span>
 
-[project.scripts]                    <span class="com"># demo console command</span>
-scratch-uv = <span class="str">"scratch_uv:main"</span>
+[project.scripts]                  <span class="com"># creates the flight-delays command</span>
+flight-delays = <span class="str">"flight_delays:main"</span>
 
-[build-system]                       <span class="com"># for building/publishing a package</span>
-requires = [<span class="str">"uv_build&gt;=0.12,&lt;0.13"</span>]
+[build-system]                     <span class="com"># for building/publishing a package</span>
+requires = [<span class="str">"uv_build&gt;=0.12.9,&lt;0.13.0"</span>]
 build-backend = <span class="str">"uv_build"</span></div>
 </div>
 
 <p>Four things to understand here:</p>
 
 <ol>
-  <li><strong><code class="inline">name</code> comes from the folder name.</strong> Since you created <code class="inline">scratch-uv</code>, that is what <code class="inline">uv</code> used. In our real project we rename it to <code class="inline">flight-delays</code>.</li>
+  <li><strong><code class="inline">name</code> comes from the folder name.</strong> Since you created <code class="inline">flight-delays</code>, that is what <code class="inline">uv</code> used.</li>
   <li><strong><code class="inline">description</code> is a placeholder.</strong> It waits for you to write a real one.</li>
-  <li><strong><code class="inline">[project.scripts]</code> creates a command.</strong> The generated command calls a Python function. In our project, we rename it to <code class="inline">flight-delays</code> and point it at <code class="inline">flight_delays.cli:main</code>.</li>
+  <li><strong><code class="inline">[project.scripts]</code> creates a command.</strong> The generated command calls the function it names. Right now it points at <code class="inline">flight_delays:main</code> &#8212; the demo <code class="inline">main()</code> inside <code class="inline">__init__.py</code>. Later in the lesson you will repoint it at <code class="inline">flight_delays.cli:main</code>, the real entry point.</li>
   <li><strong><code class="inline">[build-system]</code> makes installation possible.</strong> It tells <code class="inline">uv</code> how to install the code under <code class="inline">src/</code>. This matters even when you are not publishing: your environment imports the installed package, not a folder that happens to be nearby.</li>
 </ol>
 
-<p>After editing the name, description, command, and package target, our file is nearly ready. You will see the finished <code class="inline">CODE/pyproject.toml</code> in the next subsection, once the dependencies are filled in.</p>
+<p>You already have a working demo project. Try it before you change anything:</p>
 
-<div class="callout warn">
-  <div class="ti">These commands run in <code class="inline">scratch-uv</code>, not in <code class="inline">CODE/</code></div>
-  <p>The <code class="inline">CODE/</code> folder ships the finished result, so <code class="inline">uv init</code> inside it fails by design, and <code class="inline">uv add</code> there would re-write the shipped dependency minimums. Use <code class="inline">scratch-uv</code> as your playground pad to watch every command work on a live project &#8212; that is the best way to learn a tool. When you are ready to run the real project, head to <code class="inline">CODE/</code> and just run <code class="inline">uv sync</code> &#8212; its <code class="inline">pyproject.toml</code> and <code class="inline">uv.lock</code> are already in place. Delete the <code class="inline">scratch-uv</code> folder when you are done.</p>
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
+  <div class="code-body"><span class="fn">uv</span> run flight-delays</div>
+</div>
+
+<p>It installs the project into a fresh <code class="inline">.venv/</code> and prints <code class="inline">Hello from flight-delays!</code>. You have just built, installed, and run a package &#8212; without writing any code. Everything from here on replaces that demo with your real pipeline.</p>
+
+<div class="callout tip">
+  <div class="ti">Where <code class="inline">CODE/</code> fits in</div>
+  <p>Every lesson ships a finished <code class="inline">CODE/</code> folder. It is the reference answer, not the starting point. You build the same project in your own folder by hand; when you are stuck, compare your files against <code class="inline">CODE/</code> to see the expected result. Do not edit <code class="inline">CODE/</code> or run <code class="inline">uv init</code>/<code class="inline">uv add</code> inside it &#8212; that would overwrite the shipped example.</p>
 </div>
 
 <h3>Add the dependencies</h3>
@@ -315,7 +324,7 @@ requires = [<span class="str">"uv_build&gt;=0.12.9,&lt;0.13.0"</span>]
 build-backend = <span class="str">"uv_build"</span></div>
 </div>
 
-<p>Each line under <code class="inline">dependencies</code> names a package and a minimum version. The <code class="inline">&gt;=</code> means "this version or newer." You do not need to list every sub-dependency &#8212; <code class="inline">uv</code> resolves those automatically. The final two sections install <code class="inline">src/flight_delays/</code> and turn its <code class="inline">cli.main()</code> function into the command learners run.</p>
+<p>Each line under <code class="inline">dependencies</code> names a package and a minimum version. The <code class="inline">&gt;=</code> means "this version or newer." You do not need to list every sub-dependency &#8212; <code class="inline">uv</code> resolves those automatically. The final two sections install <code class="inline">src/flight_delays/</code> and turn its <code class="inline">cli.main()</code> function into the command you run.</p>
 
 <h3>Or <code class="inline">uv sync</code>: the reverse direction</h3>
 
@@ -345,6 +354,7 @@ build-backend = <span class="str">"uv_build"</span></div>
     <tr><td><code class="inline">pyproject.toml</code></td><td>Your project description &#8212; name, Python version, dependencies</td><td><code class="inline">uv init</code> + you edit it</td><td>Yes</td></tr>
     <tr><td><code class="inline">uv.lock</code></td><td>Exact resolved versions of every package (the lockfile)</td><td><code class="inline">uv add</code> / <code class="inline">uv sync</code></td><td>Yes</td></tr>
     <tr><td><code class="inline">.python-version</code></td><td>The Python version this project uses</td><td><code class="inline">uv init</code></td><td>Yes</td></tr>
+    <tr><td><code class="inline">README.md</code></td><td>Starter readme (empty for now)</td><td><code class="inline">uv init</code></td><td>Yes</td></tr>
     <tr><td><code class="inline">.venv/</code></td><td>The isolated environment folder (packages, scripts, Python binary)</td><td><code class="inline">uv add</code> / <code class="inline">uv sync</code></td><td>No &#8212; gitignored</td></tr>
   </tbody>
 </table>
@@ -386,28 +396,55 @@ build-backend = <span class="str">"uv_build"</span></div>
 
 <p>The outer <code class="inline">src/</code> folder is a <strong>source layout</strong>, not the package name. Keeping importable code one level below the repository root prevents Python from importing an uninstalled checkout by accident. If <code class="inline">uv sync</code> has not installed the package correctly, the import fails immediately instead of giving you a misleading success.</p>
 
+<p>Here is what <code class="inline">uv init</code> left you with:</p>
+
 <div class="code-block">
-  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">project layout</span></div>
-  <div class="code-body"><span class="def">CODE/</span>
-  pyproject.toml     <span class="com"># project metadata + dependencies (from uv init + uv add)</span>
-  uv.lock            <span class="com"># locked package versions (from uv add / uv sync)</span>
-  .python-version    <span class="com"># Python version for this project (from uv init)</span>
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">flight-delays/ right after uv init</span></div>
+  <div class="code-body"><span class="def">flight-delays/</span>
+  pyproject.toml     <span class="com"># project metadata + placeholder values</span>
+  .python-version    <span class="com"># Python version for this project</span>
+  README.md          <span class="com"># empty starter</span>
+  .gitignore         <span class="com"># ignores __pycache__, .venv, build artifacts</span>
   <span class="def">src/</span>               <span class="com"># source-layout boundary</span>
-    <span class="def">flight_delays/</span> <span class="com"># installed package &#8212; you import this</span>
-      __init__.py    <span class="com"># initializes the package</span>
-      __main__.py    <span class="com"># supports python -m flight_delays</span>
-      cli.py         <span class="com"># command entry point</span>
-      config.py
-      load.py
-      clean.py
-      features.py
-      train.py
-      evaluate.py
-      predict.py
+    <span class="def">flight_delays/</span> <span class="com"># the package you import</span>
+      __init__.py    <span class="com"># demo main() prints "Hello from flight-delays!"</span></div>
+</div>
+
+<p>By the end of this lesson, the same folder looks like this:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">flight-delays/ after this lesson</span></div>
+  <div class="code-body"><span class="def">flight-delays/</span>
+  pyproject.toml     <span class="com"># edited: real description, script points at cli.main</span>
+  uv.lock            <span class="com"># locked package versions (from uv add)</span>
+  .python-version    <span class="com"># from uv init</span>
+  <span class="def">src/</span>               <span class="com"># source-layout boundary</span>
+    <span class="def">flight_delays/</span> <span class="com"># the package you import</span>
+      __init__.py    <span class="com"># empty &#8212; marks the folder as importable</span>
+      __main__.py    <span class="com"># lets python -m flight_delays run the CLI</span>
+      cli.py         <span class="com"># the real entry point (orchestrates the pipeline)</span>
+      config.py      <span class="com"># paths + constants</span>
+      load.py        <span class="com"># read the CSV</span>
+      clean.py       <span class="com"># filter + derive features</span>
+      features.py    <span class="com"># build preprocessor and model</span>
+      train.py       <span class="com"># fit the pipeline</span>
+      evaluate.py    <span class="com"># accuracy + F1</span>
+      predict.py     <span class="com"># load and predict</span>
+  <span class="def">models/</span>           <span class="com"># saved fitted pipeline (gitignored)</span>
   <span class="def">.venv/</span>             <span class="com"># virtual environment (gitignored)</span></div>
 </div>
 
-<p>The rule is simple: <code class="inline">cli.py</code> orchestrates the workflow, while the other modules do focused jobs. The build system installs <code class="inline">flight_delays</code>, and the console entry point gives users a stable command even if files are reorganized later. The same installed package can be imported by later tests and services.</p>
+<p>The <code class="inline">README.md</code>, <code class="inline">.gitignore</code>, and <code class="inline">.git/</code> from <code class="inline">uv init</code> stay as they are &#8212; the tree above shows only the files relevant to the code itself.</p>
+
+<p>The rule is simple: <code class="inline">cli.py</code> orchestrates the workflow, while the other modules do focused jobs. The build system installs <code class="inline">flight_delays</code>, and the console entry point gives you a stable command even if files are reorganized later. The same installed package can be imported by later tests and services.</p>
+
+<p>Three files in that tree exist for structural reasons and often confuse beginners. Here is exactly why each one is there.</p>
+
+<p><strong><code class="inline">__init__.py</code> &#8212; marks the folder as a package.</strong> When Python sees this file inside a folder, it treats the folder as an importable package, so <code class="inline">from flight_delays.cli import main</code> works. Without it, Python refuses the import. After this lesson the file is empty &#8212; its only job is to exist. (uv created it with a demo <code class="inline">main()</code>; you move that function to <code class="inline">cli.py</code> and leave the file blank.)</p>
+
+<p><strong><code class="inline">__main__.py</code> &#8212; makes <code class="inline">python -m flight_delays</code> work.</strong> When you run a package with the <code class="inline">-m</code> flag, Python looks for a file named <code class="inline">__main__.py</code> inside it and runs it. Ours is three lines that import and call the same <code class="inline">main()</code> from <code class="inline">cli.py</code> &#8212; giving you a second, Python-native way to run the pipeline without duplicating any logic.</p>
+
+<p><strong><code class="inline">cli.py</code> &#8212; the command entry point.</strong> This is a real module with a function named <code class="inline">main()</code>, and <code class="inline">[project.scripts]</code> points the <code class="inline">flight-delays</code> command at it. Why <code class="inline">cli.py</code> instead of <code class="inline">main.py</code>? First, <code class="inline">main.py</code> would make the script entry read <code class="inline">flight_delays.main:main</code> &#8212; hard to read. Second, it would sit right next to <code class="inline">__main__.py</code>, and you would have to puzzle out which one Python actually uses. Third, as the project grows, <code class="inline">cli.py</code> always means "this is the command-line interface," while <code class="inline">main.py</code> would become ambiguous &#8212; is it the CLI? a server? a training script?</p>
 
 <h2 class="section"><span class="num">4</span>The config module</h2>
 <p class="section-intro">One place for all paths and constants.</p>
@@ -450,6 +487,8 @@ build-backend = <span class="str">"uv_build"</span></div>
 </div>
 
 <p><code class="inline">Path(__file__).resolve().parents[6]</code> reaches the repository root from the installed package file (flight_delays &#8594; src &#8594; CODE &#8594; lesson-02 &#8594; module-01 &#8594; modules &#8594; repo root). From there, <code class="inline">REPO_ROOT / "data"</code> points to the shared data pool. <code class="inline">parents[2]</code> reaches this lesson's <code class="inline">CODE/</code> folder for generated models.</p>
+
+<p>That note matters for your setup: the <code class="inline">parents[6]</code> shortcut only matches the shipped <code class="inline">CODE/</code> location inside the course repo. When you build this project in your own folder, the default data path will be wrong &#8212; and that is exactly why <code class="inline">FLIGHT_DATA_DIR</code> exists (see Section 7). Write the file as shown here; the constant is the <em>last-resort default</em>, and configuration overrides it.</p>
 
 <p>The feature lists and training defaults live here too. Later lessons will add to this file; for now it gives you one place to change the random seed or the test size.</p>
 
@@ -612,7 +651,7 @@ build-backend = <span class="str">"uv_build"</span></div>
 <h2 class="section"><span class="num">6</span>The entry point</h2>
 <p class="section-intro">One installed command that wires everything together.</p>
 
-<p><code class="inline">src/flight_delays/cli.py</code> contains <code class="inline">main()</code>, the function named by <code class="inline">[project.scripts]</code>. It runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save &#8594; predict. A teammate runs it through the installed command:</p>
+<p><code class="inline">src/flight_delays/cli.py</code> contains <code class="inline">main()</code>, the function that runs the full pipeline: load &#8594; clean &#8594; split &#8594; train &#8594; evaluate &#8594; save &#8594; predict. First, tell <code class="inline">uv</code> that this function is the entry point: edit <code class="inline">[project.scripts]</code> in <code class="inline">pyproject.toml</code> so the command points at <code class="inline">flight_delays.cli:main</code> instead of the demo <code class="inline">flight_delays:main</code>. While you are in there, replace the placeholder description with something real (check <code class="inline">CODE/pyproject.toml</code> for the wording). Then delete the demo <code class="inline">main()</code> from <code class="inline">__init__.py</code>, leaving the file empty. The command now runs your pipeline:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/cli.py (excerpt)</span></div>
@@ -666,7 +705,7 @@ build-backend = <span class="str">"uv_build"</span></div>
 
     loaded_model = <span class="fn">load_model</span>(model_path)
     delay_probability = <span class="fn">predict_delay</span>(loaded_model, X_test.<span class="fn">iloc</span>[:<span class="fn">1</span>])
-    <span class="fn">print</span>(<span class="str">f"\nPredicted delay probability for the first test flight: {delay_probability[0]:.4f}"</span>)
+    <span class="fn">print</span>(<span class="str">f"\nProbability of delay for first test flight: {delay_probability[0]:.4f}"</span>)
 
     <span class="fn">print</span>(<span class="str">"\nDone."</span>)
 
@@ -683,7 +722,14 @@ build-backend = <span class="str">"uv_build"</span></div>
 
 <p><strong>Predicting right after training.</strong> The script does not stop after saving. It loads the artifact back with <code class="inline">load_model</code> and predicts a delay probability for the first test flight. This round-trip proves the file you keep is the model you will actually serve later. The preprocessing never re-runs here &#8212; the fitted pipeline already contains it, so one feature row (<code class="inline">X_test.iloc[:1]</code>) goes straight to <code class="inline">predict_proba</code>. This is the shape of serving we will build in Module 4.</p>
 
-<p><strong>Two ways into the same function.</strong> <code class="inline">uv run flight-delays</code> calls <code class="inline">cli.main()</code> through the console entry point. The small <code class="inline">__main__.py</code> file calls that same function, so <code class="inline">uv run python -m flight_delays</code> is an equivalent Python-native form. There is one workflow, not two copies.</p>
+<p><strong>Two ways into the same function.</strong> <code class="inline">uv run flight-delays</code> calls <code class="inline">cli.main()</code> through the console entry point. The tiny <code class="inline">__main__.py</code> file does the same job natively &#8212; it imports the same function and calls it, so <code class="inline">uv run python -m flight_delays</code> is an equivalent Python-native form. There is one workflow, not two copies:</p>
+
+<div class="code-block">
+  <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">src/flight_delays/__main__.py</span></div>
+  <div class="code-body"><span class="def">from</span> flight_delays.cli <span class="def">import</span> main
+
+<span class="fn">main</span>()</div>
+</div>
 
 <h2 class="section"><span class="num">7</span>Run it &#8212; the milestone</h2>
 <p class="section-intro">This is your verification step: one command reproduces the notebook numbers.</p>
@@ -693,7 +739,7 @@ build-backend = <span class="str">"uv_build"</span></div>
   <div class="code-body"><span class="fn">uv</span> run flight-delays</div>
 </div>
 
-<p>Run it from the <code class="inline">CODE/</code> folder and you should see:</p>
+<p>Run it from your project folder and you should see:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">output</span></div>
@@ -704,14 +750,14 @@ f1:       <span class="fn">0.7415</span>
 
 Saved pipeline to models/model_2025_01.joblib
 
-Predicted delay probability for the first test flight: <span class="fn">0.0550</span>
+Probability of delay for first test flight: <span class="fn">0.0550</span>
 
 Done.</div>
 </div>
 
 <p>The same accuracy and F1 as the notebook &#8212; same data, same pipeline, same random seed. But now the result is produced by a program, not a session transcript.</p>
 
-<p>If your data lives somewhere else, override the path with an environment variable. On Mac/Linux:</p>
+<p>Because your project folder lives outside the course repo, the default path in <code class="inline">config.py</code> will not find the shared data pool &#8212; recall the <code class="inline">parents[6]</code> note from Section 4. Tell the pipeline where the data pool is with an environment variable. On Mac/Linux:</p>
 
 <div class="code-block">
   <div class="code-header"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">terminal</span></div>
@@ -728,7 +774,7 @@ Done.</div>
 <div class="callout warn">
   <div class="ti">Common mistakes</div>
   <ul>
-    <li><strong>Running from the wrong folder.</strong> <code class="inline">uv sync</code> and <code class="inline">uv run</code> must run from the <code class="inline">CODE/</code> folder &#8212; that is where <code class="inline">pyproject.toml</code> lives. Elsewhere, <code class="inline">uv</code> will not find your project.</li>
+    <li><strong>Running from the wrong folder.</strong> <code class="inline">uv sync</code> and <code class="inline">uv run</code> must run from the folder that holds <code class="inline">pyproject.toml</code> &#8212; your project folder. Elsewhere, <code class="inline">uv</code> will not find your project.</li>
     <li><strong>Skipping <code class="inline">uv run</code>.</strong> Typing only <code class="inline">flight-delays</code> may use the wrong environment or fail to find the installed command. <code class="inline">uv run</code> selects this project's environment.</li>
     <li><strong>Committing <code class="inline">.venv/</code>.</strong> The code in this lesson ignores it via <code class="inline">.gitignore</code>. Never add it to git.</li>
     <li><strong>Editing <code class="inline">pyproject.toml</code> by hand to change dependencies.</strong> Let <code class="inline">uv add</code> / <code class="inline">uv remove</code> do it for you &#8212; they update the file, the environment, and the lockfile together. If you do edit it by hand, re-run <code class="inline">uv sync</code> so the environment and lockfile catch up.</li>
@@ -753,7 +799,7 @@ Done.</div>
 </table>
 </div>
 
-<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from the <code class="inline">CODE/</code> folder and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code>.</p>
+<p>Verify the milestone: run <code class="inline">uv run flight-delays</code> from your project folder (with <code class="inline">FLIGHT_DATA_DIR</code> set) and confirm accuracy is <code class="inline">0.8952</code> and F1 is <code class="inline">0.7415</code> &#8212; the same numbers as the Lesson 1.1 notebook. The lesson's <code class="inline">CODE/</code> is the finished reference.</p>
 
 <div class="callout try">
   <div class="ti">Try it</div>

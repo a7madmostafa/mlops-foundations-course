@@ -51,7 +51,7 @@ You should see:
 accuracy: 0.8952
 f1:       0.7415
 
-Predicted delay probability for the first test flight: 0.0550
+Probability of delay for first test flight: 0.0550
 ```
 
 These match the notebook baseline from Lesson 1.1. The last line proves the
